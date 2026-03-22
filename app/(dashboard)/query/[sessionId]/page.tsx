@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Display sections derived from agent_outputs keys
@@ -115,6 +114,16 @@ export default function SessionDetailPage() {
   )
   const [activeCitation, setActiveCitation] = useState<string | null>(null)
   const [copiedClaim, setCopiedClaim] = useState<string | null>(null)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [startTime] = useState(Date.now())
+
+  // Request notification permission
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+  }, [])
 
   // Dynamic page title
   useEffect(() => {
@@ -165,6 +174,47 @@ export default function SessionDetailPage() {
     }
   }, [stream.status, sessionId, token])
 
+  // Polling fallback — catches completion even if SSE stream misses it
+  useEffect(() => {
+    if (!sessionId || !token) return
+    if (sessionData?.status === 'complete' || sessionData?.status === 'error') return
+
+    const interval = setInterval(async () => {
+      try {
+        const data = await getSession(sessionId, token)
+        if (data.status === 'complete' || data.status === 'error') {
+          setSessionData(data)
+        }
+      } catch { /* ignore */ }
+    }, 8_000)
+
+    return () => clearInterval(interval)
+  }, [sessionId, token, sessionData?.status])
+
+  // Elapsed timer while running
+  const stillRunning = sessionData?.status === 'running' || sessionData?.status === 'pending' ||
+    stream.status === 'running' || stream.status === 'connecting'
+  useEffect(() => {
+    if (!stillRunning) return
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [stillRunning, startTime])
+
+  // Browser notification on completion
+  useEffect(() => {
+    if (sessionData?.status !== 'complete') return
+    if (typeof document !== 'undefined' && document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+      const query = sessionData.query_text?.slice(0, 60) ?? 'Your research'
+      new Notification('QANUN Research Complete', {
+        body: `"${query}..." — ${sessionData.claims_count} claims extracted`,
+        icon: '/favicon.ico',
+        tag: sessionData.session_id,
+      })
+    }
+  }, [sessionData?.status, sessionData?.query_text, sessionData?.claims_count, sessionData?.session_id])
+
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev)
@@ -201,9 +251,24 @@ export default function SessionDetailPage() {
   const isComplete =
     sessionData?.status === 'complete' || stream.status === 'complete'
   const isRunning =
-    stream.status === 'running' || stream.status === 'connecting'
+    stream.status === 'running' || stream.status === 'connecting' ||
+    (sessionData?.status === 'running' && !isComplete)
   const isError =
     sessionData?.status === 'error' || stream.status === 'error'
+
+  const MILESTONES = [
+    { at: 0, label: 'Connecting to corpus…', detail: 'Initialising MALIS pipeline' },
+    { at: 5, label: 'Retrieving relevant provisions…', detail: 'Vector search across 63,397 sections' },
+    { at: 20, label: 'Running legal analysis…', detail: 'Analyst agent examining provisions' },
+    { at: 40, label: "Devil's advocate review…", detail: 'Challenging the initial analysis' },
+    { at: 60, label: 'Lateral thinking…', detail: 'Exploring comparative frameworks' },
+    { at: 90, label: 'Stress testing…', detail: 'RSA and Stress Tester agents' },
+    { at: 130, label: 'Synthesising research note…', detail: 'Orchestrator compiling final output' },
+    { at: 180, label: 'Grounding and verification…', detail: 'Checking claims against corpus' },
+    { at: 240, label: 'Finalising…', detail: 'Almost ready' },
+  ]
+  const currentMilestone = [...MILESTONES].reverse().find((m) => elapsedSeconds >= m.at) ?? MILESTONES[0]
+  const progressPct = isComplete ? 100 : Math.min(95, (elapsedSeconds / 300) * 100)
 
   const claims: ClaimObject[] = sessionData?.claims ?? []
 
@@ -255,11 +320,11 @@ export default function SessionDetailPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
           <button
-            onClick={() => router.push('/query')}
+            onClick={() => router.push('/sessions')}
             className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            New query
+            Sessions
           </button>
           {isComplete && (
             <button
@@ -290,32 +355,51 @@ export default function SessionDetailPage() {
         </div>
       </div>
 
-      {/* Progress bar — animated while running */}
-      {!isComplete && (
-        <Card className="p-4 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] font-medium text-gray-700">
-              {isRunning
-                ? 'Pipeline running…'
-                : isError
-                  ? 'Error'
-                  : 'Connecting…'}
+      {/* Progress — milestone display while running */}
+      {isRunning && (
+        <div className="bg-white border border-[#E8EBF0] rounded-xl p-5 mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <Loader2 className="w-4 h-4 text-[#1A5FA8] animate-spin flex-shrink-0" strokeWidth={1.5} />
+              <span className="text-[14px] font-medium text-[#0B1829]">
+                {currentMilestone.label}
+              </span>
+            </div>
+            <span className="text-[12px] text-[#9CA3AF] font-mono">
+              {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
             </span>
-            {isRunning && (
-              <Loader2 className="h-4 w-4 text-navy animate-spin" />
-            )}
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            {isRunning ? (
-              <div className="h-full bg-navy/70 rounded-full animate-pulse w-2/3 transition-all duration-1000" />
-            ) : (
-              <Progress value={0} className="h-2" />
-            )}
+          <p className="text-[12px] text-[#6B7280] mb-4 ml-[26px]">
+            {currentMilestone.detail}
+          </p>
+          <div className="h-[3px] bg-[#E8EBF0] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#1A5FA8] rounded-full transition-all duration-1000 ease-linear"
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
+          <div className="flex items-center gap-1.5 mt-4">
+            {MILESTONES.slice(0, 8).map((m, i) => (
+              <div
+                key={i}
+                className={`h-[5px] flex-1 rounded-full transition-all duration-500 ${
+                  elapsedSeconds >= m.at ? 'bg-[#1A5FA8]' : 'bg-[#E8EBF0]'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-[11px] text-[#9CA3AF] mt-3 text-center">
+            Research continues in the background — you can navigate away and return when complete.
+          </p>
+        </div>
+      )}
+      {isError && !isComplete && (
+        <div className="mb-4">
+          <div className="h-[4px] bg-[#991B1B] rounded-full mb-2" />
           {stream.error && (
-            <p className="text-[12px] text-[#991B1B] mt-2">{stream.error}</p>
+            <p className="text-[12px] text-[#991B1B]">{stream.error}</p>
           )}
-        </Card>
+        </div>
       )}
 
       {/* Complete banner */}
