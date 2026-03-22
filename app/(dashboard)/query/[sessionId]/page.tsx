@@ -25,7 +25,6 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Display sections derived from agent_outputs keys
@@ -165,6 +164,23 @@ export default function SessionDetailPage() {
     }
   }, [stream.status, sessionId, token])
 
+  // Polling fallback — catches completion even if SSE stream misses it
+  useEffect(() => {
+    if (!sessionId || !token) return
+    if (sessionData?.status === 'complete' || sessionData?.status === 'error') return
+
+    const interval = setInterval(async () => {
+      try {
+        const data = await getSession(sessionId, token)
+        if (data.status === 'complete' || data.status === 'error') {
+          setSessionData(data)
+        }
+      } catch { /* ignore */ }
+    }, 8_000)
+
+    return () => clearInterval(interval)
+  }, [sessionId, token, sessionData?.status])
+
   const toggleSection = (key: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev)
@@ -290,32 +306,28 @@ export default function SessionDetailPage() {
         </div>
       </div>
 
-      {/* Progress bar — animated while running */}
-      {!isComplete && (
-        <Card className="p-4 mb-6">
+      {/* Progress bar — indeterminate while running */}
+      {isRunning && (
+        <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] font-medium text-gray-700">
-              {isRunning
-                ? 'Pipeline running…'
-                : isError
-                  ? 'Error'
-                  : 'Connecting…'}
-            </span>
-            {isRunning && (
-              <Loader2 className="h-4 w-4 text-navy animate-spin" />
-            )}
+            <span className="text-[12px] text-[#6B7280]">Pipeline running…</span>
+            <Loader2 className="w-4 h-4 text-[#1A5FA8] animate-spin" strokeWidth={1.5} />
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            {isRunning ? (
-              <div className="h-full bg-navy/70 rounded-full animate-pulse w-2/3 transition-all duration-1000" />
-            ) : (
-              <Progress value={0} className="h-2" />
-            )}
+          <div className="h-[4px] bg-[#E8EBF0] rounded-full overflow-hidden">
+            <div className="h-full bg-[#1A5FA8] rounded-full w-1/3 animate-[progress_1.5s_ease-in-out_infinite]" />
           </div>
+        </div>
+      )}
+      {isComplete && (
+        <div className="h-[4px] bg-[#0F7A5F] rounded-full mb-4" />
+      )}
+      {isError && !isComplete && (
+        <div className="mb-4">
+          <div className="h-[4px] bg-[#991B1B] rounded-full mb-2" />
           {stream.error && (
-            <p className="text-[12px] text-[#991B1B] mt-2">{stream.error}</p>
+            <p className="text-[12px] text-[#991B1B]">{stream.error}</p>
           )}
-        </Card>
+        </div>
       )}
 
       {/* Complete banner */}
