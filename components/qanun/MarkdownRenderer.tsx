@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 interface MarkdownRendererProps {
   content: string
   className?: string
+  onCitationClick?: (citation: string) => void
 }
 
 function preprocessAnalysis(content: string): string {
@@ -60,7 +61,7 @@ function preprocessAnalysis(content: string): string {
 //   "...in Rules `1.3.1` (Category 1) or `1.3.2` (Category 2)..."
 //   "[`[VERIFIED]` — `PRU 1.3.2` (Guidance)]"
 
-export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, className, onCitationClick }: MarkdownRendererProps) {
   return (
     <div className={cn('prose-qanun', className)}>
     <ReactMarkdown
@@ -177,9 +178,13 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           const BARE_RULE_NUMBER = /^\d+\.\d+(\.\d+)?(\([a-zA-Z\d]+\))*$/
           if (RULEBOOK_PREFIXES.test(text) || BARE_RULE_NUMBER.test(text)) {
             return (
-              <code className="font-mono text-[11px] bg-[#F8FAFC] text-[#1A5FA8] border border-[#E2E8F0] rounded px-1.5 py-0.5">
+              <button
+                type="button"
+                onClick={() => onCitationClick?.(text)}
+                className="font-mono text-[11px] bg-[#EFF6FF] text-[#1A5FA8] border border-[#85B7EB] rounded px-1.5 py-0.5 mx-0.5 hover:bg-[#1A5FA8] hover:text-white transition-colors duration-100 cursor-pointer inline"
+              >
                 {text}
-              </code>
+              </button>
             )
           }
 

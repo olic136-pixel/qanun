@@ -6,6 +6,7 @@ import { useQueryStream } from '@/lib/hooks/useQueryStream'
 import { getSession, type SessionDetail, type ClaimObject } from '@/lib/api/query'
 import { useEffect, useState, useMemo } from 'react'
 import { MarkdownRenderer } from '@/components/qanun/MarkdownRenderer'
+import { CorpusPanel } from '@/components/qanun/CorpusPanel'
 import {
   Loader2,
   CheckCircle2,
@@ -111,6 +112,7 @@ export default function SessionDetailPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['final_output'])
   )
+  const [activeCitation, setActiveCitation] = useState<string | null>(null)
   const [copiedClaim, setCopiedClaim] = useState<string | null>(null)
 
   // Determine whether to stream
@@ -307,7 +309,11 @@ export default function SessionDetailPage() {
               <h2 className="text-[14px] font-semibold text-gray-900 mb-3">
                 Analysis
               </h2>
-              <MarkdownRenderer content={analysisText} className="max-w-none" />
+              <MarkdownRenderer
+                content={analysisText}
+                className="max-w-none"
+                onCitationClick={(citation) => setActiveCitation(citation)}
+              />
             </Card>
           )}
 
@@ -443,9 +449,13 @@ export default function SessionDetailPage() {
                     {claim.claim_text}
                   </p>
                   {claim.section_ref && (
-                    <p className="text-[11px] text-gray-400 mt-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveCitation(claim.section_ref)}
+                      className="block font-mono text-[11px] text-[#1A5FA8] hover:underline cursor-pointer mt-1.5"
+                    >
                       {claim.section_ref}
-                    </p>
+                    </button>
                   )}
                   <p className="text-[10px] text-gray-400 mt-1">
                     {claim.agent_name}
@@ -456,6 +466,10 @@ export default function SessionDetailPage() {
           </Card>
         </div>
       </div>
+      <CorpusPanel
+        citation={activeCitation}
+        onClose={() => setActiveCitation(null)}
+      />
     </div>
   )
 }
