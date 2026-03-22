@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useSystemStatus } from '@/lib/hooks/useDashboard'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -68,6 +69,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const { data: statusData } = useSystemStatus()
+
+  const liveAgentCount = statusData?.agents
+    ? Object.values(statusData.agents).filter((s) => s === 'available').length
+    : 10
+  const corpusDocs = statusData?.corpus?.documents?.toLocaleString() ?? '2,484'
+  const corpusSections = statusData?.corpus?.sections?.toLocaleString() ?? '63,397'
+  const corpusHealthy = statusData?.vault_health === 'ok'
 
   useEffect(() => {
     if (status === 'loading') return
@@ -169,13 +178,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </p>
             <div className="space-y-1">
               {[
-                { label: 'Documents', value: '2,484' },
-                { label: 'Sections', value: '63,397' },
+                { label: 'Documents', value: corpusDocs },
+                { label: 'Sections', value: corpusSections },
                 { label: 'Health', value: 'Live' },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between text-[10px]">
                   <span className="text-white/45">{row.label}</span>
-                  <span className="text-[#5DCAA5]">{row.value}</span>
+                  <span className={`text-[#5DCAA5] ${row.label === 'Health' && corpusHealthy ? 'animate-pulse' : ''}`}>{row.value}</span>
                 </div>
               ))}
             </div>
@@ -201,7 +210,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </h1>
             <span className="bg-green-50 text-green-700 text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              10 agents live
+              {liveAgentCount} agents live
             </span>
           </div>
           <div className="flex items-center gap-3">
