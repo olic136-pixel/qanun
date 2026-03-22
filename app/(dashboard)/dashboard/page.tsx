@@ -104,7 +104,7 @@ export default function DashboardPage() {
       <div className="bg-[#0B1829] rounded-xl p-5">
         <div className="flex justify-between items-center mb-3">
           <span className="text-[13px] font-medium text-white/90 uppercase tracking-[0.08em]">
-            Ask QANUN
+            Quick lookup
           </span>
           <div className="flex gap-1.5">
             {JURISDICTIONS.map((j) => {
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               handleSubmit()
             }
           }}
-          placeholder="What do you need to know about ADGM regulations today?"
+          placeholder="Ask a quick question about ADGM regulations..."
           disabled={isSubmitting}
           className="bg-transparent border-none outline-none text-[15px] text-white placeholder:text-white/40 w-full resize-none min-h-[48px] max-h-[120px]"
         />
@@ -155,9 +155,14 @@ export default function DashboardPage() {
             {isSubmitting ? (
               <Loader2 className="h-[14px] w-[14px] animate-spin" />
             ) : (
-              'Run query →'
+              'Look up →'
             )}
           </button>
+        </div>
+        <div className="text-right mt-2">
+          <Link href="/query" className="text-[11px] text-[#9CA3AF] hover:text-[#1A5FA8] transition-colors">
+            For in-depth analysis →
+          </Link>
         </div>
       </div>
 
