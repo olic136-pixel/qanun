@@ -10,6 +10,18 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+
+  /* QANUN design tokens */
+  --color-navy: var(--qanun-navy);
+  --color-blue: var(--qanun-blue);
+  --color-teal: var(--qanun-teal);
+  --color-gold: var(--qanun-gold);
+  --color-qanun-gray-50: var(--qanun-gray-50);
+  --color-qanun-gray-100: var(--qanun-gray-100);
+  --color-qanun-gray-400: var(--qanun-gray-400);
+  --color-qanun-gray-600: var(--qanun-gray-600);
+  --color-qanun-gray-900: var(--qanun-gray-900);
+  --color-qanun-red: var(--qanun-red);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,6 +61,18 @@
 }
 
 :root {
+  /* QANUN design tokens */
+  --qanun-navy: #0B1829;
+  --qanun-blue: #1A5FA8;
+  --qanun-teal: #0F7A5F;
+  --qanun-gold: #C4922A;
+  --qanun-gray-50: #F5F7FA;
+  --qanun-gray-100: #E8EBF0;
+  --qanun-gray-400: #9CA3AF;
+  --qanun-gray-600: #6B7280;
+  --qanun-gray-900: #111827;
+  --qanun-red: #991B1B;
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -84,6 +108,18 @@
 }
 
 .dark {
+  /* QANUN dark mode tokens */
+  --qanun-navy: #060D14;
+  --qanun-blue: #2B7BD4;
+  --qanun-teal: #12956F;
+  --qanun-gold: #D4A23A;
+  --qanun-gray-50: #111827;
+  --qanun-gray-100: #1F2937;
+  --qanun-gray-400: #6B7280;
+  --qanun-gray-600: #9CA3AF;
+  --qanun-gray-900: #F9FAFB;
+  --qanun-red: #DC2626;
+
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
