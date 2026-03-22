@@ -262,7 +262,7 @@ export default function DashboardPage() {
           <div className="divide-y divide-[#F5F7FA]">
             {REG_UPDATES.map((item, i) => {
               const inner = (
-                <div className="py-3 flex gap-3 hover:bg-[#F5F7FA] transition-colors duration-100 rounded-lg -mx-2 px-2">
+                <div className="py-3 flex gap-3 hover:bg-[#F5F7FA] transition-colors duration-100 rounded-lg -mx-2 px-2 cursor-pointer">
                   <div className="w-[48px] flex-shrink-0 text-center">
                     <div className="text-[18px] font-medium text-[#0B1829] leading-none">
                       {item.day}
@@ -307,7 +307,7 @@ export default function DashboardPage() {
             Corpus search
           </span>
           <div className="relative">
-            <Search className="h-[14px] w-[14px] text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="h-[14px] w-[14px] text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <Input
               value={corpusSearch}
               onChange={(e) => setCorpusSearch(e.target.value)}
@@ -317,21 +317,23 @@ export default function DashboardPage() {
                 }
               }}
               placeholder="Search corpus..."
-              className="bg-[#F5F7FA] border-[#E8EBF0] rounded-lg pl-9 h-[36px] text-[13px]"
+              className="bg-[#F5F7FA] border-[#E8EBF0] rounded-lg pl-9 pr-3 h-[36px] w-full text-[13px] text-[#111827] placeholder:text-[#9CA3AF] focus:border-[#1A5FA8] focus:bg-white transition-colors"
             />
           </div>
 
-          <div className="flex gap-3 mt-3 mb-3">
-            {[
-              { value: '2,484', label: 'Documents' },
-              { value: '63,397', label: 'Sections' },
-              { value: '3', label: 'Jurisdictions' },
-            ].map((stat) => (
-              <div key={stat.label} className="flex-1 bg-[#F5F7FA] rounded-lg py-2 text-center">
-                <div className="text-[15px] font-medium text-[#0B1829]">{stat.value}</div>
-                <div className="text-[10px] text-[#9CA3AF]">{stat.label}</div>
-              </div>
-            ))}
+          <div className="flex gap-2 mt-3 mb-3">
+            <div className="flex-1 bg-[#F5F7FA] rounded-lg py-2 text-center min-w-0">
+              <div className="text-[15px] font-medium text-[#0B1829]">2,484</div>
+              <div className="text-[10px] text-[#9CA3AF]">Documents</div>
+            </div>
+            <div className="flex-1 bg-[#F5F7FA] rounded-lg py-2 text-center min-w-0">
+              <div className="text-[15px] font-medium text-[#0B1829]">63,397</div>
+              <div className="text-[10px] text-[#9CA3AF]">Sections</div>
+            </div>
+            <div className="flex-1 bg-[#F5F7FA] rounded-lg py-2 text-center min-w-0">
+              <div className="text-[15px] font-medium text-[#0B1829]">3</div>
+              <div className="text-[10px] text-[#9CA3AF]">Jurisdictions</div>
+            </div>
           </div>
 
           <div className="mt-2">
