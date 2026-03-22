@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useQueryStream } from '@/lib/hooks/useQueryStream'
 import { getSession, type SessionDetail, type ClaimObject } from '@/lib/api/query'
 import { useEffect, useState, useMemo } from 'react'
+import { MarkdownRenderer } from '@/components/qanun/MarkdownRenderer'
 import {
   Loader2,
   CheckCircle2,
@@ -306,9 +307,7 @@ export default function SessionDetailPage() {
               <h2 className="text-[14px] font-semibold text-gray-900 mb-3">
                 Analysis
               </h2>
-              <div className="prose prose-sm max-w-none text-[13px] text-gray-700 whitespace-pre-wrap leading-relaxed">
-                {analysisText}
-              </div>
+              <MarkdownRenderer content={analysisText} className="max-w-none" />
             </Card>
           )}
 
