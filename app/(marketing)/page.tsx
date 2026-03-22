@@ -1,13 +1,11 @@
-import { QanunWordmark } from '@/components/qanun/QanunWordmark'
+import { NavBar } from '@/components/qanun/marketing/NavBar'
+import { HeroSection } from '@/components/qanun/marketing/HeroSection'
 
-export default function HomePage() {
+export default function Page() {
   return (
-    <div className="p-8 flex flex-col gap-8">
-      <QanunWordmark size="lg" />
-      <QanunWordmark size="md" />
-      <div className="bg-[#0B1829] p-4 rounded-lg inline-block">
-        <QanunWordmark size="sm" dark />
-      </div>
-    </div>
+    <>
+      <NavBar />
+      <HeroSection />
+    </>
   )
 }
