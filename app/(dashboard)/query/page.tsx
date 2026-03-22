@@ -3,12 +3,8 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createSession } from '@/lib/api/query'
-import { useState, useEffect, Suspense } from 'react'
-import { Loader2, Search, Sparkles, Scale, BookOpen, Shield, FileText } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
 
 const JURISDICTIONS = [
   { id: 'ADGM', label: 'ADGM / FSRA' },
@@ -16,24 +12,20 @@ const JURISDICTIONS = [
   { id: 'EL_SALVADOR', label: 'El Salvador' },
 ]
 
-const AGENTS = [
-  { id: 'retriever', label: 'Retriever', icon: Search, description: 'Searches the regulatory corpus' },
-  { id: 'analyzer', label: 'Analyzer', icon: Scale, description: 'Legal analysis and interpretation' },
-  { id: 'comparator', label: 'Comparator', icon: BookOpen, description: 'Cross-jurisdiction comparison' },
-  { id: 'validator', label: 'Validator', icon: Shield, description: 'Claim verification and grounding' },
-  { id: 'synthesizer', label: 'Synthesizer', icon: FileText, description: 'Final synthesis and memo' },
+const EXAMPLES = [
+  'PRU 1.3.3(2) — matched principal conditions',
+  'COBS 23.12.2 — copy trading and block-delegation',
+  'Category 3A vs 3C — what triggers reclassification?',
 ]
 
 function QueryPageInner() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [queryText, setQueryText] = useState('')
   const [activeJurisdictions, setActiveJurisdictions] = useState<string[]>(['ADGM'])
-  const [selectedAgents, setSelectedAgents] = useState<string[]>(
-    AGENTS.map((a) => a.id)
-  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -49,16 +41,20 @@ function QueryPageInner() {
     }
   }, [searchParams])
 
-  const toggleJurisdiction = (id: string) => {
-    setActiveJurisdictions((prev) =>
-      prev.includes(id) ? prev.filter((j) => j !== id) : [...prev, id]
-    )
-  }
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = textareaRef.current
+    if (el) {
+      el.style.height = 'auto'
+      el.style.height = Math.min(el.scrollHeight, 360) + 'px'
+    }
+  }, [queryText])
 
-  const toggleAgent = (id: string) => {
-    setSelectedAgents((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
-    )
+  const toggleJurisdiction = (id: string) => {
+    setActiveJurisdictions((prev) => {
+      const next = prev.includes(id) ? prev.filter((j) => j !== id) : [...prev, id]
+      return next.length === 0 ? prev : next // keep at least one
+    })
   }
 
   const handleSubmit = async () => {
@@ -76,7 +72,6 @@ function QueryPageInner() {
         {
           query: queryText.trim(),
           jurisdictions: activeJurisdictions,
-          agents: selectedAgents,
         },
         session.user.accessToken as string
       )
@@ -94,127 +89,108 @@ function QueryPageInner() {
     }
   }
 
+  const selectExample = (text: string) => {
+    setQueryText(text)
+    textareaRef.current?.focus()
+  }
+
+  const canSubmit = queryText.trim().length > 0 && !isSubmitting
+
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-[680px] mx-auto w-full py-8 px-4">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-5 w-5 text-gold" />
-          <h1 className="text-2xl font-semibold text-gray-900">New Query</h1>
-        </div>
-        <p className="text-[14px] text-gray-600">
-          Ask a regulatory question. QANUN will search the corpus, analyse, and
-          synthesise a grounded response with citations.
+      <div className="mb-6">
+        <h1 className="text-[22px] font-medium text-[#0B1829]">New query</h1>
+        <p className="text-[13px] text-[#6B7280] mt-1">
+          Ask anything across the regulatory corpus. QANUN will search, analyse,
+          and synthesise a grounded response with full citations.
         </p>
       </div>
 
-      {/* Query input */}
-      <Card className="p-6 mb-6">
-        <label className="block text-[13px] font-medium text-gray-900 mb-2">
-          Your question
-        </label>
-        <Textarea
+      {/* Single query card */}
+      <div className="bg-white border border-[#E8EBF0] rounded-xl p-5">
+        <textarea
+          ref={textareaRef}
           value={queryText}
           onChange={(e) => setQueryText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. What are the ADGM requirements for financial promotions by virtual asset service providers?"
-          className="min-h-[120px] text-[14px] resize-none"
+          placeholder="e.g. What are the four conditions for dealing as Matched Principal under PRU 1.3.3(2), and does a dual-entity structure satisfy each condition?"
           disabled={isSubmitting}
+          className="min-h-[140px] max-h-[360px] resize-none bg-transparent border-none outline-none text-[14px] text-[#111827] leading-relaxed w-full placeholder:text-[#9CA3AF]"
         />
-        <p className="text-[11px] text-gray-400 mt-2">
-          Press ⌘+Enter to submit
-        </p>
-      </Card>
 
-      {/* Jurisdictions */}
-      <Card className="p-6 mb-6">
-        <label className="block text-[13px] font-medium text-gray-900 mb-3">
-          Jurisdictions
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {JURISDICTIONS.map((j) => (
+        {/* Divider */}
+        <div className="border-t border-[#E8EBF0] mt-4 pt-3">
+          <div className="flex items-center justify-between">
+            {/* Jurisdiction chips */}
+            <div className="flex items-center gap-1.5">
+              {JURISDICTIONS.map((j) => {
+                const active = activeJurisdictions.includes(j.id)
+                return (
+                  <button
+                    key={j.id}
+                    onClick={() => toggleJurisdiction(j.id)}
+                    disabled={isSubmitting}
+                    className={`text-[11px] font-medium px-3 py-1 rounded-full cursor-pointer transition-colors duration-100 ${
+                      active
+                        ? 'bg-[#0B1829] text-[#C4922A]'
+                        : 'bg-white text-[#6B7280] border border-[#E8EBF0] hover:border-[#9CA3AF]'
+                    }`}
+                  >
+                    {j.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Run button */}
             <button
-              key={j.id}
-              onClick={() => toggleJurisdiction(j.id)}
-              disabled={isSubmitting}
-              className={`px-4 py-2 rounded-full text-[13px] font-medium transition-colors ${
-                activeJurisdictions.includes(j.id)
-                  ? 'bg-navy text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className={`h-[38px] px-5 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                canSubmit
+                  ? 'bg-[#0B1829] text-[#C4922A] hover:bg-[#1A5FA8] hover:text-white'
+                  : 'bg-[#F5F7FA] text-[#9CA3AF] cursor-not-allowed'
               }`}
             >
-              {j.label}
+              {isSubmitting ? (
+                <Loader2 className="h-[14px] w-[14px] animate-spin" />
+              ) : (
+                'Run query →'
+              )}
             </button>
-          ))}
+          </div>
         </div>
-      </Card>
-
-      {/* Agents */}
-      <Card className="p-6 mb-6">
-        <label className="block text-[13px] font-medium text-gray-900 mb-3">
-          Agents
-        </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {AGENTS.map((agent) => {
-            const Icon = agent.icon
-            const isSelected = selectedAgents.includes(agent.id)
-            return (
-              <button
-                key={agent.id}
-                onClick={() => toggleAgent(agent.id)}
-                disabled={isSubmitting}
-                className={`flex items-start gap-3 p-3 rounded-lg border text-left transition-colors ${
-                  isSelected
-                    ? 'border-navy bg-navy/5'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div
-                  className={`mt-0.5 p-1.5 rounded ${
-                    isSelected ? 'bg-navy text-white' : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-                <div>
-                  <div className="text-[13px] font-medium text-gray-900">
-                    {agent.label}
-                  </div>
-                  <div className="text-[11px] text-gray-500">
-                    {agent.description}
-                  </div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </Card>
+      </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mt-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-[13px] text-[#991B1B]">{error}</p>
         </div>
       )}
 
-      {/* Submit */}
-      <div className="flex justify-end">
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !queryText.trim()}
-          className="bg-navy hover:bg-navy/90 text-white px-6"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Submitting…
-            </>
-          ) : (
-            <>
-              Run query →
-            </>
-          )}
-        </Button>
+      {/* Keyboard hint */}
+      <p className="mt-2 text-center text-[11px] text-[#9CA3AF]">
+        ⌘ Enter to submit
+      </p>
+
+      {/* Example queries */}
+      <div className="mt-5">
+        <p className="text-[11px] text-[#9CA3AF] uppercase tracking-[0.06em] mb-2">
+          Try an example
+        </p>
+        <div className="flex flex-col gap-2">
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex}
+              onClick={() => selectExample(ex)}
+              className="border border-[#E8EBF0] rounded-lg px-3 py-2 text-[12px] text-[#6B7280] hover:border-[#1A5FA8] hover:text-[#1A5FA8] bg-white cursor-pointer transition-colors duration-100 text-left w-full"
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )
