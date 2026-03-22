@@ -2,8 +2,9 @@
 
 import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
-import { apiFetch } from '@/lib/api/client'
-import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { listSources, searchCorpus, type CorpusSource, type CorpusSearchResult } from '@/lib/api/corpus'
+import { useState, useEffect, Suspense } from 'react'
 import { Search, BookOpen, FileText, Scale } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -14,47 +15,84 @@ const DOC_TYPE_ICONS: Record<string, React.ElementType> = {
   legislation: Scale,
   rulebook: BookOpen,
   guidance: FileText,
+  circular: FileText,
 }
 
-export default function CorpusPage() {
+const DOC_TYPES = ['all', 'rulebook', 'guidance', 'circular', 'legislation', 'judgment']
+
+const JURISDICTIONS = [
+  { label: 'All jurisdictions', value: '' },
+  { label: 'FSRA', value: 'FSRA' },
+  { label: 'DFSA', value: 'DFSA' },
+  { label: 'DIFC', value: 'DIFC' },
+  { label: 'ADGM RA', value: 'ADGM_RA' },
+  { label: 'El Salvador', value: 'EL_SALVADOR' },
+]
+
+function CorpusPageInner() {
   const { data: session } = useSession()
   const token = session?.user?.accessToken as string
-  const [search, setSearch] = useState('')
-  const [docType, setDocType] = useState<string>('all')
+  const searchParams = useSearchParams()
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['corpus', docType],
-    queryFn: () =>
-      apiFetch<{
-        documents: Array<{
-          doc_id: string
-          title: string
-          doc_type: string
-          source_entity: string
-          effective_date: string | null
-          sections_count: number
-        }>
-        total: number
-      }>(`/api/corpus${docType !== 'all' ? `?doc_type=${docType}` : ''}`, { token }),
-    enabled: !!token,
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [docType, setDocType] = useState<string>('all')
+  const [jurisdiction, setJurisdiction] = useState<string>('')
+
+  // Pre-populate from URL params
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) {
+      setSearchQuery(q)
+      setDebouncedQuery(q)
+    }
+  }, [searchParams])
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 400)
+    return () => clearTimeout(t)
+  }, [searchQuery])
+
+  const isSearchMode = debouncedQuery.trim().length > 0
+
+  const { data: sourcesData, isLoading: sourcesLoading } = useQuery({
+    queryKey: ['corpus-sources', jurisdiction, docType],
+    queryFn: () => listSources(token, {
+      source_entity: jurisdiction || undefined,
+      doc_type: docType !== 'all' ? docType : undefined,
+    }),
+    enabled: !!token && !isSearchMode,
   })
 
-  const docs = (data?.documents ?? []).filter(
-    (d) =>
-      !search ||
-      d.title.toLowerCase().includes(search.toLowerCase()) ||
-      d.source_entity?.toLowerCase().includes(search.toLowerCase())
-  )
+  const { data: searchData, isLoading: searchLoading } = useQuery({
+    queryKey: ['corpus-search', debouncedQuery, jurisdiction, docType],
+    queryFn: () => searchCorpus(debouncedQuery, token, {
+      source_entity: jurisdiction || undefined,
+      doc_type: docType !== 'all' ? docType : undefined,
+      max_results: 20,
+    }),
+    enabled: !!token && isSearchMode,
+  })
 
-  const docTypes = ['all', 'legislation', 'rulebook', 'guidance', 'consultation', 'amendment']
+  const isLoading = isSearchMode ? searchLoading : sourcesLoading
+  const sources: CorpusSource[] = !isSearchMode ? (sourcesData ?? []) : []
+  const searchResults: CorpusSearchResult[] = isSearchMode ? (searchData?.results ?? []) : []
+  const totalCount = isSearchMode ? (searchData?.total ?? 0) : sources.length
+
+  // Filter sources client-side by title when not in search mode
+  const filteredSources = sources.filter((s) =>
+    !searchQuery || s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.rulebook_code?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto py-8 px-4 space-y-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-full" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-16" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 rounded-lg" />
         ))}
       </div>
     )
@@ -65,22 +103,34 @@ export default function CorpusPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">Corpus Browser</h1>
         <p className="text-[14px] text-gray-500">
-          {data?.total ?? 0} documents across ADGM, DIFC, and El Salvador
+          {totalCount.toLocaleString()} {isSearchMode ? 'results' : 'documents'} across ADGM, DIFC, and El Salvador
         </p>
       </div>
 
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search documents…"
-            className="pl-10 text-[14px]"
-          />
+      {/* Search + filters */}
+      <div className="space-y-3 mb-6">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search corpus…"
+              className="pl-10 text-[14px]"
+            />
+          </div>
+          <select
+            value={jurisdiction}
+            onChange={(e) => setJurisdiction(e.target.value)}
+            className="text-[12px] px-3 py-1.5 rounded-lg border border-[#E8EBF0] bg-white text-[#6B7280]"
+          >
+            {JURISDICTIONS.map((j) => (
+              <option key={j.value} value={j.value}>{j.label}</option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-1.5">
-          {docTypes.map((dt) => (
+          {DOC_TYPES.map((dt) => (
             <button
               key={dt}
               onClick={() => setDocType(dt)}
@@ -96,34 +146,113 @@ export default function CorpusPage() {
         </div>
       </div>
 
-      <div className="space-y-2">
-        {docs.slice(0, 50).map((doc) => {
-          const Icon = DOC_TYPE_ICONS[doc.doc_type] ?? FileText
-          return (
-            <Card key={doc.doc_id} className="p-3 hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <Icon className="h-4 w-4 text-gray-400 shrink-0" />
+      {/* Search results mode */}
+      {isSearchMode && (
+        <div className="space-y-2">
+          {searchResults.map((result, i) => (
+            <Card key={`${result.section_ref}-${i}`} className="p-4 hover:bg-gray-50 transition-colors">
+              <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-gray-900 truncate">{doc.title}</p>
-                  <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{doc.source_entity}</Badge>
-                    <span>{doc.doc_type}</span>
-                    {doc.sections_count > 0 && <span>{doc.sections_count} sections</span>}
-                    {doc.effective_date && <span>{new Date(doc.effective_date).toLocaleDateString()}</span>}
+                  <div className="flex items-center gap-2 mb-1">
+                    {result.section_ref && (
+                      <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
+                        {result.section_ref}
+                      </Badge>
+                    )}
+                    {result.rulebook_code && (
+                      <Badge className="bg-navy text-white text-[10px] px-1.5 py-0">
+                        {result.rulebook_code}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize">
+                      {result.source_entity}
+                    </Badge>
+                    {result.is_current && (
+                      <span className="flex items-center gap-1 text-[10px] text-[#16A34A]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                        Current
+                      </span>
+                    )}
                   </div>
+                  <p className="text-[13px] font-medium text-gray-900 mb-1">
+                    {result.doc_title}
+                  </p>
+                  <p className="text-[12px] text-gray-600 leading-relaxed line-clamp-2">
+                    {result.chunk_text}
+                  </p>
+                </div>
+                {/* Relevance bar */}
+                <div className="w-[60px] flex-shrink-0 pt-1">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-navy rounded-full"
+                      style={{ width: `${Math.max(20, 95 - i * 8)}%` }}
+                    />
+                  </div>
+                  <p className="text-[9px] text-gray-400 text-right mt-0.5">
+                    {Math.round(result.relevance_score * 100)}%
+                  </p>
                 </div>
               </div>
             </Card>
-          )
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {docs.length === 0 && (
+      {/* Browse mode */}
+      {!isSearchMode && (
+        <div className="space-y-2">
+          {filteredSources.slice(0, 50).map((doc) => {
+            const Icon = DOC_TYPE_ICONS[doc.doc_type] ?? FileText
+            return (
+              <Card key={doc.doc_id} className="p-3 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Icon className="h-4 w-4 text-gray-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-medium text-gray-900 truncate">
+                      {doc.title || doc.source_key || `Document #${doc.doc_id}`}
+                    </p>
+                    <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                      {doc.rulebook_code && (
+                        <Badge className="bg-navy text-white text-[10px] px-1.5 py-0">
+                          {doc.rulebook_code}
+                        </Badge>
+                      )}
+                      <span className="capitalize">{doc.doc_type}</span>
+                      {doc.word_count > 0 && (
+                        <span>{doc.word_count.toLocaleString()} words</span>
+                      )}
+                      {doc.is_current && (
+                        <span className="flex items-center gap-1 text-[#16A34A]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                          Current
+                        </span>
+                      )}
+                      {doc.version && <span>v{doc.version}</span>}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!isLoading && (isSearchMode ? searchResults.length === 0 : filteredSources.length === 0) && (
         <div className="text-center py-16">
           <BookOpen className="h-8 w-8 text-gray-300 mx-auto mb-3" />
           <p className="text-[14px] text-gray-500">No documents found.</p>
         </div>
       )}
     </div>
+  )
+}
+
+export default function CorpusPage() {
+  return (
+    <Suspense>
+      <CorpusPageInner />
+    </Suspense>
   )
 }

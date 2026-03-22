@@ -7,22 +7,61 @@ import { cn } from '@/lib/utils'
 interface MarkdownRendererProps {
   content: string
   className?: string
+  onCitationClick?: (citation: string) => void
 }
 
 function preprocessAnalysis(content: string): string {
-  return content
+  const RULEBOOKS =
+    'PRU|COBS|GEN|MKT|FUNDS|PIB|COLL|FSMR|MAR|SUP|DTR|LR|BIPRU|GENPRU|SYSC|PRIN|MCOB|ICOBS|MCOBS|IFR|MiFID'
+
+  // PASS 1: Full citations e.g. "PRU 1.3.2(a)" → `PRU 1.3.2(a)`
+  let result = content.replace(
+    new RegExp(
+      `\\b(${RULEBOOKS})\\s+(\\d+\\.\\d+(?:\\.\\d+)?(?:\\([a-zA-Z\\d]+\\))*)`,
+      'g'
+    ),
+    (match) => `\`${match}\``
+  )
+
+  // PASS 2: "Rule N.N.N" / "Rules N.N.N" patterns
+  result = result.replace(
+    /\b(Rules?\s+)(\d+\.\d+(?:\.\d+)?(?:\([a-zA-Z\d]+\))*)/g,
+    (_match, prefix, num) => `${prefix}\`${num}\``
+  )
+
+  // PASS 3: Bare numbers after "or" / "and" e.g. "or 1.3.2"
+  result = result.replace(
+    /\b(or|and)\s+(\d+\.\d+(?:\.\d+)?(?:\([a-zA-Z\d]+\))*)(?!`)/g,
+    (_match, conj, num) => `${conj} \`${num}\``
+  )
+
+  // PASS 4: Confidence labels
+  result = result
     .replace(/\[VERIFIED\]/g, '`[VERIFIED]`')
     .replace(/\[SUPPORTED\]/g, '`[SUPPORTED]`')
     .replace(/\[INFERRED\]/g, '`[INFERRED]`')
     .replace(/\[SPECULATIVE\]/g, '`[SPECULATIVE]`')
     .replace(/\[CONTESTED\]/g, '`[CONTESTED]`')
-    .replace(
-      /\b(PRU|COBS|GEN|MKT|FUNDS|PIB|COLL|IFR|FSMR)\s+[\d.()]+/g,
-      (match) => `\`${match}\``
-    )
+
+  // PASS 5: Deduplicate double-wrapped backticks
+  result = result.replace(/``([^`]+)``/g, '`$1`')
+
+  return result
 }
 
-export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+// TEST CASES for preprocessAnalysis:
+// Input:  "The Guidance to PRU 1.3.2 provides that a Category 3A Authorised
+//          Person is one whose FSP authorises it to carry on the Regulated
+//          Activity of Dealing in Investments as Agent, and which does not
+//          hold authorisation for the activities specified in Rules 1.3.1
+//          (Category 1) or 1.3.2 (Category 2) [VERIFIED — PRU 1.3.2 (Guidance)]."
+//
+// Expected output (backtick-wrapped):
+//   "...to `PRU 1.3.2` provides..."
+//   "...in Rules `1.3.1` (Category 1) or `1.3.2` (Category 2)..."
+//   "[`[VERIFIED]` — `PRU 1.3.2` (Guidance)]"
+
+export function MarkdownRenderer({ content, className, onCitationClick }: MarkdownRendererProps) {
   return (
     <div className={cn('prose-qanun', className)}>
     <ReactMarkdown
@@ -135,11 +174,17 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
               </span>
             )
           }
-          if (/^(PRU|COBS|GEN|MKT|FUNDS|PIB|COLL|IFR|FSMR)\s/.test(text)) {
+          const RULEBOOK_PREFIXES = /^(PRU|COBS|GEN|MKT|FUNDS|PIB|COLL|FSMR|MAR|SUP|IFR|MiFID)\s/
+          const BARE_RULE_NUMBER = /^\d+\.\d+(\.\d+)?(\([a-zA-Z\d]+\))*$/
+          if (RULEBOOK_PREFIXES.test(text) || BARE_RULE_NUMBER.test(text)) {
             return (
-              <code className="font-mono text-[11px] bg-[#F8FAFC] text-[#1A5FA8] border border-[#E2E8F0] rounded px-1.5 py-0.5">
+              <button
+                type="button"
+                onClick={() => onCitationClick?.(text)}
+                className="font-mono text-[11px] bg-[#EFF6FF] text-[#1A5FA8] border border-[#85B7EB] rounded px-1.5 py-0.5 mx-0.5 hover:bg-[#1A5FA8] hover:text-white transition-colors duration-100 cursor-pointer inline"
+              >
                 {text}
-              </code>
+              </button>
             )
           }
 
