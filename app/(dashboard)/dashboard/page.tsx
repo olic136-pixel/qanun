@@ -81,26 +81,34 @@ export default function DashboardPage() {
             run health check
           </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {agents.map(([name, agentStatus]) => {
-            const isLive = agentStatus === 'available'
-            return (
-              <div key={name} className="bg-[#F5F7FA] rounded-md p-2">
-                <p className="text-[10px] font-medium text-[#111827] capitalize">{name}</p>
-                <div className="flex items-center gap-1 mt-1">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      isLive ? 'bg-[#0F7A5F] animate-pulse' : 'bg-[#991B1B]'
-                    }`}
-                  />
-                  <span className="text-[9px] text-[#6B7280]">
-                    {isLive ? 'Live' : 'Unavailable'}
-                  </span>
+        {statusLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Skeleton key={i} className="h-[52px] rounded-md" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {agents.map(([name, agentStatus]) => {
+              const isLive = agentStatus === 'available'
+              return (
+                <div key={name} className="bg-[#F5F7FA] rounded-md p-2">
+                  <p className="text-[10px] font-medium text-[#111827] capitalize">{name}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isLive ? 'bg-[#0F7A5F] animate-pulse' : 'bg-[#991B1B]'
+                      }`}
+                    />
+                    <span className="text-[9px] text-[#6B7280]">
+                      {isLive ? 'Live' : 'Unavailable'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Quick Query Box */}
