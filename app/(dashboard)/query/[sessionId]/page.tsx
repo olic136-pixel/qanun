@@ -21,6 +21,7 @@ import {
   Shield,
   BarChart3,
   AlertTriangle,
+  Download,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -115,6 +116,17 @@ export default function SessionDetailPage() {
   const [activeCitation, setActiveCitation] = useState<string | null>(null)
   const [copiedClaim, setCopiedClaim] = useState<string | null>(null)
 
+  // Dynamic page title
+  useEffect(() => {
+    if (sessionData?.query_text) {
+      const t = sessionData.query_text.length > 60
+        ? sessionData.query_text.slice(0, 60) + '...'
+        : sessionData.query_text
+      document.title = `${t} — QANUN`
+    }
+    return () => { document.title = 'QANUN — Regulatory Intelligence' }
+  }, [sessionData?.query_text])
+
   // Determine whether to stream
   const shouldStream =
     sessionData?.status === 'running' ||
@@ -166,6 +178,23 @@ export default function SessionDetailPage() {
     await navigator.clipboard.writeText(text)
     setCopiedClaim(id)
     setTimeout(() => setCopiedClaim(null), 2000)
+  }
+
+  const exportMemo = async () => {
+    if (!token) return
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sessions/${sessionId}/export`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `QANUN-memo-${sessionId.slice(0, 8)}.txt`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch { /* ignore */ }
   }
 
   // Derive display state
@@ -224,13 +253,24 @@ export default function SessionDetailPage() {
     <div className="max-w-5xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="mb-6">
-        <button
-          onClick={() => router.push('/query')}
-          className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700 mb-3"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          New query
-        </button>
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => router.push('/query')}
+            className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            New query
+          </button>
+          {isComplete && (
+            <button
+              onClick={exportMemo}
+              className="flex items-center gap-1.5 text-[12px] text-[#1A5FA8] hover:text-[#0B1829] transition-colors"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export memo
+            </button>
+          )}
+        </div>
 
         <h1 className="text-xl font-semibold text-gray-900 mb-1">
           {sessionData?.query_text ?? 'Query session'}
