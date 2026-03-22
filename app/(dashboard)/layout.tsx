@@ -12,6 +12,8 @@ import {
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemStatus } from '@/lib/hooks/useDashboard'
+import { CommandPalette } from '@/components/qanun/CommandPalette'
+import { useUIStore } from '@/lib/stores/uiStore'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -214,7 +216,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="text-[12px] text-[#6B7280] border border-[#E8EBF0] rounded-md px-3 py-1.5 hover:bg-[#F5F7FA] flex items-center gap-1.5">
+            <button
+              onClick={() => useUIStore.getState().setPaletteOpen(true)}
+              className="text-[12px] text-[#6B7280] border border-[#E8EBF0] rounded-md px-3 py-1.5 hover:bg-[#F5F7FA] flex items-center gap-1.5"
+            >
               <Command size={12} />
               <span>Cmd K</span>
             </button>
@@ -257,6 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <CommandPalette />
     </div>
   )
 }
