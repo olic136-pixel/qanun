@@ -24,7 +24,7 @@ const navSections = [
     label: 'Workspace',
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-      { label: 'New query', icon: Search, href: '/query' },
+      { label: 'Research', icon: Search, href: '/query' },
       { label: 'Sessions', icon: Clock, href: '/sessions' },
     ],
   },
@@ -55,7 +55,7 @@ const navSections = [
 function getPageTitle(pathname: string): string {
   const map: Record<string, string> = {
     '/dashboard': 'Dashboard',
-    '/query': 'New query',
+    '/query': 'Research',
     '/sessions': 'Sessions',
     '/twins': 'Product twins',
     '/alerts': 'Alerts',
