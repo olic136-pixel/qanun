@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Search, Clock, Hexagon, Bell, BookOpen,
   GitCommit, Settings2, CreditCard, ChevronLeft, ChevronRight,
-  Sun, Moon, Command,
+  Sun, Moon, Command, Activity,
 } from 'lucide-react'
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -46,6 +46,7 @@ const navSections = [
     label: 'Account',
     items: [
       { label: 'Settings', icon: Settings2, href: '/settings' },
+      { label: 'System', icon: Activity, href: '/system' },
       { label: 'Billing', icon: CreditCard, href: '/billing' },
     ],
   },
@@ -61,6 +62,7 @@ function getPageTitle(pathname: string): string {
     '/corpus': 'Browse corpus',
     '/changes': 'Recent changes',
     '/settings': 'Settings',
+    '/system': 'System',
     '/billing': 'Billing',
   }
   return map[pathname] || 'Dashboard'
