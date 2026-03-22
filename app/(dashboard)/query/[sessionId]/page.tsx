@@ -20,6 +20,11 @@ import {
   BookOpen,
   Shield,
   FileText,
+  Sparkles,
+  AlertTriangle,
+  Lightbulb,
+  Zap,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -28,12 +33,19 @@ import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const AGENT_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
+  orchestrator: { label: 'Orchestrator', icon: Sparkles, color: 'text-gold' },
   retriever: { label: 'Retriever', icon: Search, color: 'text-blue' },
-  analyzer: { label: 'Analyzer', icon: Scale, color: 'text-teal' },
-  comparator: { label: 'Comparator', icon: BookOpen, color: 'text-gold' },
-  validator: { label: 'Validator', icon: Shield, color: 'text-navy' },
-  synthesizer: { label: 'Synthesizer', icon: FileText, color: 'text-gray-700' },
+  analyst: { label: 'Analyst', icon: Scale, color: 'text-teal' },
+  devils_advocate: { label: "Devil's Advocate", icon: AlertTriangle, color: 'text-[#991B1B]' },
+  blue_sky: { label: 'Blue Sky', icon: Lightbulb, color: 'text-gold' },
+  rsa: { label: 'RSA', icon: Shield, color: 'text-navy' },
+  stress_tester: { label: 'Stress Tester', icon: Zap, color: 'text-orange-500' },
+  ux_advocate: { label: 'UX Advocate', icon: Users, color: 'text-blue' },
+  memory_scribe: { label: 'Memory Scribe', icon: BookOpen, color: 'text-teal' },
+  task_director: { label: 'Task Director', icon: FileText, color: 'text-gray-700' },
 }
+
+const TOTAL_AGENTS = 10
 
 const CONFIDENCE_COLORS: Record<string, string> = {
   VERIFIED: 'bg-teal/10 text-teal border-teal/20',
@@ -122,10 +134,9 @@ export default function SessionDetailPage() {
     ? Object.keys(sessionData?.agent_outputs ?? {})
     : stream.agentsComplete
 
-  const totalAgents = 5
   const progressPercent = isComplete
     ? 100
-    : (agentsComplete.length / totalAgents) * 100
+    : (agentsComplete.length / TOTAL_AGENTS) * 100
 
   const claims: ClaimObject[] = sessionData?.claims ?? []
   const digest = sessionData?.compressed_digest || stream.compressedDigest
@@ -182,7 +193,7 @@ export default function SessionDetailPage() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-[13px] font-medium text-gray-700">
               {isRunning
-                ? `Running — ${agentsComplete.length}/${totalAgents} agents complete`
+                ? `Running — ${agentsComplete.length}/${TOTAL_AGENTS} agents complete`
                 : isError
                   ? 'Error'
                   : 'Connecting…'}
@@ -279,7 +290,7 @@ export default function SessionDetailPage() {
 
           {/* Running agents placeholder */}
           {isRunning &&
-            Array.from({ length: totalAgents - agentsComplete.length }).map(
+            Array.from({ length: Math.max(0, TOTAL_AGENTS - agentsComplete.length) }).map(
               (_, i) => (
                 <Card key={`pending-${i}`} className="p-4">
                   <div className="flex items-center gap-3">
