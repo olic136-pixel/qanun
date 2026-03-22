@@ -2,37 +2,52 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-
-const agents = [
-  'Orchestrator', 'Retriever', 'Analyst', 'Devil\'s advocate', 'Blue sky',
-  'RSA', 'Stress tester', 'UX advocate', 'Memory scribe', 'Task director',
-]
+import { useSession } from 'next-auth/react'
+import { useQuery } from '@tanstack/react-query'
+import { useDashboardKPIs, useSystemStatus } from '@/lib/hooks/useDashboard'
+import { getSessions } from '@/lib/api/query'
+import { getTwins } from '@/lib/api/twins'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const jurisdictions = ['ADGM / FSRA', 'DIFC / DFSA', 'El Salvador', 'Cross-jurisdiction']
 
-const kpis = [
-  { label: 'Sessions this week', value: '14', sub: '+3 vs prior week' },
-  { label: 'Active product twins', value: '3', sub: '1 alert pending' },
-  { label: 'Claims generated', value: '105', sub: 'Across all sessions' },
-  { label: 'Corpus documents', value: '2,484', sub: 'Updated today' },
-]
-
-const twins = [
-  { name: 'Fuutura Treasury Inc.', meta: 'BVI · Token issuer', status: 'Clear', statusColor: 'text-[#0F7A5F] bg-green-50' },
-  { name: 'TradeDar Ltd', meta: 'ADGM · 3A applicant', status: '1 alert', statusColor: 'text-amber-700 bg-amber-50' },
-  { name: 'Fuutura El Salvador', meta: 'El Salvador · DASP', status: 'Clear', statusColor: 'text-[#0F7A5F] bg-green-50' },
-]
-
-const sessions = [
-  { query: '3A licence: custody and client money models', meta: 'Today · 7 claims · ADGM' },
-  { query: 'COBS 23.12.2 — copy trading characterisation', meta: 'Today · 5 claims · ADGM' },
-  { query: 'PRU 8.1.2/8.1.3 group consolidation framework', meta: 'Yesterday · 9 claims · ADGM' },
-]
-
 export default function DashboardPage() {
   const router = useRouter()
+  const { data: session } = useSession()
+  const token = session?.user?.accessToken as string
   const [queryText, setQueryText] = useState('')
   const [activeJurisdiction, setActiveJurisdiction] = useState('ADGM / FSRA')
+
+  const { data: kpiData, isLoading: kpiLoading } = useDashboardKPIs()
+  const { data: statusData, isLoading: statusLoading } = useSystemStatus()
+
+  const { data: sessionsData } = useQuery({
+    queryKey: ['recent-sessions'],
+    queryFn: () => getSessions(token, { limit: 3 }),
+    enabled: !!token,
+  })
+
+  const { data: twinsData } = useQuery({
+    queryKey: ['dashboard-twins'],
+    queryFn: () => getTwins(token),
+    enabled: !!token,
+  })
+
+  const kpis = [
+    { label: 'Sessions this week', value: kpiData?.sessions_this_week?.toString() ?? '—', sub: 'Query sessions' },
+    { label: 'Active product twins', value: kpiData?.active_twins?.toString() ?? '—', sub: `${kpiData?.pending_alerts ?? 0} alert${(kpiData?.pending_alerts ?? 0) !== 1 ? 's' : ''} pending` },
+    { label: 'Claims generated', value: kpiData?.claims_total?.toLocaleString() ?? '—', sub: 'Across all sessions' },
+    { label: 'Corpus documents', value: kpiData?.corpus_documents?.toLocaleString() ?? '—', sub: 'Updated today' },
+  ]
+
+  const agents = statusData?.agents
+    ? Object.entries(statusData.agents)
+    : [
+        ['Orchestrator', 'available'], ['Retriever', 'available'], ['Analyst', 'available'],
+        ["Devil's advocate", 'available'], ['Blue sky', 'available'], ['RSA', 'available'],
+        ['Stress tester', 'available'], ['UX advocate', 'available'],
+        ['Memory scribe', 'available'], ['Task director', 'available'],
+      ]
 
   const submitQuery = useCallback(() => {
     if (!queryText.trim()) return
@@ -48,7 +63,11 @@ export default function DashboardPage() {
         {kpis.map((kpi) => (
           <div key={kpi.label} className="bg-[#F5F7FA] rounded-md p-3">
             <p className="text-xs text-[#6B7280]">{kpi.label}</p>
-            <p className="text-xl font-medium text-[#0B1829] mt-1">{kpi.value}</p>
+            {kpiLoading ? (
+              <Skeleton className="h-7 w-16 rounded mt-1" />
+            ) : (
+              <p className="text-xl font-medium text-[#0B1829] mt-1">{kpi.value}</p>
+            )}
             <p className="text-[10px] text-[#9CA3AF] mt-0.5">{kpi.sub}</p>
           </div>
         ))}
@@ -63,15 +82,24 @@ export default function DashboardPage() {
           </button>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-          {agents.map((agent) => (
-            <div key={agent} className="bg-[#F5F7FA] rounded-md p-2">
-              <p className="text-[10px] font-medium text-[#111827] capitalize">{agent}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0F7A5F] animate-pulse" />
-                <span className="text-[9px] text-[#6B7280]">Live</span>
+          {agents.map(([name, agentStatus]) => {
+            const isLive = agentStatus === 'available'
+            return (
+              <div key={name} className="bg-[#F5F7FA] rounded-md p-2">
+                <p className="text-[10px] font-medium text-[#111827] capitalize">{name}</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isLive ? 'bg-[#0F7A5F] animate-pulse' : 'bg-[#991B1B]'
+                    }`}
+                  />
+                  <span className="text-[9px] text-[#6B7280]">
+                    {isLive ? 'Live' : 'Unavailable'}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -124,25 +152,40 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-medium text-[#111827]">Product twins</h3>
-            <button className="text-xs text-[#1A5FA8] hover:underline">view all</button>
+            <button
+              onClick={() => router.push('/twins')}
+              className="text-xs text-[#1A5FA8] hover:underline"
+            >
+              view all
+            </button>
           </div>
           <div className="space-y-2">
-            {twins.map((twin) => (
-              <div
-                key={twin.name}
-                className="bg-[#F5F7FA] rounded-md p-2.5 flex justify-between items-center"
-              >
-                <div>
-                  <p className="text-[11px] font-medium text-[#0B1829]">{twin.name}</p>
-                  <p className="text-[10px] text-[#9CA3AF]">{twin.meta}</p>
-                </div>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full ${twin.statusColor}`}
+            {(twinsData?.twins ?? []).map((twin) => {
+              const hasAlert = twin.status === 'alert'
+              return (
+                <div
+                  key={twin.twin_id}
+                  onClick={() => router.push(`/twins/${twin.twin_id}`)}
+                  className="bg-[#F5F7FA] rounded-md p-2.5 flex justify-between items-center cursor-pointer hover:bg-[#EBEDF2] transition-colors"
                 >
-                  {twin.status}
-                </span>
-              </div>
-            ))}
+                  <div>
+                    <p className="text-[11px] font-medium text-[#0B1829]">{twin.product_name}</p>
+                    <p className="text-[10px] text-[#9CA3AF]">
+                      {twin.jurisdictions?.join(' · ')}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full ${
+                      hasAlert
+                        ? 'text-amber-700 bg-amber-50'
+                        : 'text-[#0F7A5F] bg-green-50'
+                    }`}
+                  >
+                    {hasAlert ? 'Alert' : 'Clear'}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -150,18 +193,26 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-medium text-[#111827]">Recent sessions</h3>
-            <button className="text-xs text-[#1A5FA8] hover:underline">view all</button>
+            <button
+              onClick={() => router.push('/sessions')}
+              className="text-xs text-[#1A5FA8] hover:underline"
+            >
+              view all
+            </button>
           </div>
           <div className="space-y-2">
-            {sessions.map((s) => (
+            {(sessionsData?.sessions ?? []).map((s) => (
               <div
-                key={s.query}
+                key={s.session_id}
+                onClick={() => router.push(`/query/${s.session_id}`)}
                 className="bg-[#F5F7FA] rounded-md p-2.5 cursor-pointer hover:bg-[#EBEDF2] transition-colors"
               >
                 <p className="text-[11px] font-medium text-[#0B1829] truncate">
-                  {s.query}
+                  {s.query_text}
                 </p>
-                <p className="text-[10px] text-[#9CA3AF] mt-0.5">{s.meta}</p>
+                <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                  {new Date(s.created_at).toLocaleDateString()} · {s.claims_count} claims · {s.jurisdictions?.[0] ?? 'ADGM'}
+                </p>
               </div>
             ))}
           </div>
