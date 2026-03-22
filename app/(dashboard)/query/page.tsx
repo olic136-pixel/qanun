@@ -260,10 +260,10 @@ function QueryPageInner() {
                     onClick={() => router.push(`/query/${s.session_id}`)}
                     className="w-full bg-[#F5F7FA] hover:bg-[#EFF6FF] rounded-lg px-3 py-2.5 cursor-pointer transition-colors text-left"
                   >
-                    <p className="text-[11px] text-[#111827] font-medium line-clamp-1">
+                    <p className="text-[13px] text-[#111827] font-medium line-clamp-1">
                       {s.query_text}
                     </p>
-                    <div className="text-[10px] text-[#9CA3AF] mt-0.5 flex items-center gap-2">
+                    <div className="text-[11px] text-[#9CA3AF] mt-0.5 flex items-center gap-2">
                       <Clock className="h-[10px] w-[10px]" />
                       <span>{relativeTime(s.created_at)}</span>
                       <span>·</span>
@@ -277,7 +277,7 @@ function QueryPageInner() {
 
           {/* Corpus status */}
           <div className="bg-white border border-[#E8EBF0] rounded-xl p-4">
-            <p className="text-[11px] text-[#9CA3AF] uppercase tracking-[0.06em] mb-2">
+            <p className="text-[12px] text-[#9CA3AF] uppercase tracking-[0.06em] mb-2">
               Corpus
             </p>
             <div className="space-y-1.5">
@@ -287,7 +287,7 @@ function QueryPageInner() {
               ].map((row) => (
                 <div
                   key={row.label}
-                  className="flex justify-between text-[12px]"
+                  className="flex justify-between text-[13px]"
                 >
                   <span className="text-[#6B7280]">{row.label}</span>
                   <span className="text-[#0B1829] font-medium">

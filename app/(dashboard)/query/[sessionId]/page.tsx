@@ -439,7 +439,7 @@ export default function SessionDetailPage() {
                       )}
                     </button>
                   </div>
-                  <p className="text-[12px] text-gray-700 leading-relaxed">
+                  <p className="text-[13px] text-gray-700 leading-relaxed">
                     {claim.claim_text}
                   </p>
                   {claim.section_ref && (

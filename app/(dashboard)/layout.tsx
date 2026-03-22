@@ -139,7 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {navSections.map((section) => (
             <div key={section.label}>
               {!collapsed && (
-                <p className="px-4 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/30 mt-2">
+                <p className="px-4 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50 mt-2">
                   {section.label}
                 </p>
               )}
@@ -152,8 +152,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     href={item.href}
                     className={`flex items-center gap-2 px-4 py-2 text-[12px] cursor-pointer transition-all duration-120 ${
                       active
-                        ? 'bg-[rgba(26,95,168,0.2)] text-[#85B7EB] border-l-2 border-[#1A5FA8] -ml-[2px] pl-[calc(1rem+2px)]'
-                        : 'text-white/50 hover:bg-white/5 hover:text-white/80'
+                        ? 'bg-[rgba(26,95,168,0.2)] text-white border-l-2 border-[#1A5FA8] -ml-[2px] pl-[calc(1rem+2px)]'
+                        : 'text-white/70 hover:bg-white/5 hover:text-white/90'
                     }`}
                   >
                     <Icon size={16} className="shrink-0" />
@@ -175,7 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Corpus status footer */}
         {!collapsed && (
           <div className="mx-3 mb-3 bg-[rgba(15,122,95,0.1)] border border-[rgba(15,122,95,0.25)] rounded-[7px] p-[9px]">
-            <p className="text-[9px] text-white/35 uppercase tracking-[0.08em] mb-1.5">
+            <p className="text-[9px] text-white/50 uppercase tracking-[0.08em] mb-1.5">
               Corpus status
             </p>
             <div className="space-y-1">
@@ -185,8 +185,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 { label: 'Health', value: 'Live' },
               ].map((row) => (
                 <div key={row.label} className="flex justify-between text-[10px]">
-                  <span className="text-white/45">{row.label}</span>
-                  <span className={`text-[#5DCAA5] ${row.label === 'Health' && corpusHealthy ? 'animate-pulse' : ''}`}>{row.value}</span>
+                  <span className="text-white/50">{row.label}</span>
+                  <span className={`${row.label === 'Health' ? 'text-[#5DCAA5]' : 'text-white/70'} ${row.label === 'Health' && corpusHealthy ? 'animate-pulse' : ''}`}>{row.value}</span>
                 </div>
               ))}
             </div>
@@ -207,10 +207,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Topbar */}
         <header className="h-[52px] bg-white border-b border-[#E8EBF0] sticky top-0 z-40 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-sm font-medium text-[#111827]">
+            <h1 className="text-[15px] font-medium text-[#111827]">
               {getPageTitle(pathname)}
             </h1>
-            <span className="bg-green-50 text-green-700 text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5">
+            <span className="bg-green-50 text-green-700 text-[12px] px-3 py-1 rounded-full flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               {liveAgentCount} agents live
             </span>
@@ -218,7 +218,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-3">
             <button
               onClick={() => useUIStore.getState().setPaletteOpen(true)}
-              className="text-[12px] text-[#6B7280] border border-[#E8EBF0] rounded-md px-3 py-1.5 hover:bg-[#F5F7FA] flex items-center gap-1.5"
+              className="text-[13px] text-[#6B7280] border border-[#E8EBF0] rounded-md px-3 py-1.5 hover:bg-[#F5F7FA] flex items-center gap-1.5"
             >
               <Command size={12} />
               <span>Cmd K</span>

@@ -104,7 +104,7 @@ export default function TwinsPage() {
                   <p className="text-[13px] text-gray-600 mb-2 line-clamp-2">
                     {twin.product_description}
                   </p>
-                  <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                  <div className="flex items-center gap-3 text-[12px] text-gray-400">
                     {twin.jurisdictions?.map((j) => (
                       <Badge key={j} variant="outline" className="text-[10px] px-1.5 py-0">
                         {j}

@@ -32,7 +32,7 @@ export function QanunWordmark({ size = 'md', dark = false, className }: QanunWor
           'font-mono',
           s.pron,
           s.gap,
-          dark ? 'text-white/40' : 'text-[#6B7280]'
+          dark ? 'text-white/55' : 'text-[#6B7280]'
         )}
       >
         {'/k\u0251\u02D0\u02C8nu\u02D0n/'}

@@ -135,7 +135,7 @@ export default function AlertsPage() {
                     <p className="text-[13px] text-gray-600 mb-2">
                       {alert.description}
                     </p>
-                    <div className="flex items-center gap-4 text-[11px] text-gray-400">
+                    <div className="flex items-center gap-4 text-[12px] text-gray-400">
                       <span>{alert.twin_name}</span>
                       {alert.affected_rule && (
                         <span className="font-mono">{alert.affected_rule}</span>

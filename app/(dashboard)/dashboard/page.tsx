@@ -68,7 +68,7 @@ export default function DashboardPage() {
             ) : (
               <p className="text-xl font-medium text-[#0B1829] mt-1">{kpi.value}</p>
             )}
-            <p className="text-[10px] text-[#9CA3AF] mt-0.5">{kpi.sub}</p>
+            <p className="text-[12px] text-[#9CA3AF] mt-0.5">{kpi.sub}</p>
           </div>
         ))}
       </div>
@@ -93,14 +93,14 @@ export default function DashboardPage() {
               const isLive = agentStatus === 'available'
               return (
                 <div key={name} className="bg-[#F5F7FA] rounded-md p-2">
-                  <p className="text-[10px] font-medium text-[#111827] capitalize">{name}</p>
+                  <p className="text-[12px] font-medium text-[#111827] capitalize">{name}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
                         isLive ? 'bg-[#0F7A5F] animate-pulse' : 'bg-[#991B1B]'
                       }`}
                     />
-                    <span className="text-[9px] text-[#6B7280]">
+                    <span className="text-[11px] text-[#6B7280]">
                       {isLive ? 'Live' : 'Unavailable'}
                     </span>
                   </div>
@@ -177,8 +177,8 @@ export default function DashboardPage() {
                   className="bg-[#F5F7FA] rounded-md p-2.5 flex justify-between items-center cursor-pointer hover:bg-[#EBEDF2] transition-colors"
                 >
                   <div>
-                    <p className="text-[11px] font-medium text-[#0B1829]">{twin.product_name}</p>
-                    <p className="text-[10px] text-[#9CA3AF]">
+                    <p className="text-[12px] font-medium text-[#0B1829]">{twin.product_name}</p>
+                    <p className="text-[11px] text-[#9CA3AF]">
                       {twin.jurisdictions?.join(' · ')}
                     </p>
                   </div>
@@ -215,10 +215,10 @@ export default function DashboardPage() {
                 onClick={() => router.push(`/query/${s.session_id}`)}
                 className="bg-[#F5F7FA] rounded-md p-2.5 cursor-pointer hover:bg-[#EBEDF2] transition-colors"
               >
-                <p className="text-[11px] font-medium text-[#0B1829] truncate">
+                <p className="text-[12px] font-medium text-[#0B1829] truncate">
                   {s.query_text}
                 </p>
-                <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5">
                   {new Date(s.created_at).toLocaleDateString()} · {s.claims_count} claims · {s.jurisdictions?.[0] ?? 'ADGM'}
                 </p>
               </div>
