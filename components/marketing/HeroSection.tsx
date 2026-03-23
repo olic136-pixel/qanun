@@ -198,15 +198,20 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative min-h-screen bg-[#0B1829] flex flex-col overflow-hidden">
+    <section className="relative bg-[#0B1829] flex flex-col overflow-hidden">
       <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 55% 60% at 72% 38%, rgba(26,95,168,0.11) 0%, transparent 65%)',
+        background: 'radial-gradient(ellipse 55% 60% at 72% 35%, rgba(26,95,168,0.11) 0%, transparent 65%), radial-gradient(ellipse 40% 30% at 15% 85%, rgba(196,146,42,0.04) 0%, transparent 60%)',
       }} />
+      {/* Bottom fade — bridges to white section below */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom, transparent, rgba(11,24,41,0.6))' }}
+      />
 
-      <div className="flex-1 max-w-[1280px] mx-auto px-6 pt-28 pb-10 w-full
+      <div className="max-w-[1280px] mx-auto px-6 pt-28 pb-16 w-full
                       grid grid-cols-1 lg:grid-cols-2 gap-10 lg:items-start">
         {/* LEFT COLUMN */}
-        <div className="pt-6">
+        <div className="pt-4">
           {mounted && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -496,24 +501,50 @@ export function HeroSection() {
       </div>
 
       {/* Marquee strip */}
-      <div className="border-t border-white/[0.05] py-3 overflow-hidden">
+      <div className="border-t border-white/[0.10] py-3.5 overflow-hidden"
+           style={{ background: 'rgba(255,255,255,0.03)' }}>
         <div className="flex flex-col gap-2">
           <div className="flex overflow-hidden">
             <div className="flex gap-10 animate-marquee-left whitespace-nowrap">
               {[...JLEFT, ...JLEFT].map((j, i) => (
-                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#2D3748]">{j}</span>
+                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#4B5563]">{j}</span>
               ))}
             </div>
           </div>
           <div className="flex overflow-hidden">
             <div className="flex gap-10 animate-marquee-right whitespace-nowrap">
               {[...JRIGHT, ...JRIGHT].map((j, i) => (
-                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#2D3748]">{j}</span>
+                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#4B5563]">{j}</span>
               ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Scroll indicator */}
+      {mounted && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 2.0 }}
+          className="flex justify-center pb-4 pt-1"
+        >
+          <motion.div
+            animate={{ y: [0, 5, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex flex-col items-center gap-1 cursor-pointer"
+            onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <span className="text-[10px] font-mono tracking-[0.12em] uppercase text-white/25">
+              scroll
+            </span>
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="text-white/20">
+              <path d="M1 1l7 7 7-7" stroke="currentColor" strokeWidth="1.5"
+                    strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </motion.div>
+        </motion.div>
+      )}
     </section>
   )
 }
