@@ -15,7 +15,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "QANUN — Regulatory Intelligence",
-  description: "AI-powered regulatory intelligence for ADGM, DIFC, and emerging markets.",
+  description: "Research-grade regulatory analysis for ADGM, DIFC, and emerging financial markets. 10-agent pipeline. 63,397 provisions. Results in 90 seconds.",
+  metadataBase: new URL("https://qanun.vercel.app"),
+  openGraph: {
+    title: "QANUN — Regulatory Intelligence",
+    description: "Research-grade regulatory analysis. 10-agent pipeline across 63,397 provisions.",
+    url: "https://qanun.vercel.app",
+    siteName: "QANUN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QANUN — Regulatory Intelligence",
+    description: "Research-grade regulatory analysis for ADGM, DIFC, and emerging markets.",
+  },
 };
 
 export default function RootLayout({

@@ -184,3 +184,7 @@
   50%  { transform: translateX(100%); }
   100% { transform: translateX(300%); }
 }
+
+/* Hide scrollbar on hero document panel */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
