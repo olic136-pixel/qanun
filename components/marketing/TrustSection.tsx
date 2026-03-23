@@ -28,7 +28,7 @@ export function TrustSection() {
             animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h2 className="text-[36px] font-semibold tracking-[-0.02em] text-[#0B1829] leading-[1.15] mb-5">
+            <h2 className="text-[clamp(28px,3.5vw,42px)] font-semibold tracking-[-0.02em] text-[#0B1829] leading-[1.15] mb-5">
               Built on practitioner judgment, not prompts.
             </h2>
             <p className="text-[16px] text-[#6B7280] leading-relaxed mb-8">
@@ -58,7 +58,7 @@ export function TrustSection() {
           >
             {BADGES.map((b, i) => (
               <div key={i} className="bg-white rounded-2xl p-7 border border-[#E8EBF0] text-center">
-                <p className="text-[40px] font-mono font-semibold leading-none" style={{ color: b.color }}>
+                <p className="text-[48px] font-mono font-semibold leading-none" style={{ color: b.color }}>
                   {b.n}
                 </p>
                 <p className="text-[13px] text-[#6B7280] mt-3 leading-snug">{b.label}</p>

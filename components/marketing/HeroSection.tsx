@@ -507,14 +507,14 @@ export function HeroSection() {
           <div className="flex overflow-hidden">
             <div className="flex gap-10 animate-marquee-left whitespace-nowrap">
               {[...JLEFT, ...JLEFT].map((j, i) => (
-                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#4B5563]">{j}</span>
+                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#6B7280]">{j}</span>
               ))}
             </div>
           </div>
           <div className="flex overflow-hidden">
             <div className="flex gap-10 animate-marquee-right whitespace-nowrap">
               {[...JRIGHT, ...JRIGHT].map((j, i) => (
-                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#4B5563]">{j}</span>
+                <span key={i} className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#6B7280]">{j}</span>
               ))}
             </div>
           </div>
@@ -535,10 +535,10 @@ export function HeroSection() {
             className="flex flex-col items-center gap-1 cursor-pointer"
             onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            <span className="text-[10px] font-mono tracking-[0.12em] uppercase text-white/25">
+            <span className="text-[10px] font-mono tracking-[0.12em] uppercase text-white/40">
               scroll
             </span>
-            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="text-white/20">
+            <svg width="16" height="10" viewBox="0 0 16 10" fill="none" className="text-white/35">
               <path d="M1 1l7 7 7-7" stroke="currentColor" strokeWidth="1.5"
                     strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

@@ -37,7 +37,7 @@ export function JurisdictionsSection() {
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           >
             <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#1A5FA8] mb-4">COVERAGE</p>
-            <h2 className="text-[48px] font-semibold tracking-[-0.02em] text-[#0B1829] leading-[1.1] mb-5">
+            <h2 className="text-[clamp(38px,4.5vw,58px)] font-semibold tracking-[-0.03em] text-[#0B1829] leading-[1.05] mb-5">
               Eleven jurisdictions.<br />One platform.
             </h2>
             <p className="text-[17px] text-[#6B7280] leading-[1.65] max-w-[440px]">
@@ -82,7 +82,7 @@ export function JurisdictionsSection() {
         >
           {STATS.map((s, i) => (
             <div key={i} className={`flex flex-col ${i > 0 ? 'md:border-l md:border-white/10 md:pl-8' : ''}`}>
-              <span className="text-[42px] font-mono font-semibold text-white leading-none">{s.n}</span>
+              <span className="text-[52px] font-mono font-semibold text-white leading-none">{s.n}</span>
               <span className="text-[13px] text-[#6B7280] mt-2">{s.label}</span>
             </div>
           ))}
