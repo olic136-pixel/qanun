@@ -114,6 +114,7 @@ export default function SessionDetailPage() {
   )
   const [activeCitation, setActiveCitation] = useState<string | null>(null)
   const [copiedClaim, setCopiedClaim] = useState<string | null>(null)
+  const [exportLoading, setExportLoading] = useState<'docx' | 'pdf' | false>(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [startTime] = useState(Date.now())
 
@@ -231,21 +232,27 @@ export default function SessionDetailPage() {
     setTimeout(() => setCopiedClaim(null), 2000)
   }
 
-  const exportMemo = async () => {
+  async function handleExport(format: 'docx' | 'pdf') {
     if (!token) return
+    setExportLoading(format)
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sessions/${sessionId}/export`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sessions/${sessionId}/export?format=${format}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      if (!res.ok) throw new Error('Export failed')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `QANUN-memo-${sessionId.slice(0, 8)}.txt`
+      a.download = `QANUN-research-${sessionId.slice(0, 8)}.${format}`
       a.click()
       URL.revokeObjectURL(url)
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error('Export error:', e)
+    } finally {
+      setExportLoading(false)
+    }
   }
 
   // Derive display state
@@ -329,13 +336,23 @@ export default function SessionDetailPage() {
             Sessions
           </button>
           {isComplete && (
-            <button
-              onClick={exportMemo}
-              className="flex items-center gap-1.5 text-[12px] text-[#1A5FA8] hover:text-[#0B1829] transition-colors"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export memo
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => handleExport('docx')}
+                disabled={!!exportLoading}
+                className="flex items-center gap-1.5 border border-[#E8EBF0] rounded-l-md px-3 h-[34px] text-[12px] text-[#6B7280] hover:bg-[#F5F7FA] transition-colors disabled:opacity-50"
+              >
+                <FileText className="w-3.5 h-3.5" strokeWidth={1.5} />
+                {exportLoading === 'docx' ? 'Exporting…' : 'Word'}
+              </button>
+              <button
+                onClick={() => handleExport('pdf')}
+                disabled={!!exportLoading}
+                className="flex items-center gap-1.5 border border-l-0 border-[#E8EBF0] rounded-r-md px-3 h-[34px] text-[12px] text-[#6B7280] hover:bg-[#F5F7FA] transition-colors disabled:opacity-50"
+              >
+                {exportLoading === 'pdf' ? 'Exporting…' : 'PDF'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -514,11 +531,11 @@ export default function SessionDetailPage() {
           )}
         </div>
 
-        {/* Right: Claims panel */}
+        {/* Right: Reference Material panel */}
         <div className="space-y-4">
           <Card className="p-4">
             <h2 className="text-[14px] font-semibold text-gray-900 mb-3">
-              Claims
+              Reference Material
               {claims.length > 0 && (
                 <Badge variant="outline" className="ml-2 text-[11px]">
                   {claims.length}
@@ -529,8 +546,8 @@ export default function SessionDetailPage() {
             {claims.length === 0 && !isRunning && (
               <p className="text-[13px] text-gray-500">
                 {isComplete
-                  ? 'No claims extracted.'
-                  : 'Claims will appear when the analysis completes.'}
+                  ? 'No reference material extracted.'
+                  : 'Reference material will appear when the analysis completes.'}
               </p>
             )}
 
