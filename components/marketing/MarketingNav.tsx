@@ -1,11 +1,16 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const pathname = usePathname()
+
+  const isHomepage = pathname === '/'
+  const needsSolidNav = !isHomepage || scrolled
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -13,79 +18,86 @@ export function MarketingNav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
+  const navBg = needsSolidNav
+    ? 'bg-white border-b border-[#E8EBF0]'
+    : 'bg-transparent border-b border-transparent'
+
+  const textColor = needsSolidNav ? 'text-[#6B7280]' : 'text-white/70'
+  const textHover = needsSolidNav ? 'hover:text-[#0B1829]' : 'hover:text-white'
+  const wordmarkColor = needsSolidNav ? 'text-[#0B1829]' : 'text-white'
+  const pronunciationColor = needsSolidNav ? 'text-[#9CA3AF]' : 'text-white/40'
+  const signinColor = needsSolidNav ? 'text-[#6B7280]' : 'text-white/60'
+
+  const NAV_LINKS = [
+    { label: 'Product', href: '/#features' },
+    { label: 'Jurisdictions', href: '/#jurisdictions' },
+    { label: 'Pricing', href: '/pricing' },
+    { label: 'About', href: '/about' },
+  ]
+
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white border-b border-[#E8EBF0]'
-          : 'bg-transparent border-b border-transparent'
-      }`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
         <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Wordmark */}
           <Link href="/" className="flex items-baseline gap-2">
-            <span className={`text-[18px] font-semibold tracking-[-0.02em] transition-colors ${
-              scrolled ? 'text-[#0B1829]' : 'text-white'
-            }`}>
+            <span className={`text-[18px] font-semibold tracking-[-0.02em] transition-colors duration-300 ${wordmarkColor}`}>
               QANUN
             </span>
-            <span className={`text-[11px] italic font-normal transition-colors ${
-              scrolled ? 'text-[#9CA3AF]' : 'text-white/40'
-            }`}>
+            <span className={`text-[11px] italic font-normal transition-colors duration-300 ${pronunciationColor}`}>
               /kɑːˈnuːn/
             </span>
           </Link>
 
-          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            {['Product', 'Jurisdictions', 'Pricing', 'About'].map(link => (
+            {NAV_LINKS.map(link => (
               <Link
-                key={link}
-                href={link === 'Pricing' ? '/pricing' : `/#${link.toLowerCase()}`}
-                className={`text-[13px] font-medium transition-colors ${
-                  scrolled
-                    ? 'text-[#6B7280] hover:text-[#0B1829]'
-                    : 'text-white/60 hover:text-white'
-                }`}
+                key={link.label}
+                href={link.href}
+                className={`text-[13px] font-medium transition-colors duration-200 ${textColor} ${textHover}`}
               >
-                {link}
+                {link.label}
               </Link>
             ))}
           </div>
 
-          {/* CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/sign-in"
-              className={`text-[13px] transition-colors px-3 py-2 ${
-                scrolled ? 'text-[#6B7280] hover:text-[#0B1829]' : 'text-white/60 hover:text-white'
-              }`}
+              className={`text-[13px] transition-colors px-3 py-2 ${signinColor} ${textHover}`}
             >
               Sign in
             </Link>
             <Link
               href="/sign-up"
-              className="text-[13px] font-medium bg-[#C4922A] text-[#0B1829] hover:bg-[#D4A23A] transition-all duration-200 px-4 py-2 rounded-md"
+              className="text-[13px] font-medium bg-[#0B1829] text-[#C4922A]
+                         hover:bg-[#1A5FA8] hover:text-white transition-all
+                         duration-200 px-4 py-2 rounded-md"
             >
               Request access
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
           <button
             className="md:hidden p-2"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Menu"
           >
             <div className="w-5 flex flex-col gap-1.5">
-              <span className={`block h-px transition-all ${scrolled ? 'bg-[#0B1829]' : 'bg-white'} ${menuOpen ? 'rotate-45 translate-y-2' : ''}`} />
-              <span className={`block h-px transition-all ${scrolled ? 'bg-[#0B1829]' : 'bg-white'} ${menuOpen ? 'opacity-0' : ''}`} />
-              <span className={`block h-px transition-all ${scrolled ? 'bg-[#0B1829]' : 'bg-white'} ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+              {[
+                menuOpen ? 'rotate-45 translate-y-2' : '',
+                menuOpen ? 'opacity-0' : '',
+                menuOpen ? '-rotate-45 -translate-y-2' : '',
+              ].map((cls, i) => (
+                <span key={i}
+                  className={`block h-px transition-all
+                    ${needsSolidNav ? 'bg-[#0B1829]' : 'bg-white'} ${cls}`}
+                />
+              ))}
             </div>
           </button>
         </div>
       </nav>
 
-      {/* Mobile drawer */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -96,19 +108,18 @@ export function MarketingNav() {
             className="fixed inset-0 z-40 bg-white pt-16"
           >
             <div className="flex flex-col p-6 gap-6">
-              {['Product', 'Jurisdictions', 'Pricing', 'About'].map(link => (
-                <Link
-                  key={link}
-                  href={link === 'Pricing' ? '/pricing' : `/#${link.toLowerCase()}`}
+              {NAV_LINKS.map(link => (
+                <Link key={link.label} href={link.href}
                   className="text-[18px] font-medium text-[#0B1829]"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {link}
+                  onClick={() => setMenuOpen(false)}>
+                  {link.label}
                 </Link>
               ))}
               <div className="flex flex-col gap-3 pt-4 border-t border-[#E8EBF0]">
                 <Link href="/sign-in" className="text-[16px] text-[#6B7280]">Sign in</Link>
-                <Link href="/sign-up" className="text-[16px] font-medium bg-[#0B1829] text-[#C4922A] px-4 py-3 rounded-md text-center">
+                <Link href="/sign-up"
+                  className="text-[16px] font-medium bg-[#0B1829] text-[#C4922A]
+                             px-4 py-3 rounded-md text-center">
                   Request access
                 </Link>
               </div>
