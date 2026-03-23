@@ -30,6 +30,26 @@ interface CorpusPanelProps {
   onClose: () => void
 }
 
+function formatRuleText(raw: string, cit: string): string[] {
+  if (!raw) return []
+  let text = raw
+  // Remove leading rule number if it matches the citation
+  const ruleNum = cit.replace(/^[A-Z]+\s+/, '')
+  if (ruleNum) {
+    const escaped = ruleNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    text = text.replace(new RegExp(`^\\s*${escaped}\\s+`), '')
+  }
+  return text
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter((p) => {
+      if (!p) return false
+      if (/^\d+$/.test(p)) return false // bare footnote numbers
+      if (p.length < 2) return false
+      return true
+    })
+}
+
 export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
   const { data: session } = useSession()
   const token = session?.user?.accessToken as string
@@ -163,7 +183,7 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                       i === 0 ? 'border-[#85B7EB] bg-[#F8FBFF]' : 'border-[#E8EBF0]'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
                       {ref && (
                         <Badge
                           variant="outline"
@@ -173,9 +193,9 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                         </Badge>
                       )}
                       {passage.rulebook_code && (
-                        <Badge className="bg-navy text-white text-[10px] px-1.5 py-0">
+                        <span className="text-[10px] font-mono bg-[#0B1829] text-[#C4922A] px-2 py-0.5 rounded-sm">
                           {passage.rulebook_code}
-                        </Badge>
+                        </span>
                       )}
                       {passage.source_entity && (
                         <Badge
@@ -191,27 +211,50 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                           Current
                         </span>
                       )}
+                      {!passage.version && title && (
+                        <span className="text-[11px] text-[#9CA3AF]">
+                          Current version
+                        </span>
+                      )}
                     </div>
-                    {title && (
-                      <p className="text-[12px] font-medium text-[#0B1829] mb-1.5">
-                        {title}
-                      </p>
-                    )}
-                    <p className="text-[12px] text-[#6B7280] leading-relaxed whitespace-pre-wrap">
-                      {text}
-                    </p>
-                    {passage.version && (
-                      <p className="text-[10px] text-[#9CA3AF] mt-2">
-                        Version: {passage.version}
-                        {passage.effective_date && ` · Effective: ${passage.effective_date}`}
-                      </p>
-                    )}
+                    {/* Formatted rule text — paragraphs, no truncation */}
+                    <div className="space-y-3">
+                      {formatRuleText(text, citation || '').map((para, pi) => (
+                        <p
+                          key={pi}
+                          className="text-[13px] text-[#111827] leading-[1.75] font-normal"
+                        >
+                          {para}
+                        </p>
+                      ))}
+                      {formatRuleText(text, citation || '').length === 0 && (
+                        <p className="text-[13px] text-[#6B7280] italic">
+                          No provision text available.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )
               })}
             </div>
           )}
         </div>
+
+        {/* Source attribution */}
+        {!loading && passages.length > 0 && (
+          <div className="px-5 py-3 border-t border-[#E8EBF0] bg-[#F5F7FA]">
+            <p className="text-[11px] text-[#9CA3AF]">
+              Source: {passages[0]?.source_entity ?? 'FSRA'}{' '}
+              {passages[0]?.rulebook_code ? `${passages[0].rulebook_code} Rulebook` : 'Corpus'}
+              {passages[0]?.version
+                ? ` · ${passages[0].version}`
+                : ' · Current version'}
+              {passages[0]?.effective_date
+                ? ` · Effective ${passages[0].effective_date}`
+                : ''}
+            </p>
+          </div>
+        )}
       </div>
     </>
   )
