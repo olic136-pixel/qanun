@@ -296,18 +296,21 @@ function QueryPageInner() {
                   <span>~90s</span>
                 </div>
               </div>
-              {/* Deep — coming soon */}
-              <div className="border border-[#E8EBF0] bg-white rounded-xl p-4 cursor-not-allowed opacity-60">
+              {/* Deep research */}
+              <div
+                onClick={() => router.push('/projects/new')}
+                className="border border-[#E8EBF0] bg-white rounded-xl p-4 cursor-pointer hover:border-[#1A5FA8] hover:bg-[#F8FAFF] transition-all"
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-medium text-[#0B1829]">Deep research</span>
-                  <span className="bg-[#F5F7FA] text-[#9CA3AF] text-[9px] uppercase tracking-[0.06em] px-2 py-0.5 rounded-full">
-                    Coming soon
+                  <span className="bg-[#1A5FA8]/10 text-[#1A5FA8] text-[9px] uppercase tracking-[0.06em] px-2 py-0.5 rounded-full font-medium">
+                    Beta
                   </span>
                 </div>
                 <p className="text-[12px] text-[#6B7280] mt-1.5 leading-relaxed">
                   Multi-session iterative analysis with memory. Builds a structured legal opinion over multiple research cycles.
                 </p>
-                <div className="mt-2 text-[11px] text-[#9CA3AF]">Coming Q3 2026</div>
+                <div className="mt-2 text-[11px] text-[#9CA3AF]">Multiple cycles · Living opinion · Obsidian export</div>
               </div>
             </div>
           </div>
