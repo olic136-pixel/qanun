@@ -30,6 +30,30 @@ interface CorpusPanelProps {
   onClose: () => void
 }
 
+function formatRuleText(raw: string, cit: string): string[] {
+  if (!raw) return []
+  let text = raw
+  // 1. Strip leading rule number if it matches citation
+  const numOnly = cit.replace(/^[A-Z]+\s+/i, '').trim()
+  if (numOnly) {
+    const escaped = numOnly.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    text = text.replace(new RegExp(`^\\s*(?:[A-Z]+\\s+)?${escaped}\\s+`), '')
+  }
+  // 2. Join soft line wraps (single \n) — PDF artifacts
+  text = text.replace(/([^.\n])\n([^\n])/g, '$1 $2')
+  text = text.replace(/([,:;])\n([^\n])/g, '$1 $2')
+  // 3. Split on real paragraph breaks (double newlines)
+  return text
+    .split(/\n\n+/)
+    .map((p) => p.replace(/\n/g, ' ').trim())
+    .filter((p) => {
+      if (!p) return false
+      if (/^\d+$/.test(p)) return false // bare footnote numbers
+      if (p.length < 3) return false
+      return true
+    })
+}
+
 export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
   const { data: session } = useSession()
   const token = session?.user?.accessToken as string
@@ -37,6 +61,45 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [source, setSource] = useState<string>('')
+  const [subPassages, setSubPassages] = useState<string[]>([])
+  const [subLoading, setSubLoading] = useState(false)
+
+  // Fetch sub-rules when main text ends with ":"
+  useEffect(() => {
+    if (!passages.length || !token || !citation) {
+      setSubPassages([])
+      return
+    }
+    const mainText = (passages[0]?.current_text ?? '').trim()
+    if (!mainText.endsWith(':')) {
+      setSubPassages([])
+      return
+    }
+    setSubLoading(true)
+    const subLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const baseCitation = passages[0]?.citation || citation
+    Promise.all(
+      subLetters.map((letter) =>
+        apiFetch<{ passages: PassageResult[] }>(
+          `/api/corpus/passage?section_ref=${encodeURIComponent(`${baseCitation}(${letter})`)}`,
+          { token }
+        )
+          .then((d) => {
+            const p = d?.passages?.[0]
+            if (p?.found && p?.current_text) {
+              let subText = p.current_text.trim()
+              subText = subText.replace(/^\([a-z]\)\s*/i, '').trim()
+              return `(${letter})  ${subText}`
+            }
+            return null
+          })
+          .catch(() => null)
+      )
+    ).then((results) => {
+      setSubPassages(results.filter(Boolean) as string[])
+      setSubLoading(false)
+    })
+  }, [passages, token, citation])
 
   useEffect(() => {
     if (!citation || !token) {
@@ -163,7 +226,7 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                       i === 0 ? 'border-[#85B7EB] bg-[#F8FBFF]' : 'border-[#E8EBF0]'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
                       {ref && (
                         <Badge
                           variant="outline"
@@ -173,9 +236,9 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                         </Badge>
                       )}
                       {passage.rulebook_code && (
-                        <Badge className="bg-navy text-white text-[10px] px-1.5 py-0">
+                        <span className="text-[10px] font-mono bg-[#0B1829] text-[#C4922A] px-2 py-0.5 rounded-sm">
                           {passage.rulebook_code}
-                        </Badge>
+                        </span>
                       )}
                       {passage.source_entity && (
                         <Badge
@@ -191,20 +254,42 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                           Current
                         </span>
                       )}
+                      {!passage.version && title && (
+                        <span className="text-[11px] text-[#9CA3AF]">
+                          Current version
+                        </span>
+                      )}
                     </div>
-                    {title && (
-                      <p className="text-[12px] font-medium text-[#0B1829] mb-1.5">
-                        {title}
+                    {/* Formatted rule text — paragraphs, no truncation */}
+                    <div className="space-y-3">
+                      {formatRuleText(text, citation || '').map((para, pi) => (
+                        <p
+                          key={pi}
+                          className="text-[13px] text-[#111827] leading-[1.75] font-normal"
+                        >
+                          {para}
+                        </p>
+                      ))}
+                      {formatRuleText(text, citation || '').length === 0 && (
+                        <p className="text-[13px] text-[#6B7280] italic">
+                          No provision text available.
+                        </p>
+                      )}
+                    </div>
+                    {/* Sub-rules for sections ending with ":" */}
+                    {i === 0 && subLoading && (
+                      <p className="text-[11px] text-[#9CA3AF] mt-2 italic">
+                        Loading sub-provisions…
                       </p>
                     )}
-                    <p className="text-[12px] text-[#6B7280] leading-relaxed whitespace-pre-wrap">
-                      {text}
-                    </p>
-                    {passage.version && (
-                      <p className="text-[10px] text-[#9CA3AF] mt-2">
-                        Version: {passage.version}
-                        {passage.effective_date && ` · Effective: ${passage.effective_date}`}
-                      </p>
+                    {i === 0 && subPassages.length > 0 && (
+                      <div className="mt-4 space-y-2.5 border-l-2 border-[#E8EBF0] pl-4">
+                        {subPassages.map((sub, si) => (
+                          <p key={si} className="text-[13px] text-[#111827] leading-[1.75]">
+                            {sub}
+                          </p>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )
@@ -212,6 +297,22 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
             </div>
           )}
         </div>
+
+        {/* Source attribution */}
+        {!loading && passages.length > 0 && (
+          <div className="px-5 py-3 border-t border-[#E8EBF0] bg-[#F5F7FA]">
+            <p className="text-[11px] text-[#9CA3AF]">
+              Source: {passages[0]?.source_entity ?? 'FSRA'}{' '}
+              {passages[0]?.rulebook_code ? `${passages[0].rulebook_code} Rulebook` : 'Corpus'}
+              {passages[0]?.version
+                ? ` · ${passages[0].version}`
+                : ' · Current version'}
+              {passages[0]?.effective_date
+                ? ` · Effective ${passages[0].effective_date}`
+                : ''}
+            </p>
+          </div>
+        )}
       </div>
     </>
   )

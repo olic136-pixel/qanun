@@ -1,4 +1,10 @@
-import { HeroSection } from '@/components/qanun/marketing/HeroSection'
+import { HeroSection } from '@/components/marketing/HeroSection'
+import { ProductPanel } from '@/components/marketing/ProductPanel'
+import { CapabilityCards } from '@/components/marketing/CapabilityCards'
+import { JurisdictionsSection } from '@/components/marketing/JurisdictionsSection'
+import { FounderStatement } from '@/components/marketing/FounderStatement'
+import { TrustSection } from '@/components/marketing/TrustSection'
+import { CTASection } from '@/components/marketing/CTASection'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -6,6 +12,16 @@ export const metadata: Metadata = {
   description: 'AI-powered regulatory intelligence for ADGM, DIFC, and emerging markets.',
 }
 
-export default function Page() {
-  return <HeroSection />
+export default function HomePage() {
+  return (
+    <>
+      <HeroSection />
+      <ProductPanel />
+      <CapabilityCards />
+      <JurisdictionsSection />
+      <FounderStatement />
+      <TrustSection />
+      <CTASection />
+    </>
+  )
 }
