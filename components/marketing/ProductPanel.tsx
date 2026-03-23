@@ -22,7 +22,7 @@ export function ProductPanel() {
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section className="bg-white py-32">
+    <section id="how-it-works" className="bg-white py-32">
       <div className="max-w-[1280px] mx-auto px-6">
         <div className="mb-16">
           <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#1A5FA8] mb-4">
