@@ -33,19 +33,23 @@ interface CorpusPanelProps {
 function formatRuleText(raw: string, cit: string): string[] {
   if (!raw) return []
   let text = raw
-  // Remove leading rule number if it matches the citation
-  const ruleNum = cit.replace(/^[A-Z]+\s+/, '')
-  if (ruleNum) {
-    const escaped = ruleNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    text = text.replace(new RegExp(`^\\s*${escaped}\\s+`), '')
+  // 1. Strip leading rule number if it matches citation
+  const numOnly = cit.replace(/^[A-Z]+\s+/i, '').trim()
+  if (numOnly) {
+    const escaped = numOnly.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    text = text.replace(new RegExp(`^\\s*(?:[A-Z]+\\s+)?${escaped}\\s+`), '')
   }
+  // 2. Join soft line wraps (single \n) — PDF artifacts
+  text = text.replace(/([^.\n])\n([^\n])/g, '$1 $2')
+  text = text.replace(/([,:;])\n([^\n])/g, '$1 $2')
+  // 3. Split on real paragraph breaks (double newlines)
   return text
-    .split(/\n+/)
-    .map((p) => p.trim())
+    .split(/\n\n+/)
+    .map((p) => p.replace(/\n/g, ' ').trim())
     .filter((p) => {
       if (!p) return false
       if (/^\d+$/.test(p)) return false // bare footnote numbers
-      if (p.length < 2) return false
+      if (p.length < 3) return false
       return true
     })
 }
@@ -57,6 +61,45 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [source, setSource] = useState<string>('')
+  const [subPassages, setSubPassages] = useState<string[]>([])
+  const [subLoading, setSubLoading] = useState(false)
+
+  // Fetch sub-rules when main text ends with ":"
+  useEffect(() => {
+    if (!passages.length || !token || !citation) {
+      setSubPassages([])
+      return
+    }
+    const mainText = (passages[0]?.current_text ?? '').trim()
+    if (!mainText.endsWith(':')) {
+      setSubPassages([])
+      return
+    }
+    setSubLoading(true)
+    const subLetters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const baseCitation = passages[0]?.citation || citation
+    Promise.all(
+      subLetters.map((letter) =>
+        apiFetch<{ passages: PassageResult[] }>(
+          `/api/corpus/passage?section_ref=${encodeURIComponent(`${baseCitation}(${letter})`)}`,
+          { token }
+        )
+          .then((d) => {
+            const p = d?.passages?.[0]
+            if (p?.found && p?.current_text) {
+              let subText = p.current_text.trim()
+              subText = subText.replace(/^\([a-z]\)\s*/i, '').trim()
+              return `(${letter})  ${subText}`
+            }
+            return null
+          })
+          .catch(() => null)
+      )
+    ).then((results) => {
+      setSubPassages(results.filter(Boolean) as string[])
+      setSubLoading(false)
+    })
+  }, [passages, token, citation])
 
   useEffect(() => {
     if (!citation || !token) {
@@ -233,6 +276,21 @@ export function CorpusPanel({ citation, onClose }: CorpusPanelProps) {
                         </p>
                       )}
                     </div>
+                    {/* Sub-rules for sections ending with ":" */}
+                    {i === 0 && subLoading && (
+                      <p className="text-[11px] text-[#9CA3AF] mt-2 italic">
+                        Loading sub-provisions…
+                      </p>
+                    )}
+                    {i === 0 && subPassages.length > 0 && (
+                      <div className="mt-4 space-y-2.5 border-l-2 border-[#E8EBF0] pl-4">
+                        {subPassages.map((sub, si) => (
+                          <p key={si} className="text-[13px] text-[#111827] leading-[1.75]">
+                            {sub}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })}
