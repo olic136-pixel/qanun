@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { CheckCircle2, Loader2, Search, ExternalLink, ArrowRight, AlertCircle, X as XIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { CorpusPanel } from '@/components/qanun/CorpusPanel'
+import { MarkdownRenderer } from '@/components/qanun/MarkdownRenderer'
 import Link from 'next/link'
 
 const JURISDICTIONS = [
@@ -216,8 +217,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="text-[13px] text-white/85 leading-[1.7] mb-4">
-              {renderAnswerWithCitations(lookupResult.answer, setActiveCitation)}
+            <div className="text-[13px] leading-[1.7] mb-4 quick-lookup-answer">
+              <MarkdownRenderer
+                content={lookupResult.answer}
+                onCitationClick={(citation) => setActiveCitation(citation)}
+              />
             </div>
 
             {lookupResult.passages.length > 0 && (
