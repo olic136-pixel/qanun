@@ -1,5 +1,5 @@
 import { HeroSection } from '@/components/marketing/HeroSection'
-import { ProductPanel } from '@/components/marketing/ProductPanel'
+import { HowItWorks } from '@/components/marketing/HowItWorks'
 import { CapabilityCards } from '@/components/marketing/CapabilityCards'
 import { JurisdictionsSection } from '@/components/marketing/JurisdictionsSection'
 import { FounderStatement } from '@/components/marketing/FounderStatement'
@@ -16,7 +16,7 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <ProductPanel />
+      <HowItWorks />
       <CapabilityCards />
       <JurisdictionsSection />
       <FounderStatement />
