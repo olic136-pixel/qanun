@@ -7,6 +7,7 @@ import {
   getProject,
   startCycle,
   exportToObsidian,
+  exportMemo,
   type ProjectDetail,
   type ProjectClaim,
 } from '@/lib/api/projects'
@@ -68,6 +69,7 @@ export default function ProjectDetailPage() {
 
   // Export state
   const [exportLoading, setExportLoading] = useState(false)
+  const [memoLoading, setMemoLoading] = useState(false)
 
   // Claim filters
   const [tierFilter, setTierFilter] = useState<string>('All')
@@ -132,6 +134,25 @@ export default function ProjectDetailPage() {
       // Error handled silently — API returns structured response
     } finally {
       setExportLoading(false)
+    }
+  }
+
+  const handleExportMemo = async () => {
+    if (!token) return
+    setMemoLoading(true)
+    try {
+      const memoText = await exportMemo(projectId, token)
+      const blob = new Blob([memoText], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `QANUN-memo-${projectId.slice(0, 8)}.txt`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // Silent fail — user sees no download
+    } finally {
+      setMemoLoading(false)
     }
   }
 
@@ -274,10 +295,15 @@ export default function ProjectDetailPage() {
               Export to Obsidian
             </button>
             <button
-              disabled
-              className="w-full text-center text-[12px] text-gray-400 py-1 cursor-not-allowed"
-              title="Coming in Sprint 5"
+              onClick={handleExportMemo}
+              disabled={memoLoading}
+              className="w-full flex items-center justify-center gap-1.5 h-[34px] rounded-md text-[12px] text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-50"
             >
+              {memoLoading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <FileText className="h-3 w-3" />
+              )}
               Export memo
             </button>
           </div>
