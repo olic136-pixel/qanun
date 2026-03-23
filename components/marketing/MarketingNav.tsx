@@ -38,14 +38,27 @@ export function MarketingNav() {
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navBg}`}>
-        <div className="max-w-[1280px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-baseline gap-2">
-            <span className={`text-[18px] font-semibold tracking-[-0.02em] transition-colors duration-300 ${wordmarkColor}`}>
-              QANUN
-            </span>
-            <span className={`text-[11px] italic font-normal transition-colors duration-300 ${pronunciationColor}`}>
-              /kɑːˈnuːn/
-            </span>
+        <div className="max-w-[1280px] mx-auto px-6 h-[68px] flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className={`w-7 h-7 rounded-md flex items-center justify-center
+                             transition-colors duration-300 ${
+              needsSolidNav ? 'bg-[#0B1829]' : 'bg-[#C4922A]/20'
+            }`}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5" stroke="#C4922A" strokeWidth="1.5"/>
+                <path d="M9.5 9.5l2 2" stroke="#C4922A" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className={`text-[20px] font-semibold tracking-[-0.03em]
+                                transition-colors duration-300 ${wordmarkColor}`}>
+                QANUN
+              </span>
+              <span className={`text-[11px] italic font-normal hidden sm:block
+                                transition-colors duration-300 ${pronunciationColor}`}>
+                /kɑːˈnuːn/
+              </span>
+            </div>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">

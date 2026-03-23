@@ -106,10 +106,10 @@ export function HeroSection() {
         background: 'radial-gradient(ellipse 55% 60% at 75% 40%, rgba(26,95,168,0.12) 0%, transparent 65%)',
       }} />
 
-      <div className="flex-1 max-w-[1280px] mx-auto px-6 pt-24 pb-10 w-full
-                      grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="flex-1 max-w-[1280px] mx-auto px-6 pt-28 pb-10 w-full
+                      grid grid-cols-1 lg:grid-cols-2 gap-12 lg:items-start">
         {/* LEFT: copy */}
-        <div>
+        <div className="pt-8">
           {mounted && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -217,9 +217,10 @@ export function HeroSection() {
             transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            <div className="rounded-2xl overflow-hidden border border-white/10"
+            <div className="rounded-2xl overflow-hidden border border-white/10 flex flex-col"
                  style={{ background: '#0D1F30',
-                          boxShadow: '0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)' }}>
+                          boxShadow: '0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06)',
+                          height: '520px' }}>
               {/* Terminal chrome */}
               <div className="bg-[#111827] px-5 py-3.5 flex items-center
                               justify-between border-b border-white/10">
@@ -248,7 +249,7 @@ export function HeroSection() {
               </div>
 
               {/* Pipeline steps */}
-              <div className="px-5 py-4 border-b border-white/[0.07] min-h-[200px]">
+              <div className="px-5 py-4 border-b border-white/[0.07] flex-1 overflow-hidden">
                 <p className="text-[10px] font-mono tracking-[0.1em] text-[#C4922A] mb-3">PIPELINE</p>
                 <div className="space-y-2">
                   {PIPELINE_STEPS.map((step, i) => {
@@ -303,7 +304,7 @@ export function HeroSection() {
               </div>
 
               {/* Results / claims */}
-              <div className="px-5 py-4 min-h-[180px]">
+              <div className="px-5 py-4 overflow-y-auto" style={{ minHeight: 0 }}>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-mono tracking-[0.1em] text-[#C4922A]">REFERENCE MATERIAL</p>
                   {phase === 'results' && (
@@ -313,16 +314,33 @@ export function HeroSection() {
                     </motion.span>
                   )}
                 </div>
-                <AnimatePresence>
-                  {phase === 'pipeline' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="flex items-center gap-2 text-[12px] font-mono text-[#374151]">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#374151] animate-pulse" />
-                      Waiting for pipeline…
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <div className="space-y-2.5">
+                <div className="relative" style={{ minHeight: '20px' }}>
+                  <AnimatePresence>
+                    {phase === 'pipeline' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 flex items-center gap-2
+                                   text-[12px] font-mono text-[#374151]"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#374151] animate-pulse" />
+                        Waiting for pipeline…
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <AnimatePresence mode="wait">
+                  {phase === 'results' && (
+                    <motion.div
+                      key="results"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-2.5"
+                    >
                   {visibleClaims.map(i => (
                     <motion.div
                       key={i}
@@ -342,7 +360,9 @@ export function HeroSection() {
                       <p className="text-[11px] text-white/70 leading-relaxed">{CLAIMS_REVEAL[i].text}</p>
                     </motion.div>
                   ))}
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </motion.div>
