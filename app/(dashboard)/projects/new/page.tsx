@@ -37,7 +37,12 @@ export default function NewProjectPage() {
   const canProceed = step === 1 && title.trim().length >= 5 && objective.trim().length >= 50
 
   const handleSubmit = async () => {
-    if (!token) return
+    // Re-read token at submit time to catch session refresh
+    const currentToken = authSession?.user?.accessToken
+    if (!currentToken || typeof currentToken !== 'string') {
+      setError('Session expired — please sign in again.')
+      return
+    }
     setError(null)
     setIsSubmitting(true)
     try {
@@ -48,7 +53,7 @@ export default function NewProjectPage() {
           jurisdiction,
           focus_areas: focusAreas,
         },
-        token
+        currentToken
       )
       router.push(`/projects/${result.project_id}`)
     } catch (err) {
