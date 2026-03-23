@@ -168,3 +168,32 @@ export const exportToObsidian = async (
 
 export const exportMemo = (projectId: string, token: string) =>
   apiFetch<string>(`/api/projects/${projectId}/export/memo`, { token })
+
+// ── Vault annotations ──────────────────────────────────────────
+
+export interface VaultAnnotation {
+  id: number
+  vault_path: string
+  annotation_text: string
+  source_section: string
+  detected_at: string
+  surfaced: boolean
+}
+
+export interface AnnotationsResponse {
+  project_id: string
+  annotations: VaultAnnotation[]
+  count: number
+}
+
+export const getAnnotations = (
+  projectId: string,
+  token: string,
+  unsurfacedOnly: boolean = true
+) => {
+  const qs = unsurfacedOnly ? '?unsurfaced_only=true' : '?unsurfaced_only=false'
+  return apiFetch<AnnotationsResponse>(
+    `/api/projects/${projectId}/annotations${qs}`,
+    { token }
+  )
+}

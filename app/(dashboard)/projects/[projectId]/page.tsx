@@ -8,8 +8,10 @@ import {
   startCycle,
   exportToObsidian,
   exportMemo,
+  getAnnotations,
   type ProjectDetail,
   type ProjectClaim,
+  type VaultAnnotation,
 } from '@/lib/api/projects'
 import { MarkdownRenderer } from '@/components/qanun/MarkdownRenderer'
 import { CorpusPanel } from '@/components/qanun/CorpusPanel'
@@ -64,6 +66,7 @@ export default function ProjectDetailPage() {
   // Modal state
   const [showCycleModal, setShowCycleModal] = useState(false)
   const [cycleQuestion, setCycleQuestion] = useState('')
+  const [annotations, setAnnotations] = useState<VaultAnnotation[]>([])
   const [cycleSubmitting, setCycleSubmitting] = useState(false)
   const [cycleError, setCycleError] = useState<string | null>(null)
 
@@ -156,10 +159,20 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const openCycleModal = (prefill?: string) => {
+  const openCycleModal = async (prefill?: string) => {
     setCycleQuestion(prefill || project?.open_questions?.[0] || '')
     setCycleError(null)
+    setAnnotations([])
     setShowCycleModal(true)
+    // Fetch vault annotations
+    if (token) {
+      try {
+        const resp = await getAnnotations(projectId, token)
+        setAnnotations(resp.annotations || [])
+      } catch {
+        // Non-critical — annotations are optional context
+      }
+    }
   }
 
   if (loading) {
@@ -558,6 +571,37 @@ export default function ProjectDetailPage() {
                 <X className="h-4 w-4 text-gray-400" />
               </button>
             </div>
+            {annotations.length > 0 && (
+              <div className="mb-4">
+                <p className="text-[9px] font-semibold tracking-[0.1em] uppercase text-[#C4922A] mb-2">
+                  Vault annotations detected
+                </p>
+                <div className="space-y-2">
+                  {annotations.map((ann) => (
+                    <div key={ann.id} className="border border-[#C4922A]/20 bg-[#C4922A]/5 rounded-md p-2.5">
+                      <p className="text-[10px] font-medium text-[#C4922A] mb-1">
+                        {ann.source_section}
+                      </p>
+                      <p className="text-[12px] text-gray-700 line-clamp-3">
+                        {ann.annotation_text.slice(0, 200)}
+                        {ann.annotation_text.length > 200 ? '...' : ''}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCycleQuestion((prev) =>
+                            prev + '\n\n---\nPractitioner note: ' + ann.annotation_text
+                          )
+                        }
+                        className="text-[11px] text-[#1A5FA8] hover:underline mt-1"
+                      >
+                        Use as context →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
               Focus question for this cycle
             </label>
