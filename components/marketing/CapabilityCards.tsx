@@ -37,7 +37,7 @@ export function CapabilityCards() {
           <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#1A5FA8] mb-4">
             CAPABILITIES
           </p>
-          <h2 className="text-[48px] font-semibold tracking-[-0.02em] text-[#0B1829] leading-[1.1]">
+          <h2 className="text-[clamp(42px,5vw,64px)] font-semibold tracking-[-0.03em] text-[#0B1829] leading-[1.05]">
             Research. Monitor. Understand.
           </h2>
         </div>

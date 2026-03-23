@@ -20,7 +20,7 @@ export function FounderStatement() {
           background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(26,95,168,0.07) 0%, transparent 70%)',
         }}
       />
-      <div className="max-w-[800px] mx-auto px-6 relative z-10">
+      <div className="max-w-[720px] mx-auto px-6 relative z-10">
         <div ref={ref} className="relative">
           <motion.span
             initial={{ opacity: 0 }}
@@ -39,7 +39,7 @@ export function FounderStatement() {
                 initial={{ opacity: 0, y: 14 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, delay: 0.15 + i * 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[21px] leading-[1.75] text-white/90 tracking-[-0.01em]"
+                className="text-[24px] leading-[1.75] text-white/90 tracking-[-0.01em]"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
                 {para}
@@ -54,7 +54,7 @@ export function FounderStatement() {
             className="mt-10"
           >
             <div className="w-10 h-px bg-[#C4922A] mb-5" />
-            <p className="text-[16px] font-semibold text-white">Oliver Cook KC</p>
+            <p className="text-[18px] font-semibold text-white">Oliver Cook KC</p>
             <p className="text-[13px] text-[#9CA3AF] mt-1">Co-founder · Barrister, Libertas Chambers</p>
           </motion.div>
         </div>
