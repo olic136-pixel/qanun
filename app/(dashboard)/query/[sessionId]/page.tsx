@@ -192,8 +192,9 @@ export default function SessionDetailPage() {
   }, [sessionId, token, sessionData?.status])
 
   // Elapsed timer while running
-  const stillRunning = sessionData?.status === 'running' || sessionData?.status === 'pending' ||
-    stream.status === 'running' || stream.status === 'connecting'
+  const stillRunning = sessionData?.status !== 'complete' && sessionData?.status !== 'error' &&
+    (sessionData?.status === 'running' || sessionData?.status === 'pending' ||
+    stream.status === 'running' || stream.status === 'connecting')
   useEffect(() => {
     if (!stillRunning) return
     const interval = setInterval(() => {
@@ -251,8 +252,9 @@ export default function SessionDetailPage() {
   const isComplete =
     sessionData?.status === 'complete' || stream.status === 'complete'
   const isRunning =
-    stream.status === 'running' || stream.status === 'connecting' ||
-    (sessionData?.status === 'running' && !isComplete)
+    !isComplete &&
+    (stream.status === 'running' || stream.status === 'connecting' ||
+    sessionData?.status === 'running')
   const isError =
     sessionData?.status === 'error' || stream.status === 'error'
 
