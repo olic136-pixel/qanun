@@ -178,7 +178,7 @@ function QueryPageInner() {
                 onChange={(e) => setQueryText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isSubmitting}
-                placeholder={`Describe your research question in full. The more context you provide, the more precise the analysis.\n\ne.g. Under ADGM COBS 23.12.2, when does a copy trading service require a Managing Assets FSP — and can a block-delegation model operated by a Category 3A licensee avoid this requirement by characterising client parameter-setting as the investment decision?`}
+                placeholder={`Describe your research question in full. The more context you provide, the more precise the analysis.\n\ne.g. Under ADGM COBS 23.12.2, when does a copy trading service require a Managing Assets FSP — and can a block-delegation model operated by a Category 3C licensee avoid this requirement by characterising client parameter-setting as the investment decision?`}
                 className="min-h-[160px] max-h-[400px] resize-none bg-transparent border-none outline-none text-[14px] text-[#111827] leading-[1.7] w-full placeholder:text-[#9CA3AF]"
               />
               {attachedFiles.length > 0 && (
