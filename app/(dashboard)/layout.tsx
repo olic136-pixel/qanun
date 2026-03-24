@@ -7,7 +7,8 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Search, Clock, Hexagon, Bell, BookOpen,
   GitCommit, Settings2, CreditCard, ChevronLeft, ChevronRight,
-  Sun, Moon, Command, Activity, FolderOpen,
+  Sun, Moon, Command, Activity, FolderOpen, Sparkles,
+  FileText, FilePlus, Download, BarChart3, Package, PlusCircle,
 } from 'lucide-react'
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -44,6 +45,17 @@ const navSections = [
     ],
   },
   {
+    label: 'Compliance Studio',
+    items: [
+      { label: 'Classify', icon: Sparkles, href: '/compliance/classify' },
+      { label: 'Documents', icon: FileText, href: '/compliance/documents' },
+      { label: 'New draft', icon: FilePlus, href: '/compliance/documents/new' },
+      { label: 'Gap analysis', icon: BarChart3, href: '/compliance/gap-analysis' },
+      { label: 'Submission', icon: Package, href: '/compliance/submission' },
+      { label: '+ Entity', icon: PlusCircle, href: '/compliance/entities/new' },
+    ],
+  },
+  {
     label: 'Account',
     items: [
       { label: 'Settings', icon: Settings2, href: '/settings' },
@@ -67,8 +79,24 @@ function getPageTitle(pathname: string): string {
     '/settings': 'Settings',
     '/system': 'System',
     '/billing': 'Billing',
+    '/compliance': 'Compliance Studio',
+    '/compliance/classify': 'Business Model Classifier',
+    '/compliance/documents': 'Document Suite',
+    '/compliance/documents/new': 'New Draft',
+    '/compliance/documents/draft': 'Drafting...',
+    '/compliance/draft': 'New Draft',
+    '/compliance/drafts': 'Drafts',
+    '/compliance/twins': 'Document Twins',
+    '/compliance/gap-analysis': 'Gap Analysis',
+    '/compliance/ingest': 'Ingest Documents',
+    '/compliance/submission': 'Submission Package',
   }
-  return map[pathname] || 'Dashboard'
+  // Check for exact match first, then prefix match for dynamic routes
+  if (map[pathname]) return map[pathname]
+  for (const [path, title] of Object.entries(map)) {
+    if (pathname.startsWith(path + '/')) return title
+  }
+  return 'Dashboard'
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

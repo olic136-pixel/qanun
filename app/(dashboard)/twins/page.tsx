@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { getTwins, assessTwin, type TwinSummary } from '@/lib/api/twins'
+import { getProductTwins as getTwins, assessTwin, type TwinSummary } from '@/lib/api/twins'
 import { useState } from 'react'
 import {
   Hexagon,
