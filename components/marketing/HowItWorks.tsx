@@ -130,30 +130,29 @@ export function HowItWorks() {
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
-    <section id="how-it-works" className="bg-white py-28 overflow-hidden">
+    <section id="how-it-works" className="bg-[#0B1829] py-28 overflow-hidden">
       <div ref={ref} className="max-w-[1280px] mx-auto px-6">
-        <motion.p initial={{ opacity: 0, y: 10 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.4 }}
-          className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#1A5FA8] mb-12">
-          HOW IT WORKS
-        </motion.p>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
           {/* LEFT */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}>
-            <h2 className="text-[clamp(42px,4.8vw,64px)] font-semibold tracking-[-0.03em] text-[#0B1829] leading-[1.05] mb-6">
+            <motion.p initial={{ opacity: 0, y: 10 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.4 }}
+              className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#C4922A] mb-8">
+              HOW IT WORKS
+            </motion.p>
+            <h2 className="text-[clamp(42px,4.8vw,64px)] font-semibold tracking-[-0.03em] text-white leading-[1.05] mb-6">
               Not a chatbot.<br /><span className="text-[#1A5FA8]">A research system.</span>
             </h2>
-            <p className="text-[17px] text-[#6B7280] leading-[1.65] mb-10 max-w-[480px]">
+            <p className="text-[17px] text-white/60 leading-[1.65] mb-10 max-w-[480px]">
               QANUN reads 63,397 regulatory provisions the way a senior counsel would — structurally, adversarially, completely. Every answer is grounded against the corpus. Nothing is invented.
             </p>
 
-            <div className="flex gap-1 mb-8 bg-[#F5F7FA] rounded-xl p-1 w-fit">
+            <div className="flex gap-1 mb-8 bg-white/[0.06] rounded-xl p-1 w-fit">
               {TABS.map((t, i) => (
                 <button key={t.id} onClick={() => setActiveTab(i)}
                   className={`px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 whitespace-nowrap ${
-                    activeTab === i ? 'bg-[#0B1829] text-[#C4922A]' : 'text-[#6B7280] hover:text-[#0B1829]'
+                    activeTab === i ? 'bg-white/10 text-[#C4922A]' : 'text-white/50 hover:text-white/80'
                   }`}>
                   {t.label}
                 </button>
@@ -163,22 +162,22 @@ export function HowItWorks() {
             <AnimatePresence mode="wait">
               <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <p className="text-[20px] font-semibold text-[#0B1829] leading-[1.3] mb-3">{TABS[activeTab].tagline}</p>
-                <p className="text-[15px] text-[#6B7280] leading-[1.7] mb-8">{TABS[activeTab].description}</p>
+                <p className="text-[20px] font-semibold text-white leading-[1.3] mb-3">{TABS[activeTab].tagline}</p>
+                <p className="text-[15px] text-white/50 leading-[1.7] mb-8">{TABS[activeTab].description}</p>
                 <div className="border-l-2 border-[#1A5FA8] pl-5 mb-8">
-                  <p className="text-[44px] font-mono font-semibold text-[#0B1829] leading-none mb-1">{TABS[activeTab].stat}</p>
-                  <p className="text-[13px] text-[#9CA3AF]">{TABS[activeTab].statLabel}</p>
+                  <p className="text-[44px] font-mono font-semibold text-white leading-none mb-1">{TABS[activeTab].stat}</p>
+                  <p className="text-[13px] text-white/40">{TABS[activeTab].statLabel}</p>
                 </div>
                 <div className="space-y-2.5 mb-8">
                   {['Every claim grounded against a specific corpus provision — never inferred beyond what the rules contain.',
                     'Citations are clickable — every reference opens the exact provision from the ADGM, DIFC, or El Salvador corpus.'
                   ].map((chip, i) => (
-                    <div key={i} className="flex items-start gap-3 bg-[#F5F7FA] rounded-xl px-4 py-3 border border-[#E8EBF0]">
+                    <div key={i} className="flex items-start gap-3 bg-white/[0.04] rounded-xl px-4 py-3 border border-white/[0.08]">
                       <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="mt-0.5 flex-shrink-0">
                         <circle cx="7.5" cy="7.5" r="6.5" stroke="#0F7A5F" strokeWidth="1.5"/>
                         <path d="M4.5 7.5l2 2 4-4" stroke="#0F7A5F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span className="text-[13px] text-[#374151]">{chip}</span>
+                      <span className="text-[13px] text-white/70">{chip}</span>
                     </div>
                   ))}
                 </div>
@@ -236,7 +235,7 @@ export function HowItWorks() {
         {/* Bottom stats */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-20 pt-10 border-t border-[#E8EBF0] grid grid-cols-2 md:grid-cols-4 gap-8">
+          className="mt-20 pt-10 border-t border-white/[0.08] grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { n: '2,484', label: 'Regulatory documents' },
             { n: '63,397', label: 'Indexed provisions' },
@@ -244,8 +243,8 @@ export function HowItWorks() {
             { n: '0', label: 'Provisions invented', teal: true },
           ].map((s, i) => (
             <div key={i}>
-              <p className={`text-[38px] font-mono font-semibold leading-none mb-1 ${s.teal ? 'text-[#0F7A5F]' : 'text-[#0B1829]'}`}>{s.n}</p>
-              <p className="text-[13px] text-[#9CA3AF]">{s.label}</p>
+              <p className={`text-[38px] font-mono font-semibold leading-none mb-1 ${s.teal ? 'text-[#0F7A5F]' : 'text-white'}`}>{s.n}</p>
+              <p className="text-[13px] text-white/40">{s.label}</p>
             </div>
           ))}
         </motion.div>

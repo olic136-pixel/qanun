@@ -1,4 +1,15 @@
 import Link from 'next/link'
+import DeepResearchPanel from '@/components/marketing/DeepResearchPanel'
+import QuickLookupPanel from '@/components/marketing/QuickLookupPanel'
+import MonitoringPanel from '@/components/marketing/MonitoringPanel'
+import ReferencePanel from '@/components/marketing/ReferencePanel'
+
+const PANELS: Record<string, React.ComponentType<{ className?: string }>> = {
+  'Deep Research': DeepResearchPanel,
+  'Quick Lookup': QuickLookupPanel,
+  'Regulatory Monitoring': MonitoringPanel,
+  'Reference Material': ReferencePanel,
+}
 
 export const metadata = {
   title: 'Product — QANUN',
@@ -93,16 +104,20 @@ export default function ProductPage() {
                   ))}
                 </div>
               </div>
-              <div className={`bg-[#F5F7FA] rounded-2xl p-8 border border-[#E8EBF0]
-                min-h-[240px] flex items-center justify-center
-                ${i % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
-                <div className="text-center">
-                  <p className="text-[11px] font-mono tracking-[0.1em] uppercase text-[#C4922A] mb-3">
-                    {f.label}
-                  </p>
-                  <div className="w-12 h-px bg-[#E8EBF0] mx-auto" />
-                </div>
-              </div>
+              {(() => {
+                const Panel = PANELS[f.label]
+                return Panel ? (
+                  <Panel className={`min-h-[240px] ${i % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`} />
+                ) : (
+                  <div className={`bg-[#F5F7FA] rounded-xl p-8 border border-[#E8EBF0]
+                    min-h-[240px] flex items-center justify-center
+                    ${i % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''}`}>
+                    <p className="text-[11px] font-mono tracking-[0.1em] uppercase text-[#C4922A]">
+                      {f.label}
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
           ))}
         </div>

@@ -178,7 +178,7 @@ function QueryPageInner() {
                 onChange={(e) => setQueryText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isSubmitting}
-                placeholder={`Describe your research question in full. The more context you provide, the more precise the analysis.\n\ne.g. Under ADGM COBS 23.12.2, when does a copy trading service require a Managing Assets FSP — and can a block-delegation model operated by a Category 3A licensee avoid this requirement by characterising client parameter-setting as the investment decision?`}
+                placeholder={`Describe your research question in full. The more context you provide, the more precise the analysis.\n\ne.g. Under ADGM COBS 23.12.2, when does a copy trading service require a Managing Assets FSP — and can a block-delegation model operated by a Category 3C licensee avoid this requirement by characterising client parameter-setting as the investment decision?`}
                 className="min-h-[160px] max-h-[400px] resize-none bg-transparent border-none outline-none text-[14px] text-[#111827] leading-[1.7] w-full placeholder:text-[#9CA3AF]"
               />
               {attachedFiles.length > 0 && (
@@ -296,18 +296,21 @@ function QueryPageInner() {
                   <span>~90s</span>
                 </div>
               </div>
-              {/* Deep — coming soon */}
-              <div className="border border-[#E8EBF0] bg-white rounded-xl p-4 cursor-not-allowed opacity-60">
+              {/* Deep research */}
+              <div
+                onClick={() => router.push('/projects/new')}
+                className="border border-[#E8EBF0] bg-white rounded-xl p-4 cursor-pointer hover:border-[#1A5FA8] hover:bg-[#F8FAFF] transition-all"
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-medium text-[#0B1829]">Deep research</span>
-                  <span className="bg-[#F5F7FA] text-[#9CA3AF] text-[9px] uppercase tracking-[0.06em] px-2 py-0.5 rounded-full">
-                    Coming soon
+                  <span className="bg-[#1A5FA8]/10 text-[#1A5FA8] text-[9px] uppercase tracking-[0.06em] px-2 py-0.5 rounded-full font-medium">
+                    Beta
                   </span>
                 </div>
                 <p className="text-[12px] text-[#6B7280] mt-1.5 leading-relaxed">
                   Multi-session iterative analysis with memory. Builds a structured legal opinion over multiple research cycles.
                 </p>
-                <div className="mt-2 text-[11px] text-[#9CA3AF]">Coming Q3 2026</div>
+                <div className="mt-2 text-[11px] text-[#9CA3AF]">Multiple cycles · Living opinion · Obsidian export</div>
               </div>
             </div>
           </div>

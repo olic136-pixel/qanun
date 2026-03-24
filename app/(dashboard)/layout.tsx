@@ -7,7 +7,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Search, Clock, Hexagon, Bell, BookOpen,
   GitCommit, Settings2, CreditCard, ChevronLeft, ChevronRight,
-  Sun, Moon, Command, Activity,
+  Sun, Moon, Command, Activity, FolderOpen,
 } from 'lucide-react'
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -25,6 +25,7 @@ const navSections = [
     items: [
       { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
       { label: 'Research', icon: Search, href: '/query' },
+      { label: 'Projects', icon: FolderOpen, href: '/projects' },
       { label: 'Sessions', icon: Clock, href: '/sessions' },
     ],
   },
@@ -57,6 +58,8 @@ function getPageTitle(pathname: string): string {
     '/dashboard': 'Dashboard',
     '/query': 'Research',
     '/sessions': 'Sessions',
+    '/projects': 'Projects',
+    '/projects/new': 'New project',
     '/twins': 'Product twins',
     '/alerts': 'Alerts',
     '/corpus': 'Browse corpus',
