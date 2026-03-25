@@ -77,7 +77,7 @@ export const validateDraftRequest = (
 ) =>
   apiFetch<ValidateResponse>('/api/drafting/validate', {
     method: 'POST',
-    body: JSON.stringify({ entity_id: entityId, doc_type: docType }),
+    body: JSON.stringify({ entity_id: entityId, doc_type: docType.toLowerCase() }),
     token,
   })
 
@@ -91,7 +91,7 @@ export const startDraft = (
     method: 'POST',
     body: JSON.stringify({
       entity_id: entityId,
-      doc_type: docType,
+      doc_type: docType.toLowerCase(),
       target_jurisdiction: targetJurisdiction,
     }),
     token,
