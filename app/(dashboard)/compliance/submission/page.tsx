@@ -7,11 +7,9 @@ import { Download, Loader2, CheckCircle2, Package } from 'lucide-react'
 import {
   getSubmissionStatus, startSubmissionPackage,
   getReportUrl, getExportUrl,
-  listEntities,
-  type PackageStatus, type DocumentStatus, type EntitySummary,
+  type PackageStatus, type DocumentStatus,
 } from '@/lib/api/entities'
-
-const ENTITY_ID = 'tradedarcateg3a-demo-0001'
+import { useEntity } from '@/lib/entity-context'
 
 const STATUS_CFG = {
   complete: { label: 'Complete', tw: 'bg-emerald-50 text-emerald-700', icon: '✓' },
@@ -26,26 +24,14 @@ const STATUS_CFG = {
 export default function SubmissionPage() {
   const { data: session } = useSession()
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
+  const { selectedEntity } = useEntity()
 
-  const [entities, setEntities] = useState<EntitySummary[]>([])
-  const [activeEntityId, setActiveEntityId] = useState(ENTITY_ID)
   const [status, setStatus] = useState<PackageStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
 
-  // Load entities
-  useEffect(() => {
-    if (!token) return
-    listEntities(token)
-      .then((r) => {
-        setEntities(r.entities)
-        if (r.entities.length > 0 && !r.entities.find((e) => e.entity_id === activeEntityId)) {
-          setActiveEntityId(r.entities[0].entity_id)
-        }
-      })
-      .catch((e) => setError(e.message))
-  }, [token])
+  const activeEntityId = selectedEntity?.id ?? ''
 
   const load = useCallback(async () => {
     if (!token || !activeEntityId) return
@@ -86,7 +72,6 @@ export default function SubmissionPage() {
     }
   }
 
-  const activeEntity = entities.find((e) => e.entity_id === activeEntityId)
   const isRunning = (status?.running_count ?? 0) > 0
   const isComplete = (status?.complete_count ?? 0) === (status?.total_documents ?? 10)
   const canStart = !isRunning && !isComplete && !starting
@@ -94,6 +79,17 @@ export default function SubmissionPage() {
   const tier1 = status?.documents.filter((d) => d.tier === 1) ?? []
   const tier2 = status?.documents.filter((d) => d.tier === 2) ?? []
   const tier3 = status?.documents.filter((d) => d.tier === 3) ?? []
+
+  if (!selectedEntity) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-sm text-gray-500 gap-3">
+        <p>Please select an entity from the sidebar to view submission status.</p>
+        <Link href="/compliance/entities/new" className="text-[#1A5FA8] hover:underline text-sm">
+          + Create new entity
+        </Link>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -109,24 +105,9 @@ export default function SubmissionPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-bold text-[#0B1829]">Submission Package</h1>
-          <div className="flex items-center gap-2 mt-1">
-            {entities.length > 1 && (
-              <select
-                value={activeEntityId}
-                onChange={(e) => setActiveEntityId(e.target.value)}
-                className="text-sm border border-gray-300 rounded px-2 py-1"
-              >
-                {entities.map((e) => (
-                  <option key={e.entity_id} value={e.entity_id}>
-                    {e.entity_name} ({e.completion_pct}%)
-                  </option>
-                ))}
-              </select>
-            )}
-            <p className="text-sm text-gray-500">
-              {activeEntity?.entity_name ?? '…'} · {activeEntity?.entity_type?.replace('_', ' ').toUpperCase() ?? '…'} · ADGM
-            </p>
-          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            {selectedEntity.name} · {selectedEntity.category.replace('_', ' ').toUpperCase()} · ADGM
+          </p>
         </div>
         <div className="flex items-center gap-3">
           {isComplete && token && (

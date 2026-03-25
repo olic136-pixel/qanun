@@ -15,6 +15,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemStatus } from '@/lib/hooks/useDashboard'
 import { CommandPalette } from '@/components/qanun/CommandPalette'
 import { useUIStore } from '@/lib/stores/uiStore'
+import { EntityProvider } from '@/lib/entity-context'
+import { EntitySelector } from '@/components/qanun/EntitySelector'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -149,6 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     .slice(0, 2) ?? 'QN'
 
   return (
+    <EntityProvider>
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside
@@ -204,6 +207,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           ))}
         </nav>
+
+        {/* Entity selector */}
+        {!collapsed && (
+          <div className="mx-3 mb-2">
+            <p className="px-1 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50">
+              Entity
+            </p>
+            <EntitySelector />
+          </div>
+        )}
 
         {/* Corpus status footer */}
         {!collapsed && (
@@ -297,5 +310,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
       <CommandPalette />
     </div>
+    </EntityProvider>
   )
 }
