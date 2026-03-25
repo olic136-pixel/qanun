@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
-import { Download, ArrowLeft, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { getJobStatus, getDownloadUrl, type JobStatus } from '@/lib/api/drafting'
+import { Download, ArrowLeft, CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw } from 'lucide-react'
+import { getJobStatus, getDownloadUrl, retryDraft, type JobStatus } from '@/lib/api/drafting'
 
 export default function DraftProgressPage() {
   const { data: session } = useSession()
@@ -16,6 +16,7 @@ export default function DraftProgressPage() {
 
   const [status, setStatus] = useState<JobStatus | null>(null)
   const [error, setError] = useState('')
+  const [retrying, setRetrying] = useState(false)
 
   const poll = useCallback(async () => {
     if (!token || !jobId) return 'waiting'
@@ -34,24 +35,49 @@ export default function DraftProgressPage() {
 
     let intervalId: ReturnType<typeof setInterval>
 
+    const terminalStates = ['complete', 'failed', 'export_failed']
+
     const startPolling = async () => {
       const initial = await poll()
-      if (initial === 'complete' || initial === 'failed') return
+      if (terminalStates.includes(initial)) return
 
       intervalId = setInterval(async () => {
         const s = await poll()
-        if (s === 'complete' || s === 'failed') {
+        if (terminalStates.includes(s)) {
           clearInterval(intervalId)
         }
-      }, 4000)
+      }, 3000)
     }
 
     startPolling()
     return () => clearInterval(intervalId)
   }, [poll, token])
 
+  const handleRetry = async () => {
+    if (!token || !jobId || retrying) return
+    setRetrying(true)
+    try {
+      await retryDraft(jobId, token)
+      // Resume polling
+      const pollInterval = setInterval(async () => {
+        const s = await poll()
+        if (['complete', 'failed', 'export_failed'].includes(s)) {
+          clearInterval(pollInterval)
+        }
+      }, 3000)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setRetrying(false)
+    }
+  }
+
   const isComplete = status?.status === 'complete'
   const isFailed = status?.status === 'failed'
+  const isExportFailed = status?.status === 'export_failed'
+  const isDrafted = status?.status === 'drafted'
+  const isExporting = status?.status === 'exporting'
+  const isRunning = status?.status === 'running' || status?.status === 'queued' || status?.status === 'created'
   const progress = status?.progress ?? 0
   const sectionsTotal = status?.total_sections ?? 0
   const sectionsDone = status?.sections_drafted ?? 0
@@ -65,21 +91,29 @@ export default function DraftProgressPage() {
           <h1 className="text-xl font-bold text-[#0B1829] mt-4 mb-1">
             {isComplete
               ? 'Document Ready'
-              : isFailed
-                ? 'Drafting Failed'
-                : 'Drafting Document…'}
+              : isExportFailed
+                ? 'Document Drafted — Export Failed'
+                : isFailed
+                  ? 'Drafting Failed'
+                  : isDrafted || isExporting
+                    ? 'Exporting Document…'
+                    : 'Drafting Document…'}
           </h1>
           <p className="text-[13px] text-gray-500">
             {isComplete
               ? 'Your document has been drafted and is ready to download.'
-              : isFailed
-                ? status?.error ?? 'An unexpected error occurred.'
-                : `Section ${sectionsDone} of ${sectionsTotal}`}
+              : isExportFailed
+                ? `All ${sectionsDone} sections were successfully drafted and preserved.`
+                : isFailed
+                  ? `Drafting failed at section ${sectionsDone} of ${sectionsTotal}.`
+                  : isDrafted || isExporting
+                    ? 'Assembling DOCX from drafted sections…'
+                    : `Section ${sectionsDone} of ${sectionsTotal}`}
           </p>
         </div>
 
-        {/* Progress bar */}
-        {!isFailed && (
+        {/* Progress bar — show for running, exporting, drafted states */}
+        {(isRunning || isDrafted || isExporting) && (
           <div className="mb-8">
             <div className="flex justify-between mb-2 text-[12px]">
               <span className="text-gray-500">Progress</span>
@@ -87,17 +121,15 @@ export default function DraftProgressPage() {
             </div>
             <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-700 ${
-                  isComplete ? 'bg-emerald-500' : 'bg-[#0B1829]'
-                }`}
+                className="h-full rounded-full transition-all duration-700 bg-[#0B1829]"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* Section dots */}
-        {!isComplete && !isFailed && sectionsTotal > 0 && (
+        {/* Section dots — running state only */}
+        {isRunning && sectionsTotal > 0 && (
           <div className="mb-6 p-4 bg-[#F5F7FA] rounded-lg">
             <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-2.5">
               Sections drafted
@@ -162,20 +194,79 @@ export default function DraftProgressPage() {
           </>
         )}
 
-        {isFailed && (
+        {/* Export failed: re-export screen */}
+        {isExportFailed && (
           <div className="space-y-3">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-2">
+              <p className="text-[11px] text-amber-700 leading-relaxed">
+                {status?.error ?? 'Export to DOCX failed.'}
+              </p>
+            </div>
+
             <button
-              onClick={() => router.push('/compliance/documents/new')}
-              className="w-full py-3 bg-[#0B1829] text-white rounded-md text-[13px] font-semibold hover:bg-[#1D2D44] transition-colors cursor-pointer"
+              onClick={handleRetry}
+              disabled={retrying}
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#0B1829] text-white rounded-md text-[13px] font-semibold hover:bg-[#1D2D44] transition-colors cursor-pointer disabled:opacity-50"
             >
-              Try again
+              {retrying ? (
+                <><Loader2 size={14} className="animate-spin" /> Exporting…</>
+              ) : (
+                <><RefreshCw size={14} /> Re-export Document</>
+              )}
             </button>
+
             <button
               onClick={() => router.push('/compliance/documents')}
               className="w-full py-2.5 bg-transparent text-gray-500 border border-[#E8EBF0] rounded-md text-[13px] font-medium hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Back to documents
             </button>
+
+            <p className="text-[11px] text-gray-400 text-center">
+              No Claude API calls required — all sections are preserved.
+            </p>
+          </div>
+        )}
+
+        {/* Generation failed: re-draft screen */}
+        {isFailed && (
+          <div className="space-y-3">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md mb-2">
+              <p className="text-[11px] text-red-700 leading-relaxed">
+                {status?.error ?? 'An unexpected error occurred.'}
+              </p>
+            </div>
+
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#0B1829] text-white rounded-md text-[13px] font-semibold hover:bg-[#1D2D44] transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {retrying ? (
+                <><Loader2 size={14} className="animate-spin" /> Re-drafting…</>
+              ) : (
+                <><RefreshCw size={14} /> Re-draft Document</>
+              )}
+            </button>
+
+            <button
+              onClick={() => router.push('/compliance/documents')}
+              className="w-full py-2.5 bg-transparent text-gray-500 border border-[#E8EBF0] rounded-md text-[13px] font-medium hover:bg-gray-50 transition-colors cursor-pointer"
+            >
+              Back to documents
+            </button>
+
+            <p className="text-[11px] text-gray-400 text-center">
+              {sectionsTotal} Claude API calls will be made
+            </p>
+          </div>
+        )}
+
+        {/* Exporting state */}
+        {(isDrafted || isExporting) && (
+          <div className="text-center">
+            <Loader2 size={20} className="animate-spin text-[#1A5FA8] mx-auto mb-2" />
+            <p className="text-[12px] text-gray-400">Assembling document…</p>
           </div>
         )}
 
@@ -196,6 +287,13 @@ function StatusIcon({ status, progress }: { status: string; progress: number }) 
       </div>
     )
   }
+  if (status === 'export_failed') {
+    return (
+      <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto">
+        <AlertTriangle size={28} className="text-amber-500" />
+      </div>
+    )
+  }
   if (status === 'failed') {
     return (
       <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto">
@@ -203,7 +301,7 @@ function StatusIcon({ status, progress }: { status: string; progress: number }) 
       </div>
     )
   }
-  // Running: conic gradient ring
+  // Running / exporting: conic gradient ring
   return (
     <div
       className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"

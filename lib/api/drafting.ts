@@ -51,9 +51,20 @@ export interface DraftResponse {
   poll_url: string
 }
 
+export type JobStatusValue =
+  | 'created'
+  | 'queued'
+  | 'running'
+  | 'drafted'
+  | 'exporting'
+  | 'complete'
+  | 'export_failed'
+  | 'failed'
+  | 'not_found'
+
 export interface JobStatus {
   job_id: string
-  status: 'queued' | 'running' | 'complete' | 'failed' | 'not_found'
+  status: JobStatusValue
   progress: number
   sections_drafted: number
   total_sections: number
@@ -63,6 +74,12 @@ export interface JobStatus {
   coverage_warnings?: string[]
   completed_at?: string
   error?: string
+  phase?: string
+  sections_preserved?: boolean
+  export_attempts?: number
+  retry_action?: 'none' | 're_export' | 'full_redraft' | 'wait' | 'unknown'
+  phase_a_completed_at?: string
+  exported_at?: string
 }
 
 // ── API Functions ──────────────────────────────────────────────
@@ -104,3 +121,21 @@ export function getDownloadUrl(jobId: string, token: string): string {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.qanun.io'
   return `${base}/api/drafting/download/${jobId}?token=${encodeURIComponent(token)}`
 }
+
+export const retryDraft = (jobId: string, token: string) =>
+  apiFetch<{
+    job_id: string
+    action: string
+    status: string
+    sections_preserved: boolean
+    claude_calls_required: number
+    message: string
+  }>(`/api/drafting/retry/${jobId}`, { method: 'POST', token })
+
+export const exportDraft = (jobId: string, token: string) =>
+  apiFetch<{
+    job_id: string
+    status: string
+    claude_calls_required: number
+    message: string
+  }>(`/api/drafting/export/${jobId}`, { method: 'POST', token })

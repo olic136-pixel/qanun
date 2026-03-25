@@ -204,6 +204,9 @@ function StatusChip({ status }: { status: string }) {
     complete: { label: 'Complete', tw: 'bg-emerald-50 text-emerald-700' },
     running: { label: 'Drafting…', tw: 'bg-blue-50 text-blue-700' },
     failed: { label: 'Failed', tw: 'bg-red-50 text-red-700' },
+    drafted: { label: 'Drafted', tw: 'bg-amber-50 text-amber-700' },
+    exporting: { label: 'Exporting…', tw: 'bg-blue-50 text-blue-700 animate-pulse' },
+    export_failed: { label: 'Export failed', tw: 'bg-amber-50 text-amber-700' },
   }
   const cfg = configs[status] ?? configs.not_started
   return (
