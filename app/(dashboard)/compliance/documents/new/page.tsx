@@ -116,11 +116,6 @@ function NewDocumentContent() {
             <div className="space-y-2 mb-4">
               <InfoRow label="Sections" value={validation.active_section_count} />
               <InfoRow
-                label="Applicability"
-                value={validation.applicable ? '✓ Applicable' : '✗ Not applicable'}
-                valueClass={validation.applicable ? 'text-emerald-600' : 'text-red-600'}
-              />
-              <InfoRow
                 label="Source"
                 value={
                   validation.has_waystone_examples
@@ -131,6 +126,18 @@ function NewDocumentContent() {
                 }
               />
             </div>
+
+            {!validation.applicable && (
+              <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 mb-4">
+                <span className="mt-0.5 shrink-0">ⓘ</span>
+                <span>
+                  This document type is not typically required for{' '}
+                  <strong>{validation.entity_type?.replace(/_/g, ' ')}</strong> entities,
+                  but you may draft it if needed. Corpus grounding
+                  will focus on generally applicable provisions.
+                </span>
+              </div>
+            )}
 
             <div className="mb-4">
               <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-2">
@@ -158,9 +165,9 @@ function NewDocumentContent() {
 
             <button
               onClick={handleStartDraft}
-              disabled={starting || !validation.applicable}
+              disabled={starting}
               className={`w-full py-3 rounded-md text-[13px] font-semibold transition-colors ${
-                starting || !validation.applicable
+                starting
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#0B1829] text-white hover:bg-[#1D2D44] cursor-pointer'
               }`}
