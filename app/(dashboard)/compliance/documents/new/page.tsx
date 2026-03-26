@@ -6,13 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import {
   getTemplates,
+  getApplicableTemplates,
   validateDraftRequest,
   startDraft,
+  ENTITY_ID,
   type Template,
 } from '@/lib/api/drafting'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
-
-const ENTITY_ID = 'tradedarcateg3a-demo-0001'
 
 function NewDocumentContent() {
   const { data: session } = useSession()
@@ -32,7 +32,7 @@ function NewDocumentContent() {
   useEffect(() => {
     if (!token) return
     getTemplates(token)
-      .then((r) => setTemplates(r.templates))
+      .then((r) => setTemplates(getApplicableTemplates(r.templates)))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [token])
