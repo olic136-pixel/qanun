@@ -11,19 +11,16 @@ import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
 const ENTITY_ID = 'tradedarcateg3a-demo-0001'
 const ENTITY_NAME = 'TradeDar Capital Management Ltd'
 const ENTITY_TYPE = 'Category 3C'
+const ENTITY_CATEGORY = 'cat_3c'
 
-const REQUIRED_DOCS = [
-  'aml_cft_policy',
-  'compliance_manual',
-  'kyc_cdd_procedures',
-  'business_risk_assessment',
-  'conflicts_policy',
-  'board_governance_charter',
-  'outsourcing_policy',
-  'cyber_risk_framework',
-  'whistleblowing_policy',
-  'suitability_policy',
-]
+/** Filter templates to those applicable for the current entity category */
+function getApplicableTemplates(templates: Template[]): Template[] {
+  return templates.filter((t) => {
+    const types = t.applicable_entity_types
+    if (!types || types.length === 0) return true
+    return types.includes('all') || types.includes(ENTITY_CATEGORY)
+  })
+}
 
 export default function DocumentSuitePage() {
   const { data: session, status: authStatus } = useSession()
@@ -61,12 +58,11 @@ export default function DocumentSuitePage() {
     )
   }
 
-  const templateMap = Object.fromEntries(
-    (templates?.templates ?? []).map((t) => [t.doc_type, t])
-  )
+  const applicableTemplates = getApplicableTemplates(templates?.templates ?? [])
 
   const completedDocs = 0
-  const completionPct = Math.round((completedDocs / REQUIRED_DOCS.length) * 100)
+  const totalDocs = applicableTemplates.length
+  const completionPct = totalDocs > 0 ? Math.round((completedDocs / totalDocs) * 100) : 0
 
   return (
     <div className="max-w-[1200px] mx-auto">
@@ -90,9 +86,9 @@ export default function DocumentSuitePage() {
 
         {/* Completion bar */}
         <div className="mt-5 flex items-center gap-8">
-          <Stat label="Required" value={REQUIRED_DOCS.length} />
+          <Stat label="Required" value={totalDocs} />
           <Stat label="Completed" value={completedDocs} />
-          <Stat label="Remaining" value={REQUIRED_DOCS.length - completedDocs} />
+          <Stat label="Remaining" value={totalDocs - completedDocs} />
           <div className="flex-1 max-w-[240px]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-1.5">
               Submission Readiness
@@ -126,48 +122,43 @@ export default function DocumentSuitePage() {
             </tr>
           </thead>
           <tbody>
-            {REQUIRED_DOCS.map((docType, i) => {
-              const tmpl = templateMap[docType]
-              return (
-                <tr
-                  key={docType}
-                  className={`border-b border-[#E8EBF0] last:border-0 ${
-                    i % 2 === 0 ? 'bg-white' : 'bg-[#F5F7FA]'
-                  } hover:bg-blue-50/30 transition-colors`}
-                >
-                  <td className="px-4 py-3">
-                    <p className="text-[13px] font-semibold text-[#1D2D44]">
-                      {tmpl?.display_name ?? docType.replace(/_/g, ' ')}
-                    </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">
-                      {tmpl?.coverage_rulebooks?.join(', ')}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    {tmpl && (
-                      <PortabilityBadge layer={tmpl.primary_portability_layer} size="sm" />
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <SourceBadge tmpl={tmpl} />
-                  </td>
-                  <td className="px-4 py-3 text-center text-[13px] text-gray-500">
-                    {tmpl?.section_count ?? '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusChip status="not_started" />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/compliance/documents/new?type=${docType}`}
-                      className="text-[12px] font-semibold text-[#1A5FA8] hover:text-[#0B1829] transition-colors"
-                    >
-                      Draft →
-                    </Link>
-                  </td>
-                </tr>
-              )
-            })}
+            {applicableTemplates.map((tmpl, i) => (
+              <tr
+                key={tmpl.doc_type}
+                className={`border-b border-[#E8EBF0] last:border-0 ${
+                  i % 2 === 0 ? 'bg-white' : 'bg-[#F5F7FA]'
+                } hover:bg-blue-50/30 transition-colors`}
+              >
+                <td className="px-4 py-3">
+                  <p className="text-[13px] font-semibold text-[#1D2D44]">
+                    {tmpl.display_name}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {tmpl.coverage_rulebooks?.join(', ')}
+                  </p>
+                </td>
+                <td className="px-4 py-3">
+                  <PortabilityBadge layer={tmpl.primary_portability_layer} size="sm" />
+                </td>
+                <td className="px-4 py-3">
+                  <SourceBadge tmpl={tmpl} />
+                </td>
+                <td className="px-4 py-3 text-center text-[13px] text-gray-500">
+                  {tmpl.section_count}
+                </td>
+                <td className="px-4 py-3">
+                  <StatusChip status="not_started" />
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <Link
+                    href={`/compliance/documents/new?type=${tmpl.doc_type}`}
+                    className="text-[12px] font-semibold text-[#1A5FA8] hover:text-[#0B1829] transition-colors"
+                  >
+                    Draft →
+                  </Link>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
