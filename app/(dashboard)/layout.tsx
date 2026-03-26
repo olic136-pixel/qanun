@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Search, Clock, Hexagon, Bell, BookOpen,
   GitCommit, Settings2, CreditCard, ChevronLeft, ChevronRight,
   Sun, Moon, Command, Activity, FolderOpen, Sparkles,
-  FileText, FilePlus, Download, BarChart3, Package, PlusCircle,
+  FileText, FilePlus, Download, BarChart3, Package, PlusCircle, Shield,
 } from 'lucide-react'
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -53,6 +53,7 @@ const navSections = [
       { label: 'Documents', icon: FileText, href: '/compliance/documents' },
       { label: 'New draft', icon: FilePlus, href: '/compliance/documents/new' },
       { label: 'Gap analysis', icon: BarChart3, href: '/compliance/gap-analysis' },
+      { label: 'Governance', icon: Shield, href: '/compliance/governance' },
       { label: 'Submission', icon: Package, href: '/compliance/submission' },
       { label: '+ Entity', icon: PlusCircle, href: '/compliance/entities/new' },
     ],
@@ -89,6 +90,10 @@ function getPageTitle(pathname: string): string {
     '/compliance/draft': 'New Draft',
     '/compliance/drafts': 'Drafts',
     '/compliance/twins': 'Document Twins',
+    '/compliance/governance': 'Governance Framework',
+    '/compliance/governance/documents': 'Document Register',
+    '/compliance/governance/folders': 'Governance Folders',
+    '/compliance/governance/gap-analysis': 'Gap Analysis',
     '/compliance/gap-analysis': 'Gap Analysis',
     '/compliance/ingest': 'Ingest Documents',
     '/compliance/submission': 'Submission Package',
