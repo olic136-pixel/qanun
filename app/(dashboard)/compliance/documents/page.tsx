@@ -11,7 +11,7 @@ import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
 const ENTITY_ID = 'tradedarcateg3a-demo-0001'
 const ENTITY_NAME = 'TradeDar Capital Management Ltd'
 const ENTITY_TYPE = 'Category 3C'
-const ENTITY_CATEGORY = 'cat_3c'
+const ENTITY_CATEGORY = 'category_3c'
 
 /** Filter templates to those applicable for the current entity category */
 function getApplicableTemplates(templates: Template[]): Template[] {
