@@ -5,22 +5,15 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { FilePlus, Download, FileText, ExternalLink } from 'lucide-react'
-import { getTemplates, type Template, type TemplatesResponse } from '@/lib/api/drafting'
+import {
+  getTemplates,
+  getApplicableTemplates,
+  ENTITY_NAME,
+  ENTITY_TYPE,
+  type Template,
+  type TemplatesResponse,
+} from '@/lib/api/drafting'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
-
-const ENTITY_ID = 'tradedarcateg3a-demo-0001'
-const ENTITY_NAME = 'TradeDar Capital Management Ltd'
-const ENTITY_TYPE = 'Category 3C'
-const ENTITY_CATEGORY = 'category_3c'
-
-/** Filter templates to those applicable for the current entity category */
-function getApplicableTemplates(templates: Template[]): Template[] {
-  return templates.filter((t) => {
-    const types = t.applicable_entity_types
-    if (!types || types.length === 0) return true
-    return types.includes('all') || types.includes(ENTITY_CATEGORY)
-  })
-}
 
 export default function DocumentSuitePage() {
   const { data: session, status: authStatus } = useSession()
