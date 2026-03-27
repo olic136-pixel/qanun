@@ -49,11 +49,11 @@ const navSections = [
   {
     label: 'Compliance Studio',
     items: [
+      { label: 'Governance', icon: Shield, href: '/compliance/governance' },
       { label: 'Classify', icon: Sparkles, href: '/compliance/classify' },
       { label: 'Documents', icon: FileText, href: '/compliance/documents' },
       { label: 'New draft', icon: FilePlus, href: '/compliance/documents/new' },
       { label: 'Gap analysis', icon: BarChart3, href: '/compliance/gap-analysis' },
-      { label: 'Governance', icon: Shield, href: '/compliance/governance' },
       { label: 'Submission', icon: Package, href: '/compliance/submission' },
       { label: '+ Entity', icon: PlusCircle, href: '/compliance/entities/new' },
     ],

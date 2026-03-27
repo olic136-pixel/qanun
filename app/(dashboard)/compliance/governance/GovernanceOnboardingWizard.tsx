@@ -56,10 +56,10 @@ const REGULATORY_STAGES = [
 ] as const
 
 const APPROXIMATE_COUNTS: Record<string, { total: number; draftable: number }> = {
-  cat_3c: { total: 52, draftable: 48 },
-  cat_3a: { total: 57, draftable: 52 },
-  cat_2: { total: 62, draftable: 56 },
-  cat_1: { total: 62, draftable: 56 },
+  cat_3c: { total: 49, draftable: 45 },
+  cat_3a: { total: 58, draftable: 54 },
+  cat_2: { total: 62, draftable: 58 },
+  cat_1: { total: 61, draftable: 57 },
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
