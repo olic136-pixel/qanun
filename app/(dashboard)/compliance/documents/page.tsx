@@ -8,17 +8,20 @@ import { FilePlus, Download, FileText, ExternalLink } from 'lucide-react'
 import {
   getTemplates,
   getApplicableTemplates,
+  ENTITY_ID,
   ENTITY_NAME,
   ENTITY_TYPE,
   type Template,
   type TemplatesResponse,
 } from '@/lib/api/drafting'
+import { getSubmissionStatus, type PackageStatus } from '@/lib/api/entities'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
 
 export default function DocumentSuitePage() {
   const { data: session, status: authStatus } = useSession()
   const router = useRouter()
   const [templates, setTemplates] = useState<TemplatesResponse | null>(null)
+  const [submissionStatus, setSubmissionStatus] = useState<PackageStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -29,8 +32,14 @@ export default function DocumentSuitePage() {
     if (!session) return
     if (!token) return
 
-    getTemplates(token)
-      .then(setTemplates)
+    Promise.all([
+      getTemplates(token),
+      getSubmissionStatus(ENTITY_ID, token).catch(() => null),
+    ])
+      .then(([tmpl, status]) => {
+        setTemplates(tmpl)
+        if (status) setSubmissionStatus(status)
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [session, authStatus, token])
@@ -53,7 +62,15 @@ export default function DocumentSuitePage() {
 
   const applicableTemplates = getApplicableTemplates(templates?.templates ?? [])
 
-  const completedDocs = 0
+  // Build status map from submission data
+  const docStatusMap = new Map<string, string>()
+  if (submissionStatus?.documents) {
+    for (const doc of submissionStatus.documents) {
+      docStatusMap.set(doc.doc_type, doc.status)
+    }
+  }
+
+  const completedDocs = submissionStatus?.complete_count ?? 0
   const totalDocs = applicableTemplates.length
   const completionPct = totalDocs > 0 ? Math.round((completedDocs / totalDocs) * 100) : 0
 
@@ -140,15 +157,21 @@ export default function DocumentSuitePage() {
                   {tmpl.section_count}
                 </td>
                 <td className="px-4 py-3">
-                  <StatusChip status="not_started" />
+                  <StatusChip status={docStatusMap.get(tmpl.doc_type) ?? 'not_started'} />
                 </td>
                 <td className="px-4 py-3 text-right">
+                  {(docStatusMap.get(tmpl.doc_type) === 'complete' || docStatusMap.get(tmpl.doc_type) === 'review_required') ? (
+                    <span className="text-[12px] font-semibold text-emerald-600">
+                      View →
+                    </span>
+                  ) : (
                   <Link
                     href={`/compliance/documents/new?type=${tmpl.doc_type}`}
                     className="text-[12px] font-semibold text-[#1A5FA8] hover:text-[#0B1829] transition-colors"
                   >
                     Draft →
                   </Link>
+                  )}
                 </td>
               </tr>
             ))}
@@ -186,6 +209,7 @@ function StatusChip({ status }: { status: string }) {
   const configs: Record<string, { label: string; tw: string }> = {
     not_started: { label: 'Not started', tw: 'bg-gray-100 text-gray-500' },
     complete: { label: 'Complete', tw: 'bg-emerald-50 text-emerald-700' },
+    review_required: { label: 'Review needed', tw: 'bg-amber-50 text-amber-700' },
     running: { label: 'Drafting…', tw: 'bg-blue-50 text-blue-700' },
     failed: { label: 'Failed', tw: 'bg-red-50 text-red-700' },
     drafted: { label: 'Drafted', tw: 'bg-amber-50 text-amber-700' },
