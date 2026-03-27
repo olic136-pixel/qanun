@@ -187,3 +187,6 @@ export const exportDraft = (jobId: string, token: string) =>
     claude_calls_required: number
     message: string
   }>(`/api/drafting/export/${jobId}`, { method: 'POST', token })
+
+export const deleteJob = (jobId: string, token: string) =>
+  apiFetch<void>(`/api/drafting/jobs/${jobId}`, { method: 'DELETE', token })

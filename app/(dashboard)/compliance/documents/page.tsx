@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FilePlus, Download, FileText, ExternalLink } from 'lucide-react'
+import { FilePlus, Trash2 } from 'lucide-react'
 import {
   getTemplates,
   getApplicableTemplates,
+  deleteJob,
   type Template,
   type TemplatesResponse,
 } from '@/lib/api/drafting'
@@ -23,6 +24,8 @@ export default function DocumentSuitePage() {
   const [submissionStatus, setSubmissionStatus] = useState<PackageStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [confirmDeleteJobId, setConfirmDeleteJobId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
 
@@ -42,6 +45,21 @@ export default function DocumentSuitePage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [session, authStatus, token])
+
+  async function handleDelete(jobId: string) {
+    setDeleting(true)
+    try {
+      await deleteJob(jobId, token)
+      // Refresh submission status after delete
+      const status = await getSubmissionStatus(selectedEntity?.id ?? '', token).catch(() => null)
+      if (status) setSubmissionStatus(status)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setDeleting(false)
+      setConfirmDeleteJobId(null)
+    }
+  }
 
   if (authStatus === 'loading' || loading) {
     return (
@@ -162,12 +180,43 @@ export default function DocumentSuitePage() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   {(docStatusMap.get(tmpl.doc_type) === 'complete' || docStatusMap.get(tmpl.doc_type) === 'review_required') ? (
-                    <Link
-                      href={`/compliance/documents/draft/${docJobMap.get(tmpl.doc_type) ?? ''}`}
-                      className="text-[12px] font-semibold text-emerald-600 hover:text-emerald-800 transition-colors"
-                    >
-                      View →
-                    </Link>
+                    <div className="flex items-center justify-end gap-3">
+                      {confirmDeleteJobId === docJobMap.get(tmpl.doc_type) ? (
+                        <span className="flex items-center gap-1.5 text-[11px]">
+                          <span className="text-gray-500">Delete draft?</span>
+                          <button
+                            onClick={() => handleDelete(docJobMap.get(tmpl.doc_type)!)}
+                            disabled={deleting}
+                            className="text-red-600 font-semibold hover:text-red-800 cursor-pointer disabled:opacity-50"
+                          >
+                            Yes
+                          </button>
+                          <span className="text-gray-300">·</span>
+                          <button
+                            onClick={() => setConfirmDeleteJobId(null)}
+                            className="text-gray-500 hover:text-gray-700 cursor-pointer"
+                          >
+                            No
+                          </button>
+                        </span>
+                      ) : (
+                        <>
+                          <Link
+                            href={`/compliance/documents/draft/${docJobMap.get(tmpl.doc_type) ?? ''}`}
+                            className="text-[12px] font-semibold text-emerald-600 hover:text-emerald-800 transition-colors"
+                          >
+                            View →
+                          </Link>
+                          <button
+                            onClick={() => setConfirmDeleteJobId(docJobMap.get(tmpl.doc_type) ?? null)}
+                            className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer"
+                            title="Delete draft"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   ) : (
                   <Link
                     href={`/compliance/documents/new?type=${tmpl.doc_type}`}
