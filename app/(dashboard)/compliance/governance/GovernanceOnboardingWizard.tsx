@@ -89,27 +89,40 @@ export function GovernanceOnboardingWizard() {
   const [fsraCategory, setFsraCategory] = useState<string | null>(null)
   const [regulatoryStage, setRegulatoryStage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [createStep, setCreateStep] = useState(0)
   const [error, setError] = useState('')
 
   const entityName = selectedEntity?.name ?? 'Entity'
   const entityId = selectedEntity?.id ?? ''
 
+  const CREATE_STEPS = [
+    'Creating governance profile…',
+    `Mapping ${APPROXIMATE_COUNTS[fsraCategory ?? '']?.total ?? ''} applicable documents…`,
+    'Redirecting to dashboard…',
+  ]
+
   async function handleCreate() {
     if (!fsraCategory || !regulatoryStage || !entityId || !token) return
     setSubmitting(true)
+    setCreateStep(1)
     setError('')
     try {
+      const stepTimer = setTimeout(() => setCreateStep(2), 800)
       await createGovernanceProfile(
         entityId,
         { fsra_category: fsraCategory, regulatory_stage: regulatoryStage },
         token,
       )
+      clearTimeout(stepTimer)
+      setCreateStep(3)
+      await new Promise((r) => setTimeout(r, 400))
       router.push('/compliance/governance')
       router.refresh()
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Failed to create governance framework'
       setError(message)
       setSubmitting(false)
+      setCreateStep(0)
     }
   }
 
@@ -231,6 +244,48 @@ export function GovernanceOnboardingWizard() {
               You can update the regulatory stage at any time.
             </p>
 
+            {submitting && (
+              <div className="mt-5 space-y-2">
+                {CREATE_STEPS.map((label, i) => {
+                  const stepNum = i + 1
+                  const done = createStep > stepNum
+                  const active = createStep === stepNum
+                  return (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                          done
+                            ? 'bg-[#0F7A5F]'
+                            : active
+                              ? 'bg-[#1A5FA8]'
+                              : 'bg-gray-100'
+                        }`}
+                      >
+                        {done ? (
+                          <Check size={11} className="text-white" />
+                        ) : active ? (
+                          <Loader2 size={11} className="text-white animate-spin" />
+                        ) : (
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                        )}
+                      </div>
+                      <span
+                        className={`text-[12px] transition-colors ${
+                          done
+                            ? 'text-[#0F7A5F] font-medium'
+                            : active
+                              ? 'text-[#1D2D44] font-medium'
+                              : 'text-gray-400'
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
             {error && (
               <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-[13px]">
                 {error}
@@ -269,26 +324,14 @@ export function GovernanceOnboardingWizard() {
                 Continue <ArrowRight size={14} />
               </button>
             )}
-            {step === 3 && (
+            {step === 3 && !submitting && (
               <button
                 onClick={handleCreate}
-                disabled={submitting}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-md text-[13px] font-semibold transition-colors ${
-                  submitting
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#0B1829] text-white hover:bg-[#1D2D44] cursor-pointer'
-                }`}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-md text-[13px] font-semibold transition-colors bg-[#0B1829] text-white hover:bg-[#1D2D44] cursor-pointer"
               >
-                {submitting ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" /> Creating…
-                  </>
-                ) : (
-                  <>
-                    <Shield size={14} /> Create governance framework
-                  </>
-                )}
+                <Shield size={14} /> Create governance framework
               </button>
+            )}
             )}
           </div>
         </div>

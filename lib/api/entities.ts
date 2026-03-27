@@ -16,6 +16,39 @@ export interface EntitySummary {
   completed_count: number
 }
 
+export interface EntityProfile {
+  primary_jurisdictions?: string[]
+  client_composition?: string
+  aum_range?: string
+  has_foreign_branches?: boolean
+  pep_exposure?: string
+  high_risk_jurisdiction_exposure?: string
+  key_products?: string[]
+  prime_broker?: string
+  custodian?: string
+  year_established?: number
+  staff_count_range?: string
+}
+
+export interface EntityProfileUpdatePayload {
+  mlro_name?: string
+  compliance_name?: string
+  seo_name?: string
+  licence_number?: string
+  registration_number?: string
+  primary_jurisdictions?: string[]
+  client_composition?: string
+  aum_range?: string
+  has_foreign_branches?: boolean
+  pep_exposure?: string
+  high_risk_jurisdiction_exposure?: string
+  key_products?: string[]
+  prime_broker?: string
+  custodian?: string
+  year_established?: number
+  staff_count_range?: string
+}
+
 export interface CreateEntityPayload {
   entity_name: string
   entity_type: string
@@ -64,8 +97,14 @@ export const listEntities = (token: string) =>
   apiFetch<{ entities: EntitySummary[]; total: number }>('/api/entities', { token })
 
 export const getEntity = (entityId: string, token: string) =>
-  apiFetch<EntitySummary & { gap_analysis: Record<string, unknown> }>(
+  apiFetch<EntitySummary & { gap_analysis: Record<string, unknown>; mlro_name: string; compliance_name: string; seo_name: string; entity_profile: EntityProfile }>(
     `/api/entities/${entityId}`, { token }
+  )
+
+export const updateEntityProfile = (entityId: string, payload: EntityProfileUpdatePayload, token: string) =>
+  apiFetch<{ entity_id: string; entity_profile: EntityProfile }>(
+    `/api/entities/${entityId}`,
+    { method: 'PATCH', body: JSON.stringify(payload), token }
   )
 
 export const createEntity = (payload: CreateEntityPayload, token: string) =>

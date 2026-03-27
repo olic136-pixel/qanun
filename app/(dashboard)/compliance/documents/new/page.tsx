@@ -11,7 +11,9 @@ import {
   startDraft,
   type Template,
 } from '@/lib/api/drafting'
+import { getEntity, type EntityProfile } from '@/lib/api/entities'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
+import { EntityProfilePanel } from '@/components/qanun/EntityProfilePanel'
 import { useEntity } from '@/lib/entity-context'
 
 function NewDocumentContent() {
@@ -29,6 +31,9 @@ function NewDocumentContent() {
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
+  const [entityDetail, setEntityDetail] = useState<{
+    mlro_name: string; compliance_name: string; seo_name: string; entity_profile: EntityProfile
+  } | null>(null)
 
   useEffect(() => {
     if (!token) return
@@ -37,6 +42,18 @@ function NewDocumentContent() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [token])
+
+  useEffect(() => {
+    if (!token || !selectedEntity?.id) return
+    getEntity(selectedEntity.id, token)
+      .then((e) => setEntityDetail({
+        mlro_name: e.mlro_name,
+        compliance_name: e.compliance_name,
+        seo_name: e.seo_name,
+        entity_profile: e.entity_profile ?? {},
+      }))
+      .catch(() => {/* non-fatal */})
+  }, [token, selectedEntity?.id])
 
   useEffect(() => {
     if (!selected || !token) {
@@ -81,7 +98,7 @@ function NewDocumentContent() {
         </button>
         <h1 className="text-xl font-bold text-[#0B1829]">Select Document Type</h1>
         <p className="text-[13px] text-gray-500 mt-1">
-          Choose which compliance document to draft for TradeDar Capital Management Ltd.
+          Choose which compliance document to draft for {selectedEntity?.name ?? 'this entity'}.
           Documents are grounded in the live ADGM regulatory corpus.
         </p>
       </div>
@@ -89,6 +106,27 @@ function NewDocumentContent() {
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-[13px] mb-5">
           {error}
+        </div>
+      )}
+
+      {/* Entity profile — shown when entity detail is loaded */}
+      {entityDetail && selectedEntity && (
+        <div className="mb-5">
+          <EntityProfilePanel
+            entityId={selectedEntity.id}
+            entityName={selectedEntity.name}
+            profile={entityDetail.entity_profile}
+            mlroName={entityDetail.mlro_name}
+            complianceName={entityDetail.compliance_name}
+            seoName={entityDetail.seo_name}
+            token={token}
+            onSaved={(updated) => setEntityDetail({
+              mlro_name: updated.mlro_name,
+              compliance_name: updated.compliance_name,
+              seo_name: updated.seo_name,
+              entity_profile: updated,
+            })}
+          />
         </div>
       )}
 
