@@ -783,21 +783,23 @@ function CitationBadge({ citation }: { citation: string }) {
     setError('')
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+      // Use corpus search directly — returns actual rule text (not just headers)
       const res = await fetch(
-        `${baseUrl}/api/corpus/passage?section_ref=${encodeURIComponent(citation)}`,
+        `${baseUrl}/api/corpus/search?q=${encodeURIComponent(citation)}&max_results=3&source_entity=FSRA`,
         { headers: { Authorization: `Bearer ${token}` } },
       )
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      const passages = data.passages || []
-      if (passages.length > 0) {
-        const p = passages[0]
-        setPassageText(
-          p.text || p.chunk_text || p.rule_text || p.content || JSON.stringify(p).slice(0, 500),
-        )
-        setPassageTitle(p.section_ref || p.citation || citation)
+      const results = data.results || []
+      // Find best match — prefer exact section_ref match
+      const exact = results.find((r: Record<string, unknown>) => r.section_ref === citation)
+      const best = exact || results[0]
+      if (best) {
+        const text = (best.chunk_text || best.text || '') as string
+        setPassageText(text)
+        setPassageTitle(((best.section_ref || citation) as string) + (best.doc_title ? ` — ${best.doc_title}` : ''))
       } else {
-        setError('No provision found in corpus')
+        setError('No provision found in corpus for this citation')
       }
     } catch {
       setError('Unable to load provision')
