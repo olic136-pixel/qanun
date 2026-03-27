@@ -15,7 +15,8 @@ interface Props {
 const JURISDICTION_OPTIONS = [
   'UAE', 'Saudi Arabia', 'Kuwait', 'Qatar', 'Bahrain', 'Oman',
   'Egypt', 'Jordan', 'UK', 'Switzerland', 'Luxembourg',
-  'Cayman Islands', 'BVI', 'Singapore', 'Hong Kong', 'United States', 'Other',
+  'Cayman Islands', 'BVI', 'Singapore', 'Hong Kong', 'United States',
+  'Worldwide (ex-US)', 'Worldwide (inc. US)', 'Other',
 ]
 
 const AUM_OPTIONS = [
