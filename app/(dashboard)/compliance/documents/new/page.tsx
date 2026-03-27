@@ -9,13 +9,14 @@ import {
   getApplicableTemplates,
   validateDraftRequest,
   startDraft,
-  ENTITY_ID,
   type Template,
 } from '@/lib/api/drafting'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
+import { useEntity } from '@/lib/entity-context'
 
 function NewDocumentContent() {
   const { data: session } = useSession()
+  const { selectedEntity } = useEntity()
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselected = searchParams.get('type')
@@ -42,7 +43,7 @@ function NewDocumentContent() {
       setValidation(null)
       return
     }
-    validateDraftRequest(ENTITY_ID, selected, token)
+    validateDraftRequest(selectedEntity?.id ?? '', selected, token)
       .then(setValidation)
       .catch((e) => setError(e.message))
   }, [selected, token])
@@ -51,7 +52,7 @@ function NewDocumentContent() {
     if (!selected || !token) return
     setStarting(true)
     try {
-      const res = await startDraft(ENTITY_ID, selected, token)
+      const res = await startDraft(selectedEntity?.id ?? '', selected, token)
       router.push(`/compliance/documents/draft/${res.job_id}`)
     } catch (e: any) {
       setError(e.message)

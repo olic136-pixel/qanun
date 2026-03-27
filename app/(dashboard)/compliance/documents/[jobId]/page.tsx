@@ -15,8 +15,7 @@ import {
   type DocAlert,
   type MethodologyNote,
 } from '@/lib/api/twins'
-
-const ENTITY_ID = 'tradedarcateg3a-demo-0001'
+import { useEntity } from '@/lib/entity-context'
 
 const SEVERITY_CONFIG = {
   high: { label: 'High', tw: 'bg-red-50 text-red-700 border-red-200' },
@@ -35,6 +34,7 @@ export default function DocumentDetailPage() {
   const { data: session } = useSession()
   const params = useParams()
   const router = useRouter()
+  const { selectedEntity } = useEntity()
   const jobId = params.jobId as string
 
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
@@ -53,7 +53,7 @@ export default function DocumentDetailPage() {
     try {
       const [jobData, twinsData] = await Promise.all([
         getJobStatus(jobId, token),
-        getDocTwins(ENTITY_ID, token),
+        getDocTwins(selectedEntity?.id ?? '', token),
       ])
       setJob(jobData)
       const t = twinsData.twins.find((tw) => tw.job_id === jobId)

@@ -89,12 +89,13 @@ export const ENTITY_NAME = 'TradeDar Capital Management Ltd'
 export const ENTITY_TYPE = 'Category 3C'
 export const ENTITY_CATEGORY = 'category_3c'
 
-/** Filter templates to those applicable for the current entity category */
-export function getApplicableTemplates(templates: Template[]): Template[] {
+/** Filter templates to those applicable for the given entity category */
+export function getApplicableTemplates(templates: Template[], entityCategory?: string): Template[] {
+  const cat = entityCategory || ENTITY_CATEGORY
   return templates.filter((t) => {
     const types = t.applicable_entity_types
     if (!types || types.length === 0) return true
-    return types.includes('all') || types.includes(ENTITY_CATEGORY)
+    return types.includes('all') || types.includes(cat)
   })
 }
 

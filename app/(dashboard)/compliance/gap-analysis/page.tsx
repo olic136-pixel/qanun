@@ -7,8 +7,7 @@ import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { getGapAnalysis, type GapAnalysis, type GapItem } from '@/lib/api/twins'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
-
-const ENTITY_ID = 'tradedarcateg3a-demo-0001'
+import { useEntity } from '@/lib/entity-context'
 
 const READINESS_CONFIG = {
   not_started: {
@@ -36,6 +35,7 @@ const READINESS_CONFIG = {
 export default function GapAnalysisPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const { selectedEntity } = useEntity()
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
 
   const [gap, setGap] = useState<GapAnalysis | null>(null)
@@ -43,12 +43,13 @@ export default function GapAnalysisPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!token) return
-    getGapAnalysis(ENTITY_ID, token)
+    if (!token || !selectedEntity?.id) return
+    setLoading(true)
+    getGapAnalysis(selectedEntity.id, token)
       .then(setGap)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, selectedEntity?.id])
 
   if (loading) {
     return (

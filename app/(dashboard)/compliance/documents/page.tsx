@@ -8,18 +8,17 @@ import { FilePlus, Download, FileText, ExternalLink } from 'lucide-react'
 import {
   getTemplates,
   getApplicableTemplates,
-  ENTITY_ID,
-  ENTITY_NAME,
-  ENTITY_TYPE,
   type Template,
   type TemplatesResponse,
 } from '@/lib/api/drafting'
 import { getSubmissionStatus, type PackageStatus } from '@/lib/api/entities'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
+import { useEntity } from '@/lib/entity-context'
 
 export default function DocumentSuitePage() {
   const { data: session, status: authStatus } = useSession()
   const router = useRouter()
+  const { selectedEntity } = useEntity()
   const [templates, setTemplates] = useState<TemplatesResponse | null>(null)
   const [submissionStatus, setSubmissionStatus] = useState<PackageStatus | null>(null)
   const [loading, setLoading] = useState(true)
@@ -34,7 +33,7 @@ export default function DocumentSuitePage() {
 
     Promise.all([
       getTemplates(token),
-      getSubmissionStatus(ENTITY_ID, token).catch(() => null),
+      getSubmissionStatus(selectedEntity?.id ?? '', token).catch(() => null),
     ])
       .then(([tmpl, status]) => {
         setTemplates(tmpl)
@@ -60,7 +59,7 @@ export default function DocumentSuitePage() {
     )
   }
 
-  const applicableTemplates = getApplicableTemplates(templates?.templates ?? [])
+  const applicableTemplates = getApplicableTemplates(templates?.templates ?? [], selectedEntity?.category)
 
   // Build status + job_id maps from submission data
   const docStatusMap = new Map<string, string>()
@@ -83,9 +82,9 @@ export default function DocumentSuitePage() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mb-1">
-              ADGM FSP Application · {ENTITY_TYPE}
+              ADGM FSP Application · {selectedEntity?.category ?? 'Category 3C'}
             </p>
-            <h2 className="text-xl font-bold text-[#0B1829]">{ENTITY_NAME}</h2>
+            <h2 className="text-xl font-bold text-[#0B1829]">{selectedEntity?.name ?? 'Entity'}</h2>
           </div>
           <Link
             href="/compliance/documents/new"
