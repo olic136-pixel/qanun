@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   ArrowRight, ArrowLeft, Loader2, AlertTriangle, CheckCircle2,
   ChevronDown, ChevronUp, Info, FileText, Sparkles, ExternalLink,
@@ -573,8 +574,8 @@ export default function ClassifyPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <p className="text-xs text-[#9CA3AF]">
-                              {(doc.corpus_basis || []).join(', ')}
+                            <p className="text-xs">
+                              <CorpusCitations text={(doc.corpus_basis || []).join(', ')} />
                             </p>
                           </td>
                         </tr>
@@ -607,8 +608,8 @@ export default function ClassifyPage() {
                           <p className="text-sm font-medium text-[#111827]">
                             {tc.condition}
                           </p>
-                          <p className="text-xs text-[#9CA3AF] mt-0.5">
-                            {tc.corpus_basis}
+                          <p className="text-xs mt-0.5">
+                            <CorpusCitations text={tc.corpus_basis} />
                           </p>
                           <p className="text-xs text-[#6B7280] italic mt-1">
                             {tc.met_by}
@@ -724,5 +725,32 @@ export default function ClassifyPage() {
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Parses a comma-separated citation string (e.g., "GEN 5.4.1, PRU 3")
+ * into individual clickable links to the corpus search page.
+ */
+function CorpusCitations({ text }: { text: string }) {
+  if (!text) return null
+
+  // Split by comma, semicolon, or " and "
+  const citations = text.split(/[,;]|\band\b/).map((s) => s.trim()).filter(Boolean)
+
+  return (
+    <span className="flex flex-wrap gap-x-1 gap-y-0.5">
+      {citations.map((cite, i) => (
+        <span key={i}>
+          <Link
+            href={`/corpus?q=${encodeURIComponent(cite)}`}
+            className="text-[#1A5FA8] hover:underline hover:text-[#0B1829] transition-colors"
+          >
+            {cite}
+          </Link>
+          {i < citations.length - 1 && <span className="text-[#9CA3AF]">,&nbsp;</span>}
+        </span>
+      ))}
+    </span>
   )
 }
