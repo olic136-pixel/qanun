@@ -656,10 +656,7 @@ export default function ClassifyPage() {
                 Takes approximately 15-30 minutes.
               </p>
               <button
-                onClick={() => {
-                  // Stub — coming in next sprint
-                  alert('Coming in next sprint')
-                }}
+                onClick={() => router.push('/compliance/submission')}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0F7A5F] text-white text-sm font-medium rounded-lg hover:bg-[#0a6249] transition-colors"
               >
                 Generate Package
@@ -674,7 +671,7 @@ export default function ClassifyPage() {
                   const config = result.entity_config_draft
                     ? encodeURIComponent(JSON.stringify(result.entity_config_draft))
                     : ''
-                  router.push(`/compliance/draft${config ? `?entity_config=${config}` : ''}`)
+                  router.push(`/compliance/documents/new${config ? `?entity_config=${config}` : ''}`)
                 }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F5F7FA] text-[#374151] text-sm font-medium rounded-lg hover:bg-[#E8EBF0] transition-colors"
               >
