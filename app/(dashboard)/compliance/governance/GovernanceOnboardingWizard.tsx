@@ -332,7 +332,6 @@ export function GovernanceOnboardingWizard() {
                 <Shield size={14} /> Create governance framework
               </button>
             )}
-            )}
           </div>
         </div>
       </div>
