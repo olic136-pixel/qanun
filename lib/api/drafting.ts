@@ -51,6 +51,25 @@ export interface DraftResponse {
   poll_url: string
 }
 
+export interface PreflightQuestion {
+  key: string
+  label: string
+  question: string
+  hint: string
+  field_type: 'text' | 'textarea' | 'jurisdiction_multi' | 'aum_select' | 'boolean'
+  required: boolean
+  options: string[]
+  current_value: string | string[] | boolean | null
+}
+
+export interface PreflightResponse {
+  doc_type: string
+  display_name: string
+  questions: PreflightQuestion[]
+  total_questions: number
+  prefilled_count: number
+}
+
 export type JobStatusValue =
   | 'created'
   | 'queued'
@@ -115,11 +134,22 @@ export const validateDraftRequest = (
     token,
   })
 
+export const getPreflightQuestions = (
+  entityId: string,
+  docType: string,
+  token: string
+) =>
+  apiFetch<PreflightResponse>(
+    `/api/drafting/preflight/${docType.toLowerCase()}?entity_id=${encodeURIComponent(entityId)}`,
+    { token }
+  )
+
 export const startDraft = (
   entityId: string,
   docType: string,
   token: string,
-  targetJurisdiction: string = 'ADGM'
+  targetJurisdiction: string = 'ADGM',
+  entityContext: Record<string, unknown> = {}
 ) =>
   apiFetch<DraftResponse>('/api/drafting/draft', {
     method: 'POST',
@@ -127,6 +157,7 @@ export const startDraft = (
       entity_id: entityId,
       doc_type: docType.toLowerCase(),
       target_jurisdiction: targetJurisdiction,
+      entity_context: entityContext,
     }),
     token,
   })

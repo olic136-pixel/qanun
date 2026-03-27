@@ -9,11 +9,14 @@ import {
   getApplicableTemplates,
   validateDraftRequest,
   startDraft,
+  getPreflightQuestions,
   type Template,
+  type PreflightResponse,
 } from '@/lib/api/drafting'
 import { getEntity, type EntityProfile } from '@/lib/api/entities'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
 import { EntityProfilePanel } from '@/components/qanun/EntityProfilePanel'
+import { PreDraftQuestionnaire } from '@/components/qanun/PreDraftQuestionnaire'
 import { useEntity } from '@/lib/entity-context'
 
 function NewDocumentContent() {
@@ -34,6 +37,9 @@ function NewDocumentContent() {
   const [entityDetail, setEntityDetail] = useState<{
     mlro_name: string; compliance_name: string; seo_name: string; entity_profile: EntityProfile
   } | null>(null)
+  const [view, setView] = useState<'select' | 'questionnaire'>('select')
+  const [preflight, setPreflight] = useState<PreflightResponse | null>(null)
+  const [loadingPreflight, setLoadingPreflight] = useState(false)
 
   useEffect(() => {
     if (!token) return
@@ -65,11 +71,26 @@ function NewDocumentContent() {
       .catch((e) => setError(e.message))
   }, [selected, token])
 
-  async function handleStartDraft() {
+  async function handleStartDraftClick() {
+    if (!selected || !token) return
+    setLoadingPreflight(true)
+    setError('')
+    try {
+      const res = await getPreflightQuestions(selectedEntity?.id ?? '', selected, token)
+      setPreflight(res)
+      setView('questionnaire')
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoadingPreflight(false)
+    }
+  }
+
+  async function handleConfirmDraft(answers: Record<string, unknown>) {
     if (!selected || !token) return
     setStarting(true)
     try {
-      const res = await startDraft(selectedEntity?.id ?? '', selected, token)
+      const res = await startDraft(selectedEntity?.id ?? '', selected, token, 'ADGM', answers)
       router.push(`/compliance/documents/draft/${res.job_id}`)
     } catch (e: any) {
       setError(e.message)
@@ -82,6 +103,25 @@ function NewDocumentContent() {
       <div className="flex items-center justify-center h-64 text-sm text-gray-500">
         <Loader2 size={16} className="animate-spin mr-2" />
         Loading templates…
+      </div>
+    )
+  }
+
+  if (view === 'questionnaire' && preflight) {
+    return (
+      <div className="max-w-[1200px] mx-auto">
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-[13px] mb-5">
+            {error}
+          </div>
+        )}
+        <PreDraftQuestionnaire
+          displayName={preflight.display_name}
+          questions={preflight.questions}
+          onSubmit={handleConfirmDraft}
+          onBack={() => setView('select')}
+          submitting={starting}
+        />
       </div>
     )
   }
@@ -203,17 +243,17 @@ function NewDocumentContent() {
             </div>
 
             <button
-              onClick={handleStartDraft}
-              disabled={starting}
+              onClick={handleStartDraftClick}
+              disabled={loadingPreflight}
               className={`w-full py-3 rounded-md text-[13px] font-semibold transition-colors ${
-                starting
+                loadingPreflight
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#0B1829] text-white hover:bg-[#1D2D44] cursor-pointer'
               }`}
             >
-              {starting ? (
+              {loadingPreflight ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Loader2 size={14} className="animate-spin" /> Starting…
+                  <Loader2 size={14} className="animate-spin" /> Loading…
                 </span>
               ) : (
                 '→ Start Drafting'
