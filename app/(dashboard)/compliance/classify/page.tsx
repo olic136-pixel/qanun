@@ -783,23 +783,18 @@ function CitationBadge({ citation }: { citation: string }) {
     setError('')
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
-      // Use corpus search directly — returns actual rule text (not just headers)
+      // Use dedicated provision endpoint — returns full section text from corpus DB
       const res = await fetch(
-        `${baseUrl}/api/corpus/search?q=${encodeURIComponent(citation)}&max_results=3&source_entity=FSRA`,
+        `${baseUrl}/api/corpus/provision?citation=${encodeURIComponent(citation)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       )
       if (!res.ok) throw new Error('Failed to fetch')
       const data = await res.json()
-      const results = data.results || []
-      // Find best match — prefer exact section_ref match
-      const exact = results.find((r: Record<string, unknown>) => r.section_ref === citation)
-      const best = exact || results[0]
-      if (best) {
-        const text = (best.chunk_text || best.text || '') as string
-        setPassageText(text)
-        setPassageTitle(((best.section_ref || citation) as string) + (best.doc_title ? ` — ${best.doc_title}` : ''))
+      if (data.found && data.text) {
+        setPassageText(data.text)
+        setPassageTitle(`${data.citation}${data.doc_title ? ` — ${data.doc_title}` : ''}`)
       } else {
-        setError('No provision found in corpus for this citation')
+        setError('Provision not found in corpus')
       }
     } catch {
       setError('Unable to load provision')
@@ -818,7 +813,7 @@ function CitationBadge({ citation }: { citation: string }) {
         <ExternalLink size={9} className="opacity-50" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-[#E8EBF0] rounded-lg shadow-xl w-[380px] max-h-[300px] overflow-y-auto">
+        <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-[#E8EBF0] rounded-lg shadow-xl w-[420px] max-h-[400px] overflow-y-auto">
           <div className="sticky top-0 bg-white border-b border-[#E8EBF0] px-3 py-2 flex items-center justify-between">
             <code className="text-[11px] font-mono font-semibold text-[#0B1829]">
               {passageTitle || citation}
@@ -838,8 +833,7 @@ function CitationBadge({ citation }: { citation: string }) {
             )}
             {passageText && (
               <p className="text-[11px] text-[#374151] leading-relaxed whitespace-pre-wrap">
-                {passageText.slice(0, 800)}
-                {passageText.length > 800 && <span className="text-gray-400">... (truncated)</span>}
+                {passageText}
               </p>
             )}
           </div>
