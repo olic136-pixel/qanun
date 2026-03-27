@@ -62,11 +62,13 @@ export default function DocumentSuitePage() {
 
   const applicableTemplates = getApplicableTemplates(templates?.templates ?? [])
 
-  // Build status map from submission data
+  // Build status + job_id maps from submission data
   const docStatusMap = new Map<string, string>()
+  const docJobMap = new Map<string, string>()
   if (submissionStatus?.documents) {
     for (const doc of submissionStatus.documents) {
       docStatusMap.set(doc.doc_type, doc.status)
+      if (doc.job_id) docJobMap.set(doc.doc_type, doc.job_id)
     }
   }
 
@@ -161,9 +163,12 @@ export default function DocumentSuitePage() {
                 </td>
                 <td className="px-4 py-3 text-right">
                   {(docStatusMap.get(tmpl.doc_type) === 'complete' || docStatusMap.get(tmpl.doc_type) === 'review_required') ? (
-                    <span className="text-[12px] font-semibold text-emerald-600">
+                    <Link
+                      href={`/compliance/documents/draft/${docJobMap.get(tmpl.doc_type) ?? ''}`}
+                      className="text-[12px] font-semibold text-emerald-600 hover:text-emerald-800 transition-colors"
+                    >
                       View →
-                    </span>
+                    </Link>
                   ) : (
                   <Link
                     href={`/compliance/documents/new?type=${tmpl.doc_type}`}
