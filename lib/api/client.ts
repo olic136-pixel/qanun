@@ -28,7 +28,10 @@ export async function apiFetch<T>(
         ...fetchOptions,
         headers,
       })
-      if (res.ok) return res.json() as Promise<T>
+      if (res.ok) {
+        if (res.status === 204 || res.headers.get('content-length') === '0') return undefined as T
+        return res.json() as Promise<T>
+      }
       if (res.status >= 500 && attempts < 2) {
         attempts++
         await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempts)))
