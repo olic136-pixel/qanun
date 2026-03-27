@@ -763,27 +763,51 @@ function CitationBadge({ citation }: { citation: string }) {
   const [passageText, setPassageText] = useState('')
   const [passageTitle, setPassageTitle] = useState('')
   const [error, setError] = useState('')
-  const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
 
-  // Close on outside click
+  // Close on outside click or Escape
   useEffect(() => {
     if (!open) return
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (
+        btnRef.current?.contains(e.target as Node) ||
+        panelRef.current?.contains(e.target as Node)
+      ) return
+      setOpen(false)
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [open])
 
   async function handleClick() {
     if (open) { setOpen(false); return }
+    // Position panel relative to button
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const panelHeight = 420
+      // Open above if not enough space below
+      if (spaceBelow < panelHeight && rect.top > panelHeight) {
+        setPos({ top: rect.top - panelHeight - 4, left: Math.min(rect.left, window.innerWidth - 440) })
+      } else {
+        setPos({ top: rect.bottom + 4, left: Math.min(rect.left, window.innerWidth - 440) })
+      }
+    }
     setOpen(true)
-    if (passageText) return // already fetched
+    if (passageText) return
     setLoading(true)
     setError('')
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
-      // Use dedicated provision endpoint — returns full section text from corpus DB
       const res = await fetch(
         `${baseUrl}/api/corpus/provision?citation=${encodeURIComponent(citation)}`,
         { headers: { Authorization: `Bearer ${token}` } },
@@ -804,8 +828,9 @@ function CitationBadge({ citation }: { citation: string }) {
   }
 
   return (
-    <span className="relative inline-block" ref={ref}>
+    <>
       <button
+        ref={btnRef}
         onClick={handleClick}
         className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-[#1A5FA8] hover:bg-blue-100 transition-colors cursor-pointer border border-blue-100"
       >
@@ -813,13 +838,17 @@ function CitationBadge({ citation }: { citation: string }) {
         <ExternalLink size={9} className="opacity-50" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-[#E8EBF0] rounded-lg shadow-xl w-[420px] max-h-[400px] overflow-y-auto">
+        <div
+          ref={panelRef}
+          className="fixed z-[9999] bg-white border border-[#E8EBF0] rounded-lg shadow-2xl w-[420px] max-h-[420px] overflow-y-auto"
+          style={{ top: pos.top, left: pos.left }}
+        >
           <div className="sticky top-0 bg-white border-b border-[#E8EBF0] px-3 py-2 flex items-center justify-between">
-            <code className="text-[11px] font-mono font-semibold text-[#0B1829]">
+            <code className="text-[11px] font-mono font-semibold text-[#0B1829] truncate mr-2">
               {passageTitle || citation}
             </code>
-            <button onClick={() => setOpen(false)} className="text-[10px] text-gray-400 hover:text-gray-600">
-              close
+            <button onClick={() => setOpen(false)} className="shrink-0 text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer">
+              &times; close
             </button>
           </div>
           <div className="px-3 py-2">
@@ -839,6 +868,6 @@ function CitationBadge({ citation }: { citation: string }) {
           </div>
         </div>
       )}
-    </span>
+    </>
   )
 }
