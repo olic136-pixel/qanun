@@ -132,9 +132,11 @@ function ToggleQuestion({
 export default function ClassifyPage() {
   const { data: session } = useSession()
   const router = useRouter()
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
 
-  const [step, setStep] = useState(1)
+  const resumeSessionId = searchParams?.get('session_id') ?? null
+  const [step, setStep] = useState(resumeSessionId ? 3 : 1)
 
   // Step 1 state
   const [description, setDescription] = useState('')
@@ -149,7 +151,7 @@ export default function ClassifyPage() {
   const [islamicFinance, setIslamicFinance] = useState<boolean | null>(null)
 
   // Step 3 state
-  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(resumeSessionId)
   const [statusMsgIdx, setStatusMsgIdx] = useState(0)
   const [classificationError, setClassificationError] = useState<string | null>(null)
   const hasSubmitted = useRef(false)
@@ -160,10 +162,13 @@ export default function ClassifyPage() {
   const [showThresholds, setShowThresholds] = useState(false)
   const [savedConfirm, setSavedConfirm] = useState(false)
 
-  // Step 3: Submit classification on mount
+  // Step 3: Submit classification on mount (or resume from URL session_id)
   useEffect(() => {
     if (step !== 3 || hasSubmitted.current || !token) return
     hasSubmitted.current = true
+
+    // If resuming from URL, skip submission — go straight to polling
+    if (resumeSessionId) return
 
     const request: ClassificationRequest = {
       business_description: description,
@@ -203,6 +208,8 @@ export default function ClassifyPage() {
           const res = await getClassificationResult(sessionId, token)
           if (res.status === 'complete') {
             setResult(res)
+            // Persist session_id in URL so result survives navigation
+            window.history.replaceState(null, '', `/compliance/classify?session_id=${sessionId}`)
             setTimeout(() => { if (!cancelled) setStep(4) }, 500)
             return
           }
@@ -681,15 +688,19 @@ export default function ClassifyPage() {
 
               <button
                 onClick={() => {
+                  if (sessionId) {
+                    const url = `${window.location.origin}/compliance/classify?session_id=${sessionId}`
+                    navigator.clipboard.writeText(url).catch(() => {})
+                  }
                   setSavedConfirm(true)
-                  setTimeout(() => setSavedConfirm(false), 2000)
+                  setTimeout(() => setSavedConfirm(false), 3000)
                 }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F5F7FA] text-[#374151] text-sm font-medium rounded-lg hover:bg-[#E8EBF0] transition-colors"
               >
                 {savedConfirm ? (
                   <>
                     <CheckCircle2 size={14} className="text-[#0F7A5F]" />
-                    Saved
+                    Link copied — classification saved
                   </>
                 ) : (
                   'Save Classification'
@@ -711,6 +722,8 @@ export default function ClassifyPage() {
                 setIslamicFinance(null)
                 setSessionId(null)
                 setResult(null)
+                window.history.replaceState(null, '', '/compliance/classify')
+                hasSubmitted.current = false
                 setClassificationError(null)
                 hasSubmitted.current = false
               }}
