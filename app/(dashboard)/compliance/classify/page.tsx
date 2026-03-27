@@ -726,28 +726,110 @@ export default function ClassifyPage() {
 }
 
 /**
- * Parses a comma-separated citation string (e.g., "GEN 5.4.1, PRU 3")
- * into individual clickable links to the corpus search page.
+ * Parses a comma-separated citation string and renders each as a clickable
+ * badge that opens an inline popover showing the actual corpus provision text.
  */
 function CorpusCitations({ text }: { text: string }) {
   if (!text) return null
-
-  // Split by comma, semicolon, or " and "
   const citations = text.split(/[,;]|\band\b/).map((s) => s.trim()).filter(Boolean)
 
   return (
-    <span className="flex flex-wrap gap-x-1 gap-y-0.5">
+    <span className="flex flex-wrap gap-x-1.5 gap-y-1">
       {citations.map((cite, i) => (
-        <span key={i}>
-          <Link
-            href={`/corpus?q=${encodeURIComponent(cite)}`}
-            className="text-[#1A5FA8] hover:underline hover:text-[#0B1829] transition-colors"
-          >
-            {cite}
-          </Link>
-          {i < citations.length - 1 && <span className="text-[#9CA3AF]">,&nbsp;</span>}
-        </span>
+        <CitationBadge key={i} citation={cite} />
       ))}
+    </span>
+  )
+}
+
+function CitationBadge({ citation }: { citation: string }) {
+  const { data: session } = useSession()
+  const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [passageText, setPassageText] = useState('')
+  const [passageTitle, setPassageTitle] = useState('')
+  const [error, setError] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  async function handleClick() {
+    if (open) { setOpen(false); return }
+    setOpen(true)
+    if (passageText) return // already fetched
+    setLoading(true)
+    setError('')
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+      const res = await fetch(
+        `${baseUrl}/api/corpus/passage?section_ref=${encodeURIComponent(citation)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      const passages = data.passages || []
+      if (passages.length > 0) {
+        const p = passages[0]
+        setPassageText(
+          p.text || p.chunk_text || p.rule_text || p.content || JSON.stringify(p).slice(0, 500),
+        )
+        setPassageTitle(p.section_ref || p.citation || citation)
+      } else {
+        setError('No provision found in corpus')
+      }
+    } catch {
+      setError('Unable to load provision')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <span className="relative inline-block" ref={ref}>
+      <button
+        onClick={handleClick}
+        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-[#1A5FA8] hover:bg-blue-100 transition-colors cursor-pointer border border-blue-100"
+      >
+        {citation}
+        <ExternalLink size={9} className="opacity-50" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-[#E8EBF0] rounded-lg shadow-xl w-[380px] max-h-[300px] overflow-y-auto">
+          <div className="sticky top-0 bg-white border-b border-[#E8EBF0] px-3 py-2 flex items-center justify-between">
+            <code className="text-[11px] font-mono font-semibold text-[#0B1829]">
+              {passageTitle || citation}
+            </code>
+            <button onClick={() => setOpen(false)} className="text-[10px] text-gray-400 hover:text-gray-600">
+              close
+            </button>
+          </div>
+          <div className="px-3 py-2">
+            {loading && (
+              <div className="flex items-center gap-2 py-4 text-[11px] text-gray-400">
+                <Loader2 size={12} className="animate-spin" /> Loading provision...
+              </div>
+            )}
+            {error && (
+              <p className="text-[11px] text-amber-600 py-2">{error}</p>
+            )}
+            {passageText && (
+              <p className="text-[11px] text-[#374151] leading-relaxed whitespace-pre-wrap">
+                {passageText.slice(0, 800)}
+                {passageText.length > 800 && <span className="text-gray-400">... (truncated)</span>}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </span>
   )
 }
