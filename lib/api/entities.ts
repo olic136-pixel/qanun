@@ -130,3 +130,37 @@ export function getExportUrl(entityId: string, token: string): string {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.qanun.io'
   return `${base}/api/submission/${entityId}/export?token=${encodeURIComponent(token)}`
 }
+
+// ── Entity Logo ──────────────────────────────────────────────
+
+export function getEntityLogoUrl(entityId: string, token: string): string {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.qanun.io'
+  return `${base}/api/entities/${entityId}/logo?token=${encodeURIComponent(token)}`
+}
+
+export async function uploadEntityLogo(entityId: string, file: File, token: string): Promise<{ status: string; logo_path: string }> {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.qanun.io'
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch(`${base}/api/entities/${entityId}/logo`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Upload failed' }))
+    throw new Error(err.detail || 'Upload failed')
+  }
+  return res.json()
+}
+
+export async function deleteEntityLogo(entityId: string, token: string): Promise<void> {
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.qanun.io'
+  const res = await fetch(`${base}/api/entities/${entityId}/logo`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok && res.status !== 404) {
+    throw new Error('Failed to delete logo')
+  }
+}

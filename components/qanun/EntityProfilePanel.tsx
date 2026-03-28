@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { AlertTriangle, ChevronDown, ChevronUp, Check, Loader2, User } from 'lucide-react'
-import { updateEntityProfile, type EntityProfile, type EntityProfileUpdatePayload } from '@/lib/api/entities'
+import { useState, useRef } from 'react'
+import { AlertTriangle, ChevronDown, ChevronUp, Check, Loader2, User, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { updateEntityProfile, uploadEntityLogo, deleteEntityLogo, getEntityLogoUrl, type EntityProfile, type EntityProfileUpdatePayload } from '@/lib/api/entities'
 
 interface Props {
   entityId: string
@@ -45,6 +45,13 @@ export function EntityProfilePanel({
   const [foreignBranches, setForeignBranches] = useState<boolean | undefined>(profile.has_foreign_branches)
   const [pepExposure, setPepExposure] = useState(profile.pep_exposure ?? '')
   const [staffCount, setStaffCount] = useState(profile.staff_count_range ?? '')
+
+  // Logo state
+  const hasLogo = Boolean((profile as Record<string, unknown>).logo_path)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState(hasLogo ? getEntityLogoUrl(entityId, token) : '')
+  const [logoError, setLogoError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const missingCount = [
     PLACEHOLDER(mlroName) && !mlro,
@@ -118,6 +125,75 @@ export function EntityProfilePanel({
             These facts are injected into every document draft for <strong>{entityName}</strong>.
             Missing fields will appear as <code className="text-[10px] bg-gray-100 px-1 rounded">[TO BE CONFIRMED]</code> placeholders in the output — Claude will not invent them.
           </p>
+
+          {/* Company logo for cover page */}
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-2">
+              Company Logo <span className="normal-case font-normal">(appears on document cover page)</span>
+            </p>
+            <div className="flex items-center gap-3">
+              {logoUrl ? (
+                <div className="relative group">
+                  <img
+                    src={logoUrl}
+                    alt="Company logo"
+                    className="h-12 max-w-[120px] object-contain border border-[#E8EBF0] rounded p-1 bg-white"
+                    onError={() => setLogoUrl('')}
+                  />
+                  <button
+                    onClick={async () => {
+                      try {
+                        await deleteEntityLogo(entityId, token)
+                        setLogoUrl('')
+                      } catch { /* ignore */ }
+                    }}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    title="Remove logo"
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={logoUploading}
+                  className="flex items-center gap-1.5 px-3 py-2 border border-dashed border-[#D0D5DD] rounded text-[11px] text-gray-500 hover:border-[#1A5FA8] hover:text-[#1A5FA8] transition-colors cursor-pointer"
+                >
+                  {logoUploading ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                  {logoUploading ? 'Uploading…' : 'Upload logo'}
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/svg+xml"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  if (file.size > 2 * 1024 * 1024) {
+                    setLogoError('Logo must be under 2MB')
+                    return
+                  }
+                  setLogoUploading(true)
+                  setLogoError('')
+                  try {
+                    await uploadEntityLogo(entityId, file, token)
+                    setLogoUrl(getEntityLogoUrl(entityId, token) + '&t=' + Date.now())
+                  } catch (err: unknown) {
+                    setLogoError(err instanceof Error ? err.message : 'Upload failed')
+                  } finally {
+                    setLogoUploading(false)
+                    e.target.value = ''
+                  }
+                }}
+              />
+              {!logoUrl && (
+                <span className="text-[10px] text-gray-400">PNG, JPG or SVG — max 2MB</span>
+              )}
+            </div>
+            {logoError && <p className="text-[11px] text-red-600 mt-1">{logoError}</p>}
+          </div>
 
           {/* Key personnel */}
           <div>
