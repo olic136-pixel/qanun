@@ -6,6 +6,10 @@ export interface QuickLookupPassage {
   rulebook_code: string
   source_entity: string
   relevance_score: number
+  doc_title?: string
+  source_url?: string
+  version_str?: string
+  is_current?: boolean
 }
 
 export interface QuickLookupResult {

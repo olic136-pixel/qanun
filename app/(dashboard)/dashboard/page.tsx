@@ -231,21 +231,33 @@ export default function DashboardPage() {
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {lookupResult.passages.map((p, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setActiveCitation(p.section_ref)}
-                      className="bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 rounded-md px-2.5 py-1.5 text-left cursor-pointer transition-colors"
-                    >
-                      <span className="font-mono text-[11px] text-[#C4922A]">
-                        {p.section_ref}
-                      </span>
-                      {p.rulebook_code && (
-                        <span className="text-[10px] text-white/40 ml-1">
-                          {p.rulebook_code}
+                    <div key={i} className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveCitation(p.section_ref)}
+                        className="bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 rounded-md px-2.5 py-1.5 text-left cursor-pointer transition-colors"
+                      >
+                        <span className="font-mono text-[11px] text-[#C4922A]">
+                          {p.section_ref || p.doc_title?.slice(0, 30) || p.rulebook_code}
                         </span>
+                        {p.rulebook_code && (
+                          <span className="text-[10px] text-white/40 ml-1">
+                            {p.rulebook_code}
+                          </span>
+                        )}
+                      </button>
+                      {p.source_url && (
+                        <a
+                          href={p.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white/30 hover:text-[#C4922A] transition-colors"
+                          title={`View full text: ${p.doc_title || p.section_ref}`}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
                       )}
-                    </button>
+                    </div>
                   ))}
                 </div>
               </div>
