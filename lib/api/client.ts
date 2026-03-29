@@ -10,9 +10,9 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(
   path: string,
-  options: RequestInit & { token?: string } = {}
+  options: RequestInit & { token?: string; onAuthError?: () => void } = {}
 ): Promise<T> {
-  const { token, ...fetchOptions } = options
+  const { token, onAuthError, ...fetchOptions } = options
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
 
   const headers: Record<string, string> = {
@@ -32,7 +32,14 @@ export async function apiFetch<T>(
         if (res.status === 204 || res.headers.get('content-length') === '0') return undefined as T
         return res.json() as Promise<T>
       }
-      if (res.status >= 500 && attempts < 2) {
+      if (res.status === 401) {
+          if (onAuthError) onAuthError()
+          const { signOut } = await import('next-auth/react')
+          await signOut({ redirect: false })
+          window.location.href = '/sign-in'
+          throw new ApiError(401, 'Session expired')
+        }
+        if (res.status >= 500 && attempts < 2) {
         attempts++
         await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempts)))
         continue

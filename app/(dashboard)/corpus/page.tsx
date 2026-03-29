@@ -46,6 +46,13 @@ function CorpusPageInner() {
       setSearchQuery(q)
       setDebouncedQuery(q)
     }
+    const ref = searchParams.get('section_ref')
+    if (ref) {
+      setSearchQuery(ref)
+      setDebouncedQuery(ref)
+      setJurisdiction('')
+      setDocType('all')
+    }
   }, [searchParams])
 
   // Debounce search
@@ -85,6 +92,11 @@ function CorpusPageInner() {
     !searchQuery || s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.rulebook_code?.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  const copyLink = (sectionRef: string) => {
+    const url = `${window.location.origin}/corpus?section_ref=${encodeURIComponent(sectionRef)}`
+    navigator.clipboard.writeText(url).catch(() => undefined)
+  }
 
   if (isLoading) {
     return (
@@ -155,7 +167,12 @@ function CorpusPageInner() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     {result.section_ref && (
-                      <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-mono px-1.5 py-0 cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => copyLink(result.section_ref)}
+                        title="Copy link to this provision"
+                      >
                         {result.section_ref}
                       </Badge>
                     )}

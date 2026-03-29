@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import { Download, ArrowLeft, CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw } from 'lucide-react'
@@ -17,6 +17,7 @@ export default function DraftProgressPage() {
   const [status, setStatus] = useState<JobStatus | null>(null)
   const [error, setError] = useState('')
   const [retrying, setRetrying] = useState(false)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const poll = useCallback(async () => {
     if (!token || !jobId) return 'waiting'
@@ -33,24 +34,26 @@ export default function DraftProgressPage() {
   useEffect(() => {
     if (!token) return
 
-    let intervalId: ReturnType<typeof setInterval>
-
     const terminalStates = ['complete', 'failed', 'export_failed']
 
     const startPolling = async () => {
       const initial = await poll()
       if (terminalStates.includes(initial)) return
 
-      intervalId = setInterval(async () => {
+      intervalRef.current = setInterval(async () => {
         const s = await poll()
         if (terminalStates.includes(s)) {
-          clearInterval(intervalId)
+          if (intervalRef.current) clearInterval(intervalRef.current)
+          intervalRef.current = null
         }
       }, 3000)
     }
 
     startPolling()
-    return () => clearInterval(intervalId)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
   }, [poll, token])
 
   const handleRetry = async () => {
@@ -59,10 +62,12 @@ export default function DraftProgressPage() {
     try {
       await retryDraft(jobId, token)
       // Resume polling
-      const pollInterval = setInterval(async () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(async () => {
         const s = await poll()
         if (['complete', 'failed', 'export_failed'].includes(s)) {
-          clearInterval(pollInterval)
+          if (intervalRef.current) clearInterval(intervalRef.current)
+          intervalRef.current = null
         }
       }, 3000)
     } catch (e: any) {
