@@ -41,6 +41,14 @@ function NewDocumentContent() {
   const [preflight, setPreflight] = useState<PreflightResponse | null>(null)
   const [loadingPreflight, setLoadingPreflight] = useState(false)
 
+  const JURISDICTIONS = [
+    { code: 'ADGM', label: 'ADGM / FSRA', active: true },
+    { code: 'VARA', label: 'VARA — Dubai', active: true },
+    { code: 'EL_SALVADOR', label: 'El Salvador — CNAD', active: false },
+  ]
+
+  const [jurisdiction, setJurisdiction] = useState<string>('ADGM')
+
   useEffect(() => {
     if (!token) return
     getTemplates(token)
@@ -90,7 +98,7 @@ function NewDocumentContent() {
     if (!selected || !token) return
     setStarting(true)
     try {
-      const res = await startDraft(selectedEntity?.id ?? '', selected, token, 'ADGM', answers)
+      const res = await startDraft(selectedEntity?.id ?? '', selected, token, jurisdiction, answers)
       router.push(`/compliance/documents/draft/${res.job_id}`)
     } catch (e: any) {
       setError(e.message)
@@ -139,8 +147,25 @@ function NewDocumentContent() {
         <h1 className="text-xl font-bold text-[#0B1829]">Select Document Type</h1>
         <p className="text-[13px] text-gray-500 mt-1">
           Choose which compliance document to draft for {selectedEntity?.name ?? 'this entity'}.
-          Documents are grounded in the live ADGM regulatory corpus.
+          Documents are grounded in the live {jurisdiction === 'ADGM' ? 'ADGM / FSRA' : jurisdiction === 'VARA' ? 'VARA' : 'El Salvador CNAD'} regulatory corpus.
         </p>
+      </div>
+
+      {/* Jurisdiction selector */}
+      <div className="flex gap-2 mb-5">
+        {JURISDICTIONS.filter(j => j.active).map((j) => (
+          <button
+            key={j.code}
+            onClick={() => { setJurisdiction(j.code); setSelected(null); }}
+            className={`px-4 py-2 rounded-lg text-[12px] font-semibold border transition-colors ${
+              jurisdiction === j.code
+                ? 'bg-[#0B1829] text-white border-[#0B1829]'
+                : 'bg-white text-gray-600 border-[#E8EBF0] hover:border-gray-300'
+            }`}
+          >
+            {j.label}
+          </button>
+        ))}
       </div>
 
       {error && (
