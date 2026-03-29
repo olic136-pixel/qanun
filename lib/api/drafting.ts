@@ -118,6 +118,24 @@ export function getApplicableTemplates(templates: Template[], entityCategory?: s
   })
 }
 
+export function filterTemplatesByJurisdiction(
+  templates: Template[],
+  jurisdiction: string
+): Template[] {
+  if (jurisdiction === 'ADGM') {
+    // All current templates are ADGM — return applicable ones
+    return getApplicableTemplates(templates)
+  }
+  // For VARA and EL_SALVADOR: filter by coverage_rulebooks containing jurisdiction prefix
+  // When no VARA/SV templates exist yet, return empty array with a placeholder
+  const filtered = templates.filter(t =>
+    t.coverage_rulebooks.some(rb =>
+      rb.startsWith(jurisdiction === 'VARA' ? 'VARA-' : 'SV-')
+    )
+  )
+  return filtered
+}
+
 // ── API Functions ──────────────────────────────────────────────
 
 export const getTemplates = (token: string) =>

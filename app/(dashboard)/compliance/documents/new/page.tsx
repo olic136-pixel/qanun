@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import {
   getTemplates,
-  getApplicableTemplates,
+  filterTemplatesByJurisdiction,
   validateDraftRequest,
   startDraft,
   getPreflightQuestions,
@@ -52,10 +52,10 @@ function NewDocumentContent() {
   useEffect(() => {
     if (!token) return
     getTemplates(token)
-      .then((r) => setTemplates(getApplicableTemplates(r.templates)))
+      .then((r) => setTemplates(filterTemplatesByJurisdiction(r.templates, jurisdiction)))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, jurisdiction])
 
   useEffect(() => {
     if (!token || !selectedEntity?.id) return
@@ -207,6 +207,23 @@ function NewDocumentContent() {
                 onSelect={() => setSelected(selected === t.doc_type ? null : t.doc_type)}
               />
             ))}
+            {templates.length === 0 && !loading && jurisdiction !== 'ADGM' && (
+              <div className="col-span-3 py-12 text-center">
+                <p className="text-[13px] text-gray-500 mb-3">
+                  No individual templates available for {jurisdiction} yet.
+                </p>
+                <p className="text-[12px] text-gray-400 mb-4">
+                  Use the Governance Suite to draft a complete{' '}
+                  {jurisdiction === 'VARA' ? 'VASP' : 'DASP'} compliance package.
+                </p>
+                <button
+                  onClick={() => router.push('/compliance/governance-suite')}
+                  className="px-4 py-2 bg-[#0F7A5F] text-white rounded-lg text-[12px] font-semibold hover:bg-[#0F6E56] transition-colors"
+                >
+                  → Open Governance Suite
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
