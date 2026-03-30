@@ -7,8 +7,8 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Search, Clock, Hexagon, Bell, BookOpen,
   GitCommit, Settings2, CreditCard, ChevronLeft, ChevronRight,
-  Sun, Moon, Command, Activity, FolderOpen, Sparkles,
-  FileText, FilePlus, Download, BarChart3, Package, PlusCircle, Shield, FileStack,
+  Sun, Moon, Command, Activity, FolderOpen,
+  FileText, FilePlus, Download, BarChart3, Package, Shield, FileStack,
 } from 'lucide-react'
 import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -51,12 +51,10 @@ const navSections = [
     items: [
       { label: 'Governance', icon: Shield, href: '/compliance/governance' },
       { label: 'Suite', icon: FileStack, href: '/compliance/governance-suite' },
-      { label: 'Classify', icon: Sparkles, href: '/compliance/classify' },
       { label: 'Documents', icon: FileText, href: '/compliance/documents' },
       { label: 'New draft', icon: FilePlus, href: '/compliance/documents/new' },
       { label: 'Gap analysis', icon: BarChart3, href: '/compliance/gap-analysis' },
       { label: 'Submission', icon: Package, href: '/compliance/submission' },
-      { label: '+ Entity', icon: PlusCircle, href: '/compliance/entities/new' },
     ],
   },
   {

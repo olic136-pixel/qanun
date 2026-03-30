@@ -8,15 +8,9 @@ import {
   getTemplates,
   filterTemplatesByJurisdiction,
   validateDraftRequest,
-  startDraft,
-  getPreflightQuestions,
   type Template,
-  type PreflightResponse,
 } from '@/lib/api/drafting'
-import { getEntity, type EntityProfile } from '@/lib/api/entities'
 import { PortabilityBadge } from '@/components/qanun/PortabilityBadge'
-import { EntityProfilePanel } from '@/components/qanun/EntityProfilePanel'
-import { PreDraftQuestionnaire } from '@/components/qanun/PreDraftQuestionnaire'
 import { useEntity } from '@/lib/entity-context'
 
 function NewDocumentContent() {
@@ -32,19 +26,12 @@ function NewDocumentContent() {
   const [selected, setSelected] = useState<string | null>(preselected)
   const [validation, setValidation] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
-  const [entityDetail, setEntityDetail] = useState<{
-    mlro_name: string; compliance_name: string; seo_name: string; entity_profile: EntityProfile
-  } | null>(null)
-  const [view, setView] = useState<'select' | 'questionnaire'>('select')
-  const [preflight, setPreflight] = useState<PreflightResponse | null>(null)
-  const [loadingPreflight, setLoadingPreflight] = useState(false)
 
   const JURISDICTIONS = [
     { code: 'ADGM', label: 'ADGM / FSRA', active: true },
     { code: 'VARA', label: 'VARA — Dubai', active: true },
-    { code: 'EL_SALVADOR', label: 'El Salvador — CNAD', active: false },
+    { code: 'EL_SALVADOR', label: 'El Salvador — CNAD', active: true },
   ]
 
   const [jurisdiction, setJurisdiction] = useState<string>('ADGM')
@@ -58,18 +45,6 @@ function NewDocumentContent() {
   }, [token, jurisdiction])
 
   useEffect(() => {
-    if (!token || !selectedEntity?.id) return
-    getEntity(selectedEntity.id, token)
-      .then((e) => setEntityDetail({
-        mlro_name: e.mlro_name,
-        compliance_name: e.compliance_name,
-        seo_name: e.seo_name,
-        entity_profile: e.entity_profile ?? {},
-      }))
-      .catch(() => {/* non-fatal */})
-  }, [token, selectedEntity?.id])
-
-  useEffect(() => {
     if (!selected || !token) {
       setValidation(null)
       return
@@ -79,57 +54,11 @@ function NewDocumentContent() {
       .catch((e) => setError(e.message))
   }, [selected, token])
 
-  async function handleStartDraftClick() {
-    if (!selected || !token) return
-    setLoadingPreflight(true)
-    setError('')
-    try {
-      const res = await getPreflightQuestions(selectedEntity?.id ?? '', selected, token)
-      setPreflight(res)
-      setView('questionnaire')
-    } catch (e: any) {
-      setError(e.message)
-    } finally {
-      setLoadingPreflight(false)
-    }
-  }
-
-  async function handleConfirmDraft(answers: Record<string, unknown>) {
-    if (!selected || !token) return
-    setStarting(true)
-    try {
-      const res = await startDraft(selectedEntity?.id ?? '', selected, token, jurisdiction, answers)
-      router.push(`/compliance/documents/draft/${res.job_id}`)
-    } catch (e: any) {
-      setError(e.message)
-      setStarting(false)
-    }
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64 text-sm text-gray-500">
         <Loader2 size={16} className="animate-spin mr-2" />
         Loading templates…
-      </div>
-    )
-  }
-
-  if (view === 'questionnaire' && preflight) {
-    return (
-      <div className="max-w-[1200px] mx-auto">
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-[13px] mb-5">
-            {error}
-          </div>
-        )}
-        <PreDraftQuestionnaire
-          displayName={preflight.display_name}
-          questions={preflight.questions}
-          onSubmit={handleConfirmDraft}
-          onBack={() => setView('select')}
-          submitting={starting}
-        />
       </div>
     )
   }
@@ -171,27 +100,6 @@ function NewDocumentContent() {
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-[13px] mb-5">
           {error}
-        </div>
-      )}
-
-      {/* Entity profile — shown when entity detail is loaded */}
-      {entityDetail && selectedEntity && (
-        <div className="mb-5">
-          <EntityProfilePanel
-            entityId={selectedEntity.id}
-            entityName={selectedEntity.name}
-            profile={entityDetail.entity_profile}
-            mlroName={entityDetail.mlro_name}
-            complianceName={entityDetail.compliance_name}
-            seoName={entityDetail.seo_name}
-            token={token}
-            onSaved={(updated) => setEntityDetail({
-              mlro_name: updated.mlro_name,
-              compliance_name: updated.compliance_name,
-              seo_name: updated.seo_name,
-              entity_profile: updated,
-            })}
-          />
         </div>
       )}
 
@@ -239,11 +147,9 @@ function NewDocumentContent() {
               <InfoRow
                 label="Source"
                 value={
-                  validation.has_waystone_examples
-                    ? 'Waystone examples'
-                    : validation.has_stark_examples
-                      ? 'Stark examples'
-                      : 'Corpus provisions only'
+                  (validation.has_waystone_examples || validation.has_stark_examples)
+                    ? 'FSRA Benchmarked'
+                    : 'Corpus provisions only'
                 }
               />
             </div>
@@ -285,21 +191,20 @@ function NewDocumentContent() {
             </div>
 
             <button
-              onClick={handleStartDraftClick}
-              disabled={loadingPreflight}
+              onClick={() => {
+                if (!selected || !selectedEntity?.id) return
+                router.push(
+                  `/compliance/documents/preflight/${selected}?entity_id=${encodeURIComponent(selectedEntity.id)}&jurisdiction=${encodeURIComponent(jurisdiction)}`
+                )
+              }}
+              disabled={!selected}
               className={`w-full py-3 rounded-md text-[13px] font-semibold transition-colors ${
-                loadingPreflight
+                !selected
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#0B1829] text-white hover:bg-[#1D2D44] cursor-pointer'
               }`}
             >
-              {loadingPreflight ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 size={14} className="animate-spin" /> Loading…
-                </span>
-              ) : (
-                '→ Start Drafting'
-              )}
+              → Start Drafting
             </button>
             <p className="text-[10px] text-gray-400 text-center mt-2">
               Typically takes 3–8 minutes
@@ -357,13 +262,9 @@ function TemplateCard({
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="text-[10px] text-gray-400">{template.section_count} sections</span>
         <span className="text-gray-300">·</span>
-        {template.has_waystone_examples ? (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-semibold">
-            Waystone
-          </span>
-        ) : template.has_stark_examples ? (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-semibold">
-            Stark
+        {(template.has_waystone_examples || template.has_stark_examples) ? (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#EAF4F1] text-[#0F7A5F] border border-[#0F7A5F]/20 font-semibold">
+            FSRA Benchmarked
           </span>
         ) : (
           <span className="text-[10px] text-gray-400">Corpus only</span>

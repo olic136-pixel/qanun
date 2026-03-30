@@ -25,6 +25,7 @@ interface EntityContextValue {
   entities: Entity[]
   loading: boolean
   error: string | null
+  refreshEntities: () => Promise<void>
 }
 
 const STORAGE_KEY = 'qanun_selected_entity'
@@ -97,53 +98,38 @@ export function EntityProvider({ children }: { children: ReactNode }) {
     persistEntity(entity)
   }, [])
 
-  // Fetch entities on mount / when token becomes available
-  useEffect(() => {
-    if (!token) {
-      setLoading(false)
-      return
-    }
+  const fetchEntities = useCallback(async () => {
+    if (!token) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await listEntities(token)
+      const mapped = res.entities.map(toEntity)
+      setEntities(mapped)
 
-    let cancelled = false
-
-    async function fetchEntities() {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await listEntities(token)
-        if (cancelled) return
-
-        const mapped = res.entities.map(toEntity)
-        setEntities(mapped)
-
-        // Restore from localStorage if it matches a fetched entity
-        const stored = readStoredEntity()
-        if (stored && mapped.some((e) => e.id === stored.id)) {
-          setSelectedEntityState(stored)
-        } else if (mapped.length > 0) {
-          // Default to first entity
-          const first = mapped[0]
-          setSelectedEntityState(first)
-          persistEntity(first)
-        }
-      } catch (e: unknown) {
-        if (cancelled) return
-        const message = e instanceof Error ? e.message : 'Failed to load entities'
-        setError(message)
-      } finally {
-        if (!cancelled) setLoading(false)
+      const stored = readStoredEntity()
+      if (stored && mapped.some((e) => e.id === stored.id)) {
+        setSelectedEntityState(stored)
+      } else if (mapped.length > 0) {
+        const first = mapped[0]
+        setSelectedEntityState(first)
+        persistEntity(first)
       }
-    }
-
-    fetchEntities()
-    return () => {
-      cancelled = true
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to load entities'
+      setError(message)
+    } finally {
+      setLoading(false)
     }
   }, [token])
 
+  useEffect(() => {
+    fetchEntities()
+  }, [fetchEntities])
+
   return (
     <EntityContext.Provider
-      value={{ selectedEntity, setSelectedEntity, entities, loading, error }}
+      value={{ selectedEntity, setSelectedEntity, entities, loading, error, refreshEntities: fetchEntities }}
     >
       {children}
     </EntityContext.Provider>

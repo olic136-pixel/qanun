@@ -279,17 +279,10 @@ function StatusChip({ status }: { status: string }) {
 
 function SourceBadge({ tmpl }: { tmpl?: Template }) {
   if (!tmpl) return <span className="text-[11px] text-gray-300">—</span>
-  if (tmpl.has_waystone_examples) {
+  if (tmpl.has_waystone_examples || tmpl.has_stark_examples) {
     return (
-      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-        Waystone
-      </span>
-    )
-  }
-  if (tmpl.has_stark_examples) {
-    return (
-      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-        Stark
+      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#EAF4F1] text-[#0F7A5F] border border-[#0F7A5F]/20">
+        FSRA Benchmarked
       </span>
     )
   }

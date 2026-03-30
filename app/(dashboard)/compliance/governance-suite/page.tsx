@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEntity } from '@/lib/entity-context'
 import { Loader2, ArrowLeft, Play, FileStack } from 'lucide-react'
 import { apiFetch } from '@/lib/api/client'
+import { getEntity } from '@/lib/api/entities'
 
 const JURISDICTIONS = [
   { code: 'ADGM', label: 'ADGM / FSRA' },
@@ -60,6 +61,26 @@ export default function GovernanceSuitePage() {
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
   const [fullBuild, setFullBuild] = useState(false)
+
+  useEffect(() => {
+    if (!selectedEntity?.id || !token) return
+    getEntity(selectedEntity.id, token)
+      .then(entity => {
+        if (entity.target_jurisdiction &&
+            ['ADGM', 'VARA', 'EL_SALVADOR'].includes(entity.target_jurisdiction)) {
+          setJurisdiction(entity.target_jurisdiction)
+        }
+        const profile = entity.entity_profile as Record<string, unknown> | null
+        if (profile?.recommended_tiers && Array.isArray(profile.recommended_tiers)) {
+          const tiers = (profile.recommended_tiers as number[]).filter(t => t >= 1 && t <= 5)
+          if (tiers.length > 0) {
+            setSelectedTiers(tiers)
+            if (tiers.length === 5) setFullBuild(true)
+          }
+        }
+      })
+      .catch(() => { /* non-fatal — defaults remain */ })
+  }, [selectedEntity?.id, token])
 
   function toggleTier(tier: number) {
     setSelectedTiers(prev =>
