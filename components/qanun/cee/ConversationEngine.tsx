@@ -131,7 +131,7 @@ export function ConversationEngine({
     setErrorMsg('')
     const systemPrompt = buildSystemPrompt(contextDocument, jurisdictionCode)
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -165,7 +165,7 @@ export function ConversationEngine({
       // Persist session in background (do not await)
       persistSession(newMessages, lastFields)
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -218,7 +218,7 @@ export function ConversationEngine({
     try {
       const recentMessages = msgs.slice(-6)
       const transcript = recentMessages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -242,7 +242,7 @@ export function ConversationEngine({
     setCeeState('extracting')
     try {
       const transcript = msgs.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

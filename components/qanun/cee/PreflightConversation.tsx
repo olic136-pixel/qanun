@@ -94,7 +94,7 @@ export function PreflightConversation({
     setErrorMsg('')
     const systemPrompt = buildPreflightSystemPrompt(displayName, questions)
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,7 +126,7 @@ export function PreflightConversation({
     const systemPrompt = buildPreflightSystemPrompt(displayName, questions)
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,7 +158,7 @@ export function PreflightConversation({
     const transcript = msgs.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
     const extractionPrompt = buildPreflightExtractionPrompt(questions)
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/cee/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
