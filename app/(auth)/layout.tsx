@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 
 const testimonials = [
   {
@@ -33,18 +32,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-screen flex">
       {/* Left panel — hidden on mobile */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#0B1829] flex-col items-center justify-center px-12">
+      <div className="hidden lg:flex lg:w-1/2 bg-black flex-col items-center justify-center px-12">
         <div className="flex items-center gap-3 mb-12">
-          <div className="w-14 h-14 bg-[rgba(196,146,42,0.15)] border border-[rgba(196,146,42,0.4)] rounded-[10px] flex items-center justify-center">
-            <span className="text-[#C4922A] text-2xl font-medium italic">Q</span>
+          <div className="w-10 h-10 bg-white flex items-center justify-center shrink-0">
+            <span className="text-black font-black text-xl leading-none">Q</span>
           </div>
-          <QanunWordmark size="lg" dark />
+          <span className="text-[22px] font-black uppercase tracking-tighter text-white">QANUN</span>
         </div>
         <div className="text-center max-w-sm transition-opacity duration-500" key={current}>
-          <p className="text-white/70 text-sm leading-relaxed italic mb-3">
+          <p className="text-white/70 text-sm leading-relaxed mb-3">
             &ldquo;{testimonial.quote}&rdquo;
           </p>
-          <p className="text-white/40 text-xs">{testimonial.author}</p>
+          <p className="font-mono text-[10px] text-white/30 uppercase tracking-[0.15em]">{testimonial.author}</p>
         </div>
       </div>
 

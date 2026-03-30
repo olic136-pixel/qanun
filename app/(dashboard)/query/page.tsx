@@ -4,18 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createSession } from '@/lib/api/query'
 import { useState, useEffect, useRef, Suspense } from 'react'
-import {
-  Loader2,
-  FileSearch,
-  Cpu,
-  Paperclip,
-  X,
-  File,
-  CheckCircle2,
-  BookMarked,
-  Workflow,
-  SlidersHorizontal,
-} from 'lucide-react'
+import { Loader2, Paperclip, X, File } from 'lucide-react'
 import Link from 'next/link'
 
 const JURISDICTIONS = [
@@ -47,20 +36,6 @@ const EXAMPLES = [
   },
 ]
 
-const COMPLEXITY_DOT: Record<string, string> = {
-  simple: 'bg-[#16A34A]',
-  moderate: 'bg-[#C4922A]',
-  complex: 'bg-[#991B1B]',
-}
-
-const PIPELINE_STEPS = [
-  { title: 'Corpus retrieval', desc: 'Pinecone vector search across 63,397 sections. Top passages retrieved.' },
-  { title: 'Legal analysis', desc: 'Analyst and Devil\'s Advocate agents examine the provisions in detail.' },
-  { title: 'Lateral thinking', desc: 'Blue Sky agent explores comparative frameworks and analogous jurisdictions.' },
-  { title: 'Stress testing', desc: 'Stress Tester and RSA agents challenge the analysis for weak points.' },
-  { title: 'Synthesis', desc: 'Orchestrator produces a structured research note with grounded claims.' },
-]
-
 function QueryPageInner() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -73,6 +48,7 @@ function QueryPageInner() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
+  const [scopeMode, setScopeMode] = useState<'standard' | 'deep'>('standard')
 
   useEffect(() => {
     const q = searchParams.get('q')
@@ -101,21 +77,19 @@ function QueryPageInner() {
 
   const handleSubmit = async () => {
     if (!queryText.trim() || !session?.user?.accessToken) return
-    if (activeJurisdictions.length === 0) {
-      setError('Select at least one jurisdiction')
-      return
-    }
+    if (activeJurisdictions.length === 0) { setError('Select at least one jurisdiction'); return }
     setError(null)
     setIsSubmitting(true)
-    if (attachedFiles.length > 0) {
-      console.log('Attached files:', attachedFiles.map((f) => f.name))
-    }
     try {
       const result = await createSession(
         { query: queryText.trim(), jurisdictions: activeJurisdictions },
         session.user.accessToken as string
       )
-      router.push(`/query/${result.session_id}`)
+      if (scopeMode === 'deep') {
+        router.push('/projects/new')
+      } else {
+        router.push(`/query/${result.session_id}`)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create session')
       setIsSubmitting(false)
@@ -123,258 +97,188 @@ function QueryPageInner() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault()
-      handleSubmit()
-    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); handleSubmit() }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setAttachedFiles((prev) => [...prev, ...Array.from(e.target.files!)])
-    }
+    if (e.target.files) setAttachedFiles(prev => [...prev, ...Array.from(e.target.files!)])
   }
 
   const removeFile = (idx: number) => {
-    setAttachedFiles((prev) => prev.filter((_, i) => i !== idx))
+    setAttachedFiles(prev => prev.filter((_, i) => i !== idx))
   }
 
   const canSubmit = queryText.trim().length > 0 && !isSubmitting
 
   return (
-    <div className="w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-        {/* LEFT COLUMN */}
-        <div>
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-[26px] font-medium text-[#0B1829]">Start a Research Project</h1>
-            <p className="text-[13px] text-[#6B7280] mt-1.5 leading-relaxed">
-              QANUN runs a full 10-agent analysis — retrieval, legal reasoning, devil&apos;s advocate, blue-sky, stress-testing, and synthesis.
-              <br />
-              Results include a structured research note, grounded claims with confidence tiers, and direct links to the cited provisions.
-            </p>
+    <div className="w-full max-w-[860px]">
+
+      {/* Page heading */}
+      <div className="mb-8">
+        <h1 className="text-[22px] font-black uppercase tracking-tighter text-black">
+          Start a Research Project
+        </h1>
+        <p className="font-mono text-[10px] text-black/30 uppercase tracking-[0.2em] mt-1">
+          10-agent MALIS pipeline · ADGM · VARA · El Salvador
+        </p>
+      </div>
+
+      {/* Main textarea — full width, no card border at top */}
+      <div className="border border-black/20 focus-within:border-black transition-colors">
+        <textarea
+          ref={textareaRef}
+          value={queryText}
+          onChange={(e) => setQueryText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isSubmitting}
+          placeholder="Describe the regulatory question in full."
+          className="w-full min-h-[200px] max-h-[400px] resize-none bg-white border-none
+                     outline-none px-5 pt-5 pb-3
+                     font-mono text-[13px] text-black leading-[1.8]
+                     placeholder:text-black/20 placeholder:font-mono
+                     disabled:opacity-50"
+        />
+
+        {/* Attached files strip */}
+        {attachedFiles.length > 0 && (
+          <div className="px-5 pb-3 flex flex-wrap gap-2 border-t border-black/10 pt-3">
+            {attachedFiles.map((f, i) => (
+              <span key={`${f.name}-${i}`}
+                className="bg-[#0047FF]/5 border border-[#0047FF]/20 px-2.5 py-1
+                           font-mono text-[10px] text-[#0047FF] flex items-center gap-1.5">
+                <File className="h-[10px] w-[10px]" />
+                {f.name.length > 28 ? f.name.slice(0, 28) + '…' : f.name}
+                <X className="h-[10px] w-[10px] cursor-pointer hover:text-black"
+                   onClick={() => removeFile(i)} />
+              </span>
+            ))}
           </div>
+        )}
 
-          {/* Research card */}
-          <div className="bg-white border border-[#E8EBF0] rounded-xl overflow-hidden">
-            {/* Top bar */}
-            <div className="bg-[#F5F7FA] border-b border-[#E8EBF0] px-5 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileSearch className="h-[15px] w-[15px] text-[#1A5FA8]" />
-                <span className="text-[12px] font-medium text-[#0B1829]">Research query</span>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-[#9CA3AF]">
-                <Cpu className="h-3 w-3" />
-                <span>10 agents · MALIS pipeline</span>
-              </div>
-            </div>
+        {/* Toolbar */}
+        <div className="border-t border-black/10 px-5 py-3 flex items-center justify-between gap-4 bg-white">
 
-            {/* Textarea */}
-            <div className="px-5 pt-4 pb-3">
-              <textarea
-                ref={textareaRef}
-                value={queryText}
-                onChange={(e) => setQueryText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={isSubmitting}
-                placeholder={`Describe your research question in full. The more context you provide, the more precise the analysis.\n\ne.g. Under ADGM COBS 23.12.2, when does a copy trading service require a Managing Assets FSP — and can a block-delegation model operated by a Category 3C licensee avoid this requirement by characterising client parameter-setting as the investment decision?`}
-                className="min-h-[160px] max-h-[400px] resize-none bg-transparent border-none outline-none text-[14px] text-[#111827] leading-[1.7] w-full placeholder:text-[#9CA3AF]"
-              />
-              {attachedFiles.length > 0 && (
-                <p className="text-[11px] text-[#6B7280] italic mt-1">
-                  Attached documents will be included in the research context.
-                </p>
-              )}
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-[#E8EBF0]" />
-
-            {/* Toolbar */}
-            <div className="px-5 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                {JURISDICTIONS.map((j) => {
-                  const active = activeJurisdictions.includes(j.id)
-                  return (
-                    <button
-                      key={j.id}
-                      onClick={() => toggleJurisdiction(j.id)}
-                      disabled={isSubmitting}
-                      className={`text-[11px] font-medium px-3 py-1.5 rounded-full cursor-pointer transition-colors duration-100 ${
-                        active
-                          ? 'bg-[#0B1829] text-[#C4922A]'
-                          : 'bg-white text-[#6B7280] border border-[#E8EBF0] hover:border-[#9CA3AF]'
-                      }`}
-                    >
-                      {j.label}
-                    </button>
-                  )
-                })}
-                <div className="w-px h-4 bg-[#E8EBF0]" />
-                <label className="border border-[#E8EBF0] rounded-md px-3 h-[34px] text-[12px] text-[#6B7280] hover:bg-[#F5F7FA] cursor-pointer flex items-center gap-1.5 transition-colors">
-                  <Paperclip className="h-[13px] w-[13px]" />
-                  Attach document
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept=".pdf,.docx,.txt"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-[#9CA3AF] hidden sm:inline">⌘↵</span>
+          {/* Left — jurisdiction + attach */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {JURISDICTIONS.map((j) => {
+              const active = activeJurisdictions.includes(j.id)
+              return (
                 <button
-                  onClick={handleSubmit}
-                  disabled={!canSubmit}
-                  className={`h-[38px] px-5 rounded-md text-[13px] font-medium transition-all duration-150 ${
-                    canSubmit
-                      ? 'bg-[#0B1829] text-[#C4922A] hover:bg-[#1A5FA8] hover:text-white'
-                      : 'bg-[#F5F7FA] text-[#9CA3AF] cursor-not-allowed'
+                  key={j.id}
+                  onClick={() => toggleJurisdiction(j.id)}
+                  disabled={isSubmitting}
+                  className={`font-mono text-[10px] uppercase tracking-[0.1em] px-3 py-1.5
+                               transition-colors duration-100 ${
+                    active
+                      ? 'bg-black text-white'
+                      : 'text-black/40 border border-black/15 hover:border-black/40'
                   }`}
                 >
-                  {isSubmitting ? (
-                    <Loader2 className="h-[14px] w-[14px] animate-spin" />
-                  ) : (
-                    'Start research →'
-                  )}
+                  {j.label}
                 </button>
-              </div>
-            </div>
-
-            {/* Attached files */}
-            {attachedFiles.length > 0 && (
-              <div className="px-5 pb-3 border-t border-[#E8EBF0] pt-3 flex flex-wrap gap-2">
-                {attachedFiles.map((f, i) => (
-                  <span
-                    key={`${f.name}-${i}`}
-                    className="bg-[#EFF6FF] border border-[#85B7EB] rounded-md px-2.5 py-1 text-[11px] text-[#0C447C] flex items-center gap-1.5"
-                  >
-                    <File className="h-[11px] w-[11px]" />
-                    {f.name.length > 24 ? f.name.slice(0, 24) + '…' : f.name}
-                    <X
-                      className="h-[11px] w-[11px] cursor-pointer hover:text-[#991B1B]"
-                      onClick={() => removeFile(i)}
-                    />
-                  </span>
-                ))}
-              </div>
-            )}
+              )
+            })}
+            <div className="w-px h-4 bg-black/10 mx-1" />
+            <label className="font-mono text-[10px] uppercase tracking-[0.1em] text-black/30
+                               border border-black/15 px-3 py-1.5 cursor-pointer
+                               hover:border-black/40 hover:text-black/60 transition-colors
+                               flex items-center gap-1.5">
+              <Paperclip className="h-[10px] w-[10px]" />
+              Attach
+              <input ref={fileInputRef} type="file" multiple
+                     accept=".pdf,.docx,.txt" className="hidden"
+                     onChange={handleFileChange} />
+            </label>
           </div>
 
-          {/* Error */}
-          {error && (
-            <div className="mt-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-[13px] text-[#991B1B]">{error}</p>
-            </div>
-          )}
-
-          {/* Research scope */}
-          <div className="mt-4 bg-white border border-[#E8EBF0] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <SlidersHorizontal className="h-[14px] w-[14px] text-[#6B7280]" />
-              <span className="text-[13px] font-medium text-[#0B1829]">Research scope</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Standard */}
-              <div className="border-2 border-[#1A5FA8] bg-[#EFF6FF] rounded-xl p-4 cursor-pointer">
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-medium text-[#0B1829]">Standard</span>
-                  <CheckCircle2 className="h-4 w-4 text-[#1A5FA8]" />
-                </div>
-                <p className="text-[12px] text-[#6B7280] mt-1.5 leading-relaxed">
-                  Full 10-agent pipeline. Legal analysis, devil&apos;s advocate, lateral thinking, stress-testing. 60–90 seconds.
-                </p>
-                <div className="mt-2 flex items-center gap-3 text-[11px] text-[#9CA3AF]">
-                  <span>10 agents</span>
-                  <span>·</span>
-                  <span>Full corpus</span>
-                  <span>·</span>
-                  <span>~90s</span>
-                </div>
-              </div>
-              {/* Deep research */}
-              <div
-                onClick={() => router.push('/projects/new')}
-                className="border border-[#E8EBF0] bg-white rounded-xl p-4 cursor-pointer hover:border-[#1A5FA8] hover:bg-[#F8FAFF] transition-all"
+          {/* Right — scope + submit */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex border border-black/15">
+              <button
+                onClick={() => setScopeMode('standard')}
+                className={`font-mono text-[10px] uppercase tracking-[0.1em] px-3 py-1.5
+                             transition-colors ${
+                  scopeMode === 'standard' ? 'bg-black text-white' : 'text-black/30 hover:text-black/60'
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] font-medium text-[#0B1829]">Deep research</span>
-                  <span className="bg-[#1A5FA8]/10 text-[#1A5FA8] text-[9px] uppercase tracking-[0.06em] px-2 py-0.5 rounded-full font-medium">
-                    Beta
-                  </span>
-                </div>
-                <p className="text-[12px] text-[#6B7280] mt-1.5 leading-relaxed">
-                  Multi-session iterative analysis with memory. Builds a structured legal opinion over multiple research cycles.
-                </p>
-                <div className="mt-2 text-[11px] text-[#9CA3AF]">Multiple cycles · Living opinion · Obsidian export</div>
-              </div>
+                Standard
+              </button>
+              <button
+                onClick={() => setScopeMode('deep')}
+                className={`font-mono text-[10px] uppercase tracking-[0.1em] px-3 py-1.5
+                             border-l border-black/15 transition-colors ${
+                  scopeMode === 'deep' ? 'bg-black text-white' : 'text-black/30 hover:text-black/60'
+                }`}
+              >
+                Deep
+              </button>
             </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="flex flex-col gap-4">
-          {/* Example projects */}
-          <div className="bg-white border border-[#E8EBF0] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <BookMarked className="h-[14px] w-[14px] text-[#6B7280]" />
-              <span className="text-[13px] font-medium text-[#0B1829]">
-                Example research projects
-              </span>
-            </div>
-            <div className="space-y-2">
-              {EXAMPLES.map((ex, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setQueryText(ex.text)
-                    textareaRef.current?.focus()
-                  }}
-                  className="w-full border border-[#E8EBF0] rounded-lg p-3 cursor-pointer hover:border-[#1A5FA8] hover:bg-[#F8FAFF] transition-all duration-100 text-left group"
-                >
-                  <p className="text-[12px] font-medium text-[#0B1829] leading-snug group-hover:text-[#1A5FA8] transition-colors">
-                    {ex.text.length > 120 ? ex.text.slice(0, 120) + '…' : ex.text}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <span className="bg-[#F5F7FA] text-[#6B7280] font-mono text-[9px] px-1.5 py-0.5 rounded-sm">
-                      {ex.tag}
-                    </span>
-                    <span className={`w-1.5 h-1.5 rounded-full ${COMPLEXITY_DOT[ex.complexity]}`} />
-                    <span className="text-[10px] text-[#9CA3AF] capitalize">{ex.complexity}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Pipeline explainer */}
-          <div className="bg-white border border-[#E8EBF0] rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Workflow className="h-[14px] w-[14px] text-[#6B7280]" />
-              <span className="text-[13px] font-medium text-[#0B1829]">
-                What happens when you run research
-              </span>
-            </div>
-            <div className="space-y-3">
-              {PIPELINE_STEPS.map((step, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-[#F5F7FA] text-[10px] font-medium text-[#6B7280] flex items-center justify-center flex-shrink-0">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-medium text-[#0B1829]">{step.title}</p>
-                    <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-relaxed">{step.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className={`font-mono text-[11px] uppercase tracking-[0.1em] px-5 py-2
+                           transition-all duration-150 flex items-center gap-2 ${
+                canSubmit
+                  ? 'bg-black text-white hover:bg-[#0047FF]'
+                  : 'bg-black/10 text-black/20 cursor-not-allowed'
+              }`}
+            >
+              {isSubmitting
+                ? <><Loader2 className="h-[11px] w-[11px] animate-spin" />Running</>
+                : <>Run ⌘↵</>
+              }
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mt-3 border border-black/20 px-4 py-3">
+          <p className="font-mono text-[11px] text-black/60">{error}</p>
+        </div>
+      )}
+
+      {/* Scope description — contextual, below toolbar */}
+      <div className="mt-3 flex items-start gap-2">
+        <span className="font-mono text-[10px] text-black/20 uppercase tracking-[0.2em] shrink-0 mt-px">
+          {scopeMode === 'standard' ? 'Standard' : 'Deep'}
+        </span>
+        <p className="font-mono text-[10px] text-black/30 leading-relaxed">
+          {scopeMode === 'standard'
+            ? '10 agents · retrieval, analysis, adversarial review, lateral thinking, stress-testing, synthesis · ~90 seconds'
+            : 'Multi-session iterative analysis · builds a structured legal opinion over multiple research cycles · living opinion · Obsidian export'
+          }
+        </p>
+      </div>
+
+      {/* Example queries — flat list, below the form */}
+      <div className="mt-12">
+        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-black/20 mb-5">
+          Example queries
+        </p>
+        <div className="space-y-0 border-t border-black/10">
+          {EXAMPLES.map((ex, i) => (
+            <button
+              key={i}
+              onClick={() => { setQueryText(ex.text); textareaRef.current?.focus() }}
+              className="w-full text-left flex items-start justify-between gap-6
+                         py-4 border-b border-black/10
+                         hover:bg-black/[0.02] transition-colors group"
+            >
+              <p className="font-mono text-[12px] text-black/50 leading-relaxed
+                             group-hover:text-black/80 transition-colors">
+                {ex.text.length > 140 ? ex.text.slice(0, 140) + '…' : ex.text}
+              </p>
+              <span className="font-mono text-[10px] text-black/20 uppercase
+                               tracking-[0.15em] shrink-0 mt-0.5 group-hover:text-[#0047FF] transition-colors">
+                {ex.tag} →
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
     </div>
   )
 }

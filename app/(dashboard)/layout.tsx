@@ -5,12 +5,10 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Search, Clock, Hexagon, Bell, BookOpen,
-  GitCommit, Settings2, CreditCard, ChevronLeft, ChevronRight,
-  Sun, Moon, Command, Activity, FolderOpen,
-  FileText, FilePlus, Download, BarChart3, Package, Shield, FileStack,
+  LayoutDashboard, Search, Bell, BookOpen,
+  Settings2, ChevronLeft, ChevronRight,
+  Command, FileText, PlusCircle,
 } from 'lucide-react'
-import { QanunWordmark } from '@/components/qanun/QanunWordmark'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemStatus } from '@/lib/hooks/useDashboard'
 import { CommandPalette } from '@/components/qanun/CommandPalette'
@@ -26,43 +24,17 @@ const navSections = [
   {
     label: 'Workspace',
     items: [
-      { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-      { label: 'Research', icon: Search, href: '/query' },
-      { label: 'Projects', icon: FolderOpen, href: '/projects' },
-      { label: 'Sessions', icon: Clock, href: '/sessions' },
-    ],
-  },
-  {
-    label: 'Monitoring',
-    items: [
-      { label: 'Product twins', icon: Hexagon, href: '/twins' },
-      { label: 'Alerts', icon: Bell, href: '/alerts', badge: 1 },
-    ],
-  },
-  {
-    label: 'Corpus',
-    items: [
-      { label: 'Browse corpus', icon: BookOpen, href: '/corpus' },
-      { label: 'Recent changes', icon: GitCommit, href: '/changes' },
-    ],
-  },
-  {
-    label: 'Compliance Studio',
-    items: [
-      { label: 'Governance', icon: Shield, href: '/compliance/governance' },
-      { label: 'Suite', icon: FileStack, href: '/compliance/governance-suite' },
-      { label: 'Documents', icon: FileText, href: '/compliance/documents' },
-      { label: 'New draft', icon: FilePlus, href: '/compliance/documents/new' },
-      { label: 'Gap analysis', icon: BarChart3, href: '/compliance/gap-analysis' },
-      { label: 'Submission', icon: Package, href: '/compliance/submission' },
+      { label: 'Dashboard',           icon: LayoutDashboard, href: '/dashboard' },
+      { label: 'Research',             icon: Search,          href: '/query' },
+      { label: 'Compliance Studio',    icon: FileText,        href: '/compliance/documents' },
+      { label: 'Monitoring',           icon: Bell,            href: '/alerts', badge: true },
+      { label: 'Corpus',               icon: BookOpen,        href: '/corpus' },
     ],
   },
   {
     label: 'Account',
     items: [
-      { label: 'Settings', icon: Settings2, href: '/settings' },
-      { label: 'System', icon: Activity, href: '/system' },
-      { label: 'Billing', icon: CreditCard, href: '/billing' },
+      { label: 'Settings',             icon: Settings2,       href: '/settings' },
     ],
   },
 ]
@@ -96,8 +68,9 @@ function getPageTitle(pathname: string): string {
     '/compliance/gap-analysis': 'Gap Analysis',
     '/compliance/ingest': 'Ingest Documents',
     '/compliance/submission': 'Submission Package',
+    '/compliance/governance-suite': 'Governance Suite',
+    '/compliance/entities/new': 'Entity Setup',
   }
-  // Check for exact match first, then prefix match for dynamic routes
   if (map[pathname]) return map[pathname]
   for (const [path, title] of Object.entries(map)) {
     if (pathname.startsWith(path + '/')) return title
@@ -115,9 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const liveAgentCount = statusData?.agents
     ? Object.values(statusData.agents).filter((s) => s === 'available').length
     : 10
-  const corpusDocs = statusData?.corpus?.documents?.toLocaleString() ?? '2,484'
-  const corpusSections = statusData?.corpus?.sections?.toLocaleString() ?? '63,397'
-  const corpusHealthy = statusData?.vault_health === 'ok'
+  const pendingAlerts = 0
 
   useEffect(() => {
     if (status === 'loading') return
@@ -129,17 +100,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (status === 'loading') {
     return (
       <div className="flex h-screen">
-        <div className="w-[220px] bg-[#0B1829] p-4 space-y-4">
-          <Skeleton className="h-8 w-32 bg-white/10" />
-          <Skeleton className="h-4 w-24 bg-white/10" />
-          <Skeleton className="h-4 w-28 bg-white/10" />
-          <Skeleton className="h-4 w-20 bg-white/10" />
+        <div className="w-[200px] bg-white border-r border-black/10 p-4 space-y-4">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-20" />
         </div>
-        <div className="flex-1 p-6 bg-[#F5F7FA]">
+        <div className="flex-1 p-6 bg-white">
           <Skeleton className="h-8 w-48 mb-6" />
           <div className="grid grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-24 rounded-md" />
+              <Skeleton key={i} className="h-24" />
             ))}
           </div>
         </div>
@@ -158,52 +129,53 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <EntityProvider>
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside
-        className={`bg-[#0B1829] flex flex-col transition-all duration-200 ${
-          collapsed ? 'w-12' : 'w-[220px]'
-        }`}
-      >
+      <aside className={`bg-white border-r border-black/10 flex flex-col transition-all duration-200 ${
+        collapsed ? 'w-12' : 'w-[220px]'
+      }`}>
         {/* Logo */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 px-4 py-4 border-b border-white/[0.08]"
+          className="flex items-center gap-2.5 px-4 py-4 border-b border-black/10"
         >
-          <div className="w-[26px] h-[26px] bg-[rgba(196,146,42,0.15)] border border-[rgba(196,146,42,0.4)] rounded-[5px] flex items-center justify-center shrink-0">
-            <span className="text-[#C4922A] text-xs font-medium italic">Q</span>
+          <div className="w-7 h-7 bg-black flex items-center justify-center shrink-0">
+            <span className="text-white font-black text-sm leading-none">Q</span>
           </div>
-          {!collapsed && <QanunWordmark size="sm" dark />}
+          {!collapsed && (
+            <span className="text-[14px] font-black uppercase tracking-tighter text-black">
+              QANUN
+            </span>
+          )}
         </Link>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-2">
+        <nav className="flex-1 overflow-y-auto py-4">
           {navSections.map((section) => (
             <div key={section.label}>
               {!collapsed && (
-                <p className="px-4 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50 mt-2">
+                <p className="px-4 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.25em] text-black/20 mt-2">
                   {section.label}
                 </p>
               )}
               {section.items.map((item) => {
                 const active = pathname === item.href || pathname.startsWith(item.href + '/')
                 const Icon = item.icon
+                const showBadge = 'badge' in item && item.badge && pendingAlerts > 0
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-4 py-2 text-[12px] cursor-pointer transition-all duration-120 ${
-                      active
-                        ? 'bg-[rgba(26,95,168,0.2)] text-white border-l-2 border-[#1A5FA8] -ml-[2px] pl-[calc(1rem+2px)]'
-                        : 'text-white/70 hover:bg-white/5 hover:text-white/90'
-                    }`}
+                    className={`sidebar-link-new ${active ? 'active' : ''}`}
                   >
-                    <Icon size={16} className="shrink-0" />
+                    <Icon size={14} className="shrink-0" strokeWidth={1.5} />
                     {!collapsed && (
-                      <span className="flex-1">{item.label}</span>
-                    )}
-                    {!collapsed && 'badge' in item && item.badge && item.badge > 0 && (
-                      <span className="bg-[#991B1B] text-white text-[9px] px-1.5 py-0.5 rounded-full">
-                        {item.badge}
-                      </span>
+                      <>
+                        <span className="flex-1">{item.label}</span>
+                        {showBadge && (
+                          <span className="bg-black text-white text-[9px] px-1.5 py-0.5 font-mono font-bold">
+                            {pendingAlerts}
+                          </span>
+                        )}
+                      </>
                     )}
                   </Link>
                 )
@@ -212,103 +184,86 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        {/* Entity selector */}
+        {/* Entity section */}
         {!collapsed && (
-          <div className="mx-3 mb-2">
-            <p className="px-1 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/50">
-              Entity
-            </p>
-            <EntitySelector />
-          </div>
-        )}
-
-        {/* Corpus status footer */}
-        {!collapsed && (
-          <div className="mx-3 mb-3 bg-[rgba(15,122,95,0.1)] border border-[rgba(15,122,95,0.25)] rounded-[7px] p-[9px]">
-            <p className="text-[9px] text-white/50 uppercase tracking-[0.08em] mb-1.5">
-              Corpus status
-            </p>
-            <div className="space-y-1">
-              {[
-                { label: 'Documents', value: corpusDocs },
-                { label: 'Sections', value: corpusSections },
-                { label: 'Health', value: 'Live' },
-              ].map((row) => (
-                <div key={row.label} className="flex justify-between text-[10px]">
-                  <span className="text-white/50">{row.label}</span>
-                  <span className={`${row.label === 'Health' ? 'text-[#5DCAA5]' : 'text-white/70'} ${row.label === 'Health' && corpusHealthy ? 'animate-pulse' : ''}`}>{row.value}</span>
-                </div>
-              ))}
+          <div className="mx-3 mb-3 border-t border-black/10 pt-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[9px] font-mono font-bold uppercase tracking-[0.25em] text-black/20">
+                Entity
+              </p>
+              <Link
+                href="/compliance/entities/new"
+                className="w-5 h-5 flex items-center justify-center border border-black/10 hover:bg-black hover:border-black hover:text-white text-black/40 transition-all"
+                title="Add new entity"
+              >
+                <PlusCircle size={11} strokeWidth={1.5} />
+              </Link>
             </div>
+            <EntitySelector />
           </div>
         )}
 
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center justify-center py-3 text-white/30 hover:text-white/60 border-t border-white/[0.08]"
+          className="flex items-center justify-center py-3 text-black/20 hover:text-black/60 border-t border-black/10 transition-colors"
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
       </aside>
 
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-[52px] bg-white border-b border-[#E8EBF0] sticky top-0 z-40 flex items-center justify-between px-6 shrink-0">
+        <header className="h-[52px] bg-white border-b border-black/10 sticky top-0 z-40 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-[15px] font-medium text-[#111827]">
+            <h1 className="text-[12px] font-black uppercase tracking-tighter text-black">
               {getPageTitle(pathname)}
             </h1>
-            <span className="bg-green-50 text-green-700 text-[12px] px-3 py-1 rounded-full flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              {liveAgentCount} agents live
-            </span>
+            <div className="flex items-center gap-2 px-3 py-1 bg-[#0047FF]/5 border border-[#0047FF]/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#0047FF] animate-pulse" />
+              <span className="font-mono text-[10px] text-[#0047FF] uppercase tracking-[0.15em]">
+                {liveAgentCount} agents live
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => useUIStore.getState().setPaletteOpen(true)}
-              className="text-[13px] text-[#6B7280] border border-[#E8EBF0] rounded-md px-3 py-1.5 hover:bg-[#F5F7FA] flex items-center gap-1.5"
+              className="font-mono text-[10px] text-black/30 border border-black/10 px-3 py-1.5 hover:bg-black/5 flex items-center gap-1.5 uppercase tracking-[0.1em] transition-colors"
             >
-              <Command size={12} />
+              <Command size={11} />
               <span>Cmd K</span>
             </button>
-            <button className="text-[#6B7280] hover:text-[#111827]">
-              <Sun size={16} />
-            </button>
-            <button className="relative text-[#6B7280] hover:text-[#111827]">
-              <Bell size={16} />
-              <span className="absolute -top-1 -right-1 bg-[#991B1B] text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                1
-              </span>
+            <button className="relative text-black/30 hover:text-black transition-colors">
+              <Bell size={15} strokeWidth={1.5} />
+              {pendingAlerts > 0 && (
+                <span className="absolute -top-1 -right-1 bg-black text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center font-bold">
+                  {pendingAlerts}
+                </span>
+              )}
             </button>
             <DropdownMenu>
-              <DropdownMenuTrigger className="w-[30px] h-[30px] rounded-full bg-[#0B1829] flex items-center justify-center text-[#C4922A] text-[11px] font-medium border-none outline-none">
+              <DropdownMenuTrigger className="w-7 h-7 bg-black flex items-center justify-center text-white font-mono text-[10px] font-bold border-none outline-none">
                 {initials}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-3 py-2">
-                  <p className="text-sm font-medium">{session?.user?.name || 'User'}</p>
-                  <p className="text-xs text-[#6B7280]">{session?.user?.email || ''}</p>
+                  <p className="text-[12px] font-bold uppercase tracking-tight">{session?.user?.name || 'User'}</p>
+                  <p className="text-[10px] font-mono text-black/40">{session?.user?.email || ''}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/settings')}>
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/billing')}>
-                  Billing
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/billing')}>Billing</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/sign-in' })}>
-                  Sign out
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/sign-in' })}>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-[#F5F7FA]">
+        <main className="flex-1 overflow-y-auto p-6 bg-[#F5F3EE]">
           {children}
         </main>
       </div>

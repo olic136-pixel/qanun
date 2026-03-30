@@ -51,11 +51,11 @@ function SignInForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <h2 className="text-2xl font-semibold text-[#0B1829] mb-6">Welcome back</h2>
+      <h2 className="text-2xl font-black uppercase tracking-tighter text-black mb-6">Welcome back</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-[#111827] mb-1 block">
+          <label className="text-sm font-semibold text-black mb-1 block">
             Email
           </label>
           <Input
@@ -64,16 +64,16 @@ function SignInForm() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-[13px] text-[#991B1B] mt-1">{errors.email.message}</p>
+            <p className="text-[13px] text-red-600 mt-1">{errors.email.message}</p>
           )}
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-[#111827]">Password</label>
+            <label className="text-sm font-semibold text-black">Password</label>
             <Link
               href="/forgot-password"
-              className="text-[13px] text-[#1A5FA8] hover:underline"
+              className="text-[13px] text-[#0047FF] hover:underline"
             >
               Forgot password?
             </Link>
@@ -84,7 +84,7 @@ function SignInForm() {
             {...register('password')}
           />
           {errors.password && (
-            <p className="text-[13px] text-[#991B1B] mt-1">
+            <p className="text-[13px] text-red-600 mt-1">
               {errors.password.message}
             </p>
           )}
@@ -93,7 +93,7 @@ function SignInForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-12 bg-[#0B1829] text-white hover:bg-[#1A5FA8]"
+          className="w-full h-12 bg-black text-white hover:bg-[#0047FF]"
         >
           {isSubmitting ? (
             <Loader2 className="animate-spin" size={18} />
@@ -103,15 +103,15 @@ function SignInForm() {
         </Button>
 
         {error && (
-          <p className="text-[13px] text-[#991B1B] text-center">{error}</p>
+          <p className="text-[13px] text-red-600 text-center">{error}</p>
         )}
       </form>
 
       {/* Divider */}
       <div className="flex items-center gap-3 my-6">
-        <div className="flex-1 h-px bg-[#E8EBF0]" />
-        <span className="text-xs text-[#9CA3AF]">or continue with</span>
-        <div className="flex-1 h-px bg-[#E8EBF0]" />
+        <div className="flex-1 h-px bg-black/10" />
+        <span className="text-xs text-black/30">or continue with</span>
+        <div className="flex-1 h-px bg-black/10" />
       </div>
 
       {/* Google SSO */}
@@ -126,9 +126,9 @@ function SignInForm() {
         Google
       </button>
 
-      <p className="text-sm text-[#6B7280] text-center mt-6">
+      <p className="text-sm text-black/40 text-center mt-6">
         Don&apos;t have an account?{' '}
-        <Link href="/sign-up" className="text-[#1A5FA8] hover:underline">
+        <Link href="/sign-up" className="text-[#0047FF] hover:underline">
           Start free trial
         </Link>
       </p>

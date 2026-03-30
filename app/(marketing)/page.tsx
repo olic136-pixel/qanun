@@ -1,26 +1,24 @@
 import { HeroSection } from '@/components/marketing/HeroSection'
-import { HowItWorks } from '@/components/marketing/HowItWorks'
-import { CapabilityCards } from '@/components/marketing/CapabilityCards'
+import { ProofBar } from '@/components/marketing/ProofBar'
+import { ProductDemo } from '@/components/marketing/ProductDemo'
 import { JurisdictionsSection } from '@/components/marketing/JurisdictionsSection'
 import { FounderStatement } from '@/components/marketing/FounderStatement'
-import { TrustSection } from '@/components/marketing/TrustSection'
 import { CTASection } from '@/components/marketing/CTASection'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'QANUN — The law, decoded. Wherever you operate.',
-  description: 'AI-powered regulatory intelligence for ADGM, DIFC, and emerging markets.',
+  title: 'QANUN — The law, decoded.',
+  description: 'AI-powered regulatory intelligence and governance suite drafting for ADGM, VARA, and El Salvador. 65,822 provisions. Zero hallucination.',
 }
 
 export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <HowItWorks />
-      <CapabilityCards />
+      <ProofBar />
+      <ProductDemo />
       <JurisdictionsSection />
       <FounderStatement />
-      <TrustSection />
       <CTASection />
     </>
   )

@@ -1,0 +1,1 @@
+Run the full test suite with pytest -v. Report results as binary PASS or FAIL. If FAIL, list every failing test with the error message and suggest fixes. Do not proceed with any new work until all tests pass.

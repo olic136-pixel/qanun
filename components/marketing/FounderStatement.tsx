@@ -5,7 +5,7 @@ import { motion, useInView } from 'framer-motion'
 const PARAGRAPHS = [
   `QANUN exists because the regulatory question and the answer to it have always lived in different places. The question lives with the practitioner — the founder applying for a licence, the CLO mapping a product against seventeen provisions, the compliance officer monitoring a regulatory change that landed at 11pm.`,
   `The answer lives in a corpus of thousands of provisions, scattered across rulebooks, circulars, and guidance notes, with no index and no memory.`,
-  `We built QANUN to close that gap. Not with a chatbot. With a system that reads the corpus the way a senior counsel reads it — structurally, adversarially, completely — and gives you a research note you can act on.`,
+  `We built QANUN to close that gap. Not with a chatbot. With a system that reads the corpus the way a senior counsel reads it — structurally, adversarially, completely — and gives you a research note you can act on. This is what QANUN does.`,
 ]
 
 export function FounderStatement() {
@@ -13,20 +13,14 @@ export function FounderStatement() {
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section className="bg-[#0B1829] py-32 relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 70% 60% at 50% 50%, rgba(26,95,168,0.07) 0%, transparent 70%)',
-        }}
-      />
+    <section className="bg-black py-20 border-t border-white/[0.08] relative overflow-hidden">
       <div className="max-w-[720px] mx-auto px-6 relative z-10">
         <div ref={ref} className="relative">
           <motion.span
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 0.25 } : {}}
             transition={{ duration: 0.6 }}
-            className="absolute -top-6 -left-4 text-[100px] leading-none text-[#C4922A] select-none"
+            className="absolute -top-6 -left-4 text-[100px] leading-none text-[#0047FF] select-none"
             style={{ fontFamily: 'Georgia, serif' }}
           >
             &ldquo;
@@ -38,7 +32,7 @@ export function FounderStatement() {
                 key={i}
                 initial={{ opacity: 0, y: 14 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.15 + i * 0.2, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.6, delay: 0.15 + i * 0.2, ease: [0.19, 1, 0.22, 1] }}
                 className="text-[24px] leading-[1.75] text-white/90 tracking-[-0.01em]"
                 style={{ fontFamily: 'Georgia, serif' }}
               >
@@ -53,9 +47,12 @@ export function FounderStatement() {
             transition={{ duration: 0.5, delay: 0.85 }}
             className="mt-10"
           >
-            <div className="w-10 h-px bg-[#C4922A] mb-5" />
-            <p className="text-[18px] font-semibold text-white">Oliver Cook KC</p>
-            <p className="text-[13px] text-[#9CA3AF] mt-1">Co-founder · Barrister, Libertas Chambers</p>
+            <div className="w-10 h-px bg-[#0047FF] mb-5" />
+            <p className="text-[18px] font-black uppercase tracking-tighter text-white">Oliver Cook KC</p>
+            <p className="font-mono text-[13px] text-white/30 mt-1">Co-founder · Barrister, Libertas Chambers</p>
+            <p className="font-mono text-[11px] text-white/20 mt-2 leading-relaxed">
+              Author of the COBS 23.12.2 brief reproduced in the research terminal above.
+            </p>
           </motion.div>
         </div>
       </div>

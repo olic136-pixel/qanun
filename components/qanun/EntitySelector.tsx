@@ -9,7 +9,7 @@ export function EntitySelector() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1 text-white/50 text-[11px]">
+      <div className="flex items-center gap-1.5 px-2 py-1 font-mono text-[10px] text-black/30 uppercase tracking-[0.15em]">
         <Loader2 size={12} className="animate-spin" />
         <span>Loading…</span>
       </div>
@@ -18,7 +18,7 @@ export function EntitySelector() {
 
   if (error) {
     return (
-      <div className="px-2 py-1 text-[11px] text-red-400 truncate max-w-[180px]" title={error}>
+      <div className="px-2 py-1 text-[10px] text-black/40 truncate max-w-[148px]" title={error}>
         Entity error
       </div>
     )
@@ -28,7 +28,7 @@ export function EntitySelector() {
     return (
       <Link
         href="/compliance/entities/new"
-        className="flex items-center gap-1 px-2 py-1 text-[11px] text-[#C4922A] hover:text-[#E0B84D] transition-colors"
+        className="flex items-center gap-1 px-2 py-1 font-mono text-[10px] text-[#0047FF] hover:text-black uppercase tracking-[0.15em] transition-colors"
       >
         + Add entity
       </Link>
@@ -42,13 +42,13 @@ export function EntitySelector() {
         const entity = entities.find((ent) => ent.id === e.target.value)
         setSelectedEntity(entity ?? null)
       }}
-      className="bg-white/10 text-white/90 text-[11px] border border-white/[0.15] rounded px-2 py-1 outline-none hover:bg-white/15 focus:border-[#C4922A]/50 transition-colors max-w-[170px] truncate"
+      className="bg-white text-black text-[10px] font-mono border border-black/10 rounded-none px-2 py-1 outline-none focus:border-[#0047FF] transition-colors max-w-[148px] truncate"
     >
       {entities.map((entity) => (
         <option
           key={entity.id}
           value={entity.id}
-          className="bg-[#0B1829] text-white"
+          className="bg-white text-black"
         >
           {entity.name}
         </option>

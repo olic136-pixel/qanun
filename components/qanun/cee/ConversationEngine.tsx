@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import type { ExtractedEntityFields, EntityValidationResult } from '@/lib/api/entitySetup'
 import { createOrUpdateSetupSession, validateEntityExtraction } from '@/lib/api/entitySetup'
 
@@ -293,43 +293,46 @@ export function ConversationEngine({
   return (
     <div className="flex flex-col h-full">
       {/* Message thread */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pr-2">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pr-2">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[88%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed ${
+          <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} mb-5`}>
+            {msg.role === 'assistant' && (
+              <div className="w-5 h-5 bg-black flex items-center justify-center mb-1.5 shrink-0">
+                <span className="text-white font-black text-[9px] leading-none">Q</span>
+              </div>
+            )}
+            <div className={`max-w-[88%] text-[14px] leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-[#0B1829] text-white'
-                : 'bg-white border border-[#E8EBF0] text-[#1D2D44]'
+                ? 'text-black font-medium text-right border-r-2 border-black/20 pr-3'
+                : 'text-black/70'
             }`}>
               {msg.content.replace('[EXTRACTION READY]', '').trim()}
             </div>
           </div>
         ))}
         {ceeState === 'loading' && (
-          <div className="flex justify-start">
-            <div className="bg-white border border-[#E8EBF0] rounded-2xl px-4 py-3">
-              <div className="flex gap-1">
-                {[0,1,2].map(i => (
-                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#9CA3AF] animate-bounce"
-                    style={{ animationDelay: `${i * 150}ms` }} />
-                ))}
-              </div>
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-5 h-5 bg-black flex items-center justify-center shrink-0">
+              <span className="text-white font-black text-[9px] leading-none">Q</span>
             </div>
+            <span className="font-mono text-[14px] text-black/30 animate-pulse">▊</span>
           </div>
         )}
       </div>
 
       {/* Status bar */}
       {(statusLabel || errorMsg) && (
-        <div className={`py-1.5 text-center text-[11px] ${errorMsg ? 'text-[#991B1B]' : 'text-[#6B7280]'}`}>
+        <div className={`py-1.5 text-center font-mono text-[10px] uppercase tracking-[0.15em] ${
+          errorMsg ? 'text-black' : 'text-black/30'
+        }`}>
           {errorMsg || statusLabel}
         </div>
       )}
 
       {/* Input area — disabled when extracting/validating/complete */}
       {ceeState !== 'complete' && (
-        <div className="border-t border-[#E8EBF0] pt-3 mt-2">
-          <div className="flex gap-2 items-end">
+        <div className="border-t border-black/10 pt-3 mt-2">
+          <div className="flex gap-0 border border-black/20 focus-within:border-[#0047FF] transition-colors">
             <textarea
               ref={textareaRef}
               value={input}
@@ -338,22 +341,26 @@ export function ConversationEngine({
                 if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
               }}
               disabled={ceeState !== 'active'}
-              placeholder={ceeState === 'loading' ? 'Waiting for response…' : 'Type your answer…'}
+              placeholder={ceeState === 'loading' ? '' : 'Type your answer…'}
               rows={1}
-              className="flex-1 resize-none text-[13px] border border-[#E8EBF0] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#0B1829] disabled:bg-[#F5F7FA] disabled:text-[#9CA3AF] placeholder:text-[#9CA3AF] max-h-[120px]"
+              className="flex-1 resize-none font-mono text-[12px] border-none px-3 py-2.5 focus:outline-none bg-white disabled:bg-white disabled:text-black/30 placeholder:text-black/30 max-h-[120px]"
             />
             <button
               onClick={sendMessage}
               disabled={!input.trim() || ceeState !== 'active'}
-              className="w-9 h-9 rounded-xl bg-[#0B1829] text-white flex items-center justify-center shrink-0 hover:bg-[#1A5FA8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-10 bg-black text-white flex items-center justify-center hover:bg-[#0047FF] disabled:bg-black/20 disabled:cursor-not-allowed transition-colors"
             >
               {ceeState === 'loading'
-                ? <Loader2 size={14} className="animate-spin" />
-                : <Send size={14} />
+                ? <Loader2 size={13} className="animate-spin" />
+                : <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M2 6.5h9M7 2.5l4.5 4L7 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
               }
             </button>
           </div>
-          <p className="text-[10px] text-[#9CA3AF] mt-1.5 text-right">Enter to send · Shift+Enter for new line</p>
+          <p className="font-mono text-[9px] text-black/20 uppercase tracking-[0.2em] mt-1.5 text-right">
+            Enter to send · Shift+Enter for new line
+          </p>
         </div>
       )}
     </div>

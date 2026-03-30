@@ -2,43 +2,46 @@ import Link from 'next/link'
 
 export function CTASection() {
   return (
-    <section className="bg-[#0B1829] py-32 relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(26,95,168,0.09) 0%, transparent 70%)',
-        }}
-      />
-      <div className="max-w-[640px] mx-auto px-6 text-center relative z-10">
-        <p className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#C4922A] mb-5">
-          GET STARTED
-        </p>
-        <h2 className="text-[48px] font-semibold tracking-[-0.02em] text-white leading-[1.1] mb-5">
-          The regulatory corpus, structured. Your question, answered.
-        </h2>
-        <p className="text-[17px] text-[#9CA3AF] mb-10">
-          Start with a question. QANUN handles the rest.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/sign-up"
-            className="inline-flex items-center gap-2 bg-[#C4922A] text-[#0B1829] font-semibold px-8 py-4 rounded-md text-[15px] hover:bg-[#D4A23A] transition-colors"
-          >
-            Start researching free
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </Link>
-          <Link
-            href="/sign-in"
-            className="inline-flex items-center gap-2 text-white border border-white/20 px-8 py-4 rounded-md text-[15px] hover:bg-white/5 transition-colors"
-          >
-            Talk to the team
-          </Link>
+    <section className="bg-black py-20 relative overflow-hidden">
+      <div className="max-w-[1280px] mx-auto px-6">
+        {/* Top rule */}
+        <div className="h-px bg-white/10 mb-12" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+          {/* Left — headline */}
+          <div className="lg:col-span-7">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/30 mb-8">
+              Get started
+            </p>
+            <h2 className="text-[clamp(42px,6vw,72px)] font-black tracking-tighter uppercase text-white leading-[0.95] mb-0">
+              The law,<br />
+              <span className="text-[#0047FF]">decoded.</span>
+            </h2>
+          </div>
+
+          {/* Right — actions */}
+          <div className="lg:col-span-5 flex flex-col gap-6">
+            <p className="text-[17px] text-white/50 leading-relaxed">
+              From a regulatory question to a complete governance structure.
+              Qanun handles the research, the drafting, and the monitoring.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/sign-up" className="btn-primary-inverted flex-1 text-center">
+                Request access
+              </Link>
+              <Link href="/sign-in"
+                className="flex-1 text-center justify-center px-8 py-4 border border-white/20 font-bold text-[13px] uppercase tracking-widest text-white/60 hover:text-white hover:border-white transition-all inline-flex items-center">
+                Sign in
+              </Link>
+            </div>
+            <p className="font-mono text-[10px] text-white/20 uppercase tracking-[0.2em]">
+              No credit card required · Cancel anytime
+            </p>
+          </div>
         </div>
-        <p className="text-[13px] text-[#4B5563] mt-7">
-          No credit card required · Full corpus access · Cancel anytime
-        </p>
+
+        {/* Bottom rule */}
+        <div className="h-px bg-white/10 mt-20" />
       </div>
     </section>
   )

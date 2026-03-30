@@ -71,7 +71,6 @@ export default function NewEntityPage() {
     setCreating(true)
     setCreateError('')
     try {
-      // 1. Create entity
       const created = await createEntity({
         entity_name: extractedFields.entity_name!,
         entity_type: extractedFields.entity_type ?? extractedFields.licence_category ?? 'category_3c',
@@ -83,7 +82,6 @@ export default function NewEntityPage() {
         is_fund_manager: false,
       }, token)
 
-      // 2. Update entity profile with full extracted data
       await updateEntityProfile(created.entity_id, {
         mlro_name: extractedFields.mlro_name ?? undefined,
         compliance_name: extractedFields.compliance_name ?? undefined,
@@ -92,10 +90,8 @@ export default function NewEntityPage() {
         ...(extractedFields.jurisdiction_specific ?? {}),
       }, token)
 
-      // 3. Refresh entity list in sidebar
       await refreshEntities()
 
-      // 4. Initiate governance suite
       const tiers = extractedFields.recommended_tiers ?? [1, 2]
       const suite = await apiFetch<{ suite_job_id: string }>('/api/drafting/suite', {
         method: 'POST',
@@ -108,7 +104,6 @@ export default function NewEntityPage() {
         token,
       })
 
-      // 5. Route to suite status
       router.push(`/compliance/governance-suite/${suite.suite_job_id}`)
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Failed to create entity')
@@ -119,8 +114,8 @@ export default function NewEntityPage() {
   return (
     <div className="flex h-[calc(100vh-52px)] overflow-hidden -m-6">
       {/* LEFT PANEL — 58% */}
-      <div className="flex flex-col w-[58%] border-r border-[#E8EBF0] bg-white overflow-hidden">
-        <div className="p-5 border-b border-[#E8EBF0]">
+      <div className="flex flex-col w-[58%] border-r border-black/10 bg-white overflow-hidden">
+        <div className="p-5 border-b border-black/10">
           <JurisdictionSelector
             selected={jurisdiction}
             onSelect={handleJurisdictionSelect}
@@ -129,18 +124,18 @@ export default function NewEntityPage() {
         </div>
         <div className="flex-1 overflow-hidden flex flex-col p-5">
           {pageState === 'selecting' && (
-            <div className="flex-1 flex items-center justify-center text-[13px] text-[#9CA3AF]">
+            <div className="flex-1 flex items-center justify-center text-[13px] text-black/30">
               Select a jurisdiction above to begin.
             </div>
           )}
           {pageState === 'loading_context' && (
-            <div className="flex-1 flex items-center justify-center gap-2 text-[13px] text-[#6B7280]">
+            <div className="flex-1 flex items-center justify-center gap-2 text-[13px] text-black/40">
               <Loader2 size={16} className="animate-spin" />
               Loading regulatory context…
             </div>
           )}
           {contextError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-[13px] text-[#991B1B] mb-4">
+            <div className="p-3 border border-black/20 text-[13px] text-black mb-4">
               {contextError}
             </div>
           )}
@@ -157,27 +152,27 @@ export default function NewEntityPage() {
             />
           )}
         </div>
-        {/* Confirmation area — only when confirmed */}
+        {/* Confirmation area */}
         {pageState === 'confirmed' && validationResult && (
-          <div className="p-5 border-t border-[#E8EBF0] bg-[#F5F7FA]">
+          <div className="p-5 border-t border-black/10 bg-white">
             <ValidationSummary
               result={validationResult}
               entityName={extractedFields.entity_name ?? 'Entity'}
             />
             {createError && (
-              <p className="text-[12px] text-[#991B1B] mb-3">{createError}</p>
+              <p className="text-[12px] text-black mb-3">{createError}</p>
             )}
             <button
               onClick={handleConfirm}
               disabled={creating}
-              className="w-full py-3 rounded-xl bg-[#0F7A5F] text-white text-[14px] font-semibold hover:bg-[#0F6E56] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-black text-white text-[13px] font-bold uppercase tracking-widest hover:bg-[#0047FF] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {creating
                 ? <><Loader2 size={16} className="animate-spin" />Creating entity and initiating suite…</>
                 : <>Confirm and Create Entity →</>
               }
             </button>
-            <p className="text-[10px] text-[#9CA3AF] text-center mt-2">
+            <p className="font-mono text-[9px] text-black/20 uppercase tracking-[0.2em] text-center mt-2">
               This will create the entity record and initiate the governance suite
             </p>
           </div>
@@ -185,13 +180,13 @@ export default function NewEntityPage() {
       </div>
 
       {/* RIGHT PANEL — 42% */}
-      <div className="flex flex-col w-[42%] bg-[#F5F7FA] overflow-hidden">
-        <div className="p-5 border-b border-[#E8EBF0]">
-          <p className="text-[15px] font-semibold text-[#0B1829]">
+      <div className="flex flex-col w-[42%] bg-white overflow-hidden">
+        <div className="p-5 border-b border-black/10">
+          <p className="text-[13px] font-black uppercase tracking-tighter text-black">
             {extractedFields.entity_name ?? 'New Entity'}
           </p>
           {jurisdiction && (
-            <p className="text-[11px] text-[#6B7280] mt-0.5">{jurisdiction}</p>
+            <p className="font-mono text-[9px] text-black/30 uppercase tracking-[0.2em] mt-0.5">{jurisdiction}</p>
           )}
         </div>
         <div className="flex-1 overflow-y-auto p-5">

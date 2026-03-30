@@ -3,14 +3,6 @@ import { useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 
-const TABS = [
-  { id: 'research', label: 'Deep Research', tagline: 'Ask once. Get a research note any senior counsel would act on.', description: 'A 10-agent pipeline reads the corpus the way a senior counsel would — structurally, adversarially, completely. The result is a structured research note with grounded claims, cited provisions, and confidence tiers.', stat: '< 90 seconds', statLabel: 'full 10-agent pipeline' },
-  { id: 'lookup', label: 'Quick Lookup', tagline: 'Type a question. Get the answer. Stay in flow.', description: 'For direct questions, QANUN retrieves the most relevant provisions and synthesises a grounded answer inline — with citations, no navigation, no waiting.', stat: '< 15 seconds', statLabel: 'corpus retrieval + synthesis' },
-  { id: 'monitoring', label: 'Regulatory Monitoring', tagline: 'Define your structure once. Never miss a regulatory change.', description: 'Product Twins track your entity structure against the live corpus. When a new circular, amendment, or guidance touches your licence position, you are alerted — with the specific provision and its implications.', stat: 'Continuous', statLabel: 'live corpus monitoring' },
-  { id: 'governance', label: 'Governance Suites', tagline: 'One conversation. A complete compliance structure.', description: 'From a single entity intake conversation, Qanun generates your complete five-tier regulatory governance structure — registration pack, mandatory policies, board frameworks, operational procedures, and filing templates — for ADGM, VARA, or El Salvador.', stat: '112 templates', statLabel: 'across 5 tiers and 3 jurisdictions' },
-  { id: 'entity', label: 'Entity Setup', tagline: 'Describe your business. Qanun determines the framework.', description: 'The Conversational Entity Engine interrogates you the way a qualified regulatory counsel would — one focused question at a time. It determines licensing viability, confirms your category, and initiates your governance suite. No forms. No dropdowns.', stat: '< 10 minutes', statLabel: 'from conversation to governance suite initiated' },
-]
-
 function ResearchPanel() {
   return (
     <div className="h-full overflow-y-auto px-6 py-5 hide-scrollbar">
@@ -28,7 +20,7 @@ function ResearchPanel() {
         { t: 'h', text: '3. FSRA Supervisory Discretion' },
         { t: 'p', text: 'The requirement to implement systems and controls "to the satisfaction of the Regulator" confers broad FSRA discretion to look through any structural characterisation of the arrangement.', cit: 'COBS 23.12.2', tier: 'SUPPORTED', tc: '#1A5FA8', tb: 'rgba(26,95,168,0.2)' },
       ].map((item, i) => item.t === 'h' ? (
-        <p key={i} className="text-[12px] font-semibold text-white mt-4 mb-2">{item.text}</p>
+        <p key={i} className="text-[13px] font-black uppercase tracking-tighter text-white mt-5 mb-2 leading-snug">{item.text}</p>
       ) : (
         <p key={i} className="text-[12px] text-white/65 leading-[1.7] mb-2">
           {item.text}
@@ -207,136 +199,205 @@ function EntitySetupPanel() {
   )
 }
 
-export function HowItWorks() {
-  const [activeTab, setActiveTab] = useState(0)
+const CAPABILITIES = [
+  {
+    id: 'research',
+    label: 'Deep Research',
+    description: 'A 10-agent pipeline reads the corpus structurally, adversarially, completely. You get a research note with grounded claims, cited provisions, and confidence tiers. Not a summary — an analysis.',
+    stat: '< 90s',
+    statLabel: 'full 10-agent pipeline',
+  },
+  {
+    id: 'lookup',
+    label: 'Quick Lookup',
+    description: 'Type a provision reference or a direct question. QANUN retrieves the relevant rules and synthesises a grounded answer in under 15 seconds, inline, with citations.',
+    stat: '< 15s',
+    statLabel: 'corpus retrieval + synthesis',
+  },
+  {
+    id: 'monitoring',
+    label: 'Regulatory Monitoring',
+    description: 'Define your entity structure once. QANUN watches the corpus. When something changes that affects your licence position, you know before your next board meeting.',
+    stat: 'Continuous',
+    statLabel: 'live corpus monitoring',
+  },
+  {
+    id: 'governance',
+    label: 'Governance Suites',
+    description: 'Describe your entity. QANUN generates the complete governance structure — registration pack, policies, board frameworks, operational procedures, filing templates — drafted against live corpus provisions.',
+    stat: '112',
+    statLabel: 'document templates across 5 tiers',
+  },
+  {
+    id: 'entity',
+    label: 'Entity Setup',
+    description: 'A conversation. No forms, no dropdowns. By the end of it, your licensing category is confirmed, your entity is created, and your governance suite is initiated.',
+    stat: '< 10 min',
+    statLabel: 'from conversation to suite initiated',
+  },
+]
+
+export function ProductDemo() {
+  const [active, setActive] = useState(0)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
   return (
-    <section id="how-it-works" className="bg-black py-28 overflow-hidden">
+    <section id="how-it-works" className="bg-black py-24 overflow-hidden">
       <div ref={ref} className="max-w-[1280px] mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          {/* LEFT */}
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}>
-            <motion.p initial={{ opacity: 0, y: 10 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.4 }}
-              className="text-[11px] font-semibold tracking-[0.14em] uppercase text-[#0047FF] mb-8">
-              HOW IT WORKS
-            </motion.p>
-            <h2 className="text-[clamp(42px,4.8vw,64px)] font-black tracking-tighter text-white leading-[1.05] uppercase mb-6">
-              Not a chatbot.<br /><span className="text-[#0047FF]">A research system.</span>
-            </h2>
-            <p className="text-[17px] text-white/60 leading-[1.65] mb-10 max-w-[480px]">
-              QANUN reads 65,822 regulatory provisions the way a senior counsel would — structurally, adversarially, completely. Every answer is grounded against the corpus. Nothing is invented.
-            </p>
+        {/* Section statement */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
+          className="mb-16"
+        >
+          <h2 className="text-[clamp(38px,4.5vw,64px)] font-black uppercase tracking-tighter
+                         text-white leading-[1.0]">
+            Not a chatbot.<br />
+            <span className="text-[#0047FF]">A research system.</span>
+          </h2>
+        </motion.div>
 
-            <div className="flex gap-0 mb-8 border-b border-white/10 w-full overflow-x-auto">
-              {TABS.map((t, i) => (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
+
+          {/* LEFT — capability list + description */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 flex flex-col"
+          >
+
+            {/* Numbered capability list */}
+            <div className="space-y-0 mb-0">
+              {CAPABILITIES.map((cap, i) => (
                 <button
-                  key={t.id}
-                  onClick={() => setActiveTab(i)}
-                  className={`px-4 py-3 font-mono text-[10px] uppercase tracking-[0.2em] whitespace-nowrap transition-all border-b-2 -mb-[1px] ${
-                    activeTab === i
-                      ? 'border-[#0047FF] text-[#0047FF] opacity-100'
-                      : 'border-transparent text-white/40 hover:text-white/70'
+                  key={cap.id}
+                  onClick={() => setActive(i)}
+                  className={`w-full flex items-center gap-4 py-4 text-left
+                               border-l-2 pl-5 transition-all duration-200 ${
+                    active === i
+                      ? 'border-[#0047FF]'
+                      : 'border-white/10 hover:border-white/25'
+                  }`}
+                >
+                  <span className="font-mono text-[10px] text-white/20 w-5 shrink-0">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span className={`text-[15px] font-black uppercase tracking-tighter
+                                    transition-colors duration-200 ${
+                    active === i ? 'text-[#0047FF]' : 'text-white/50 hover:text-white/80'
                   }`}>
-                  {t.label}
+                    {cap.label}
+                  </span>
                 </button>
               ))}
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <p className="text-[20px] font-semibold text-white leading-[1.3] mb-3">{TABS[activeTab].tagline}</p>
-                <p className="text-[15px] text-white/50 leading-[1.7] mb-8">{TABS[activeTab].description}</p>
-                <div className="border-l-2 border-[#0047FF] pl-5 mb-8">
-                  <p className="text-[44px] font-mono font-semibold text-white leading-none mb-1">{TABS[activeTab].stat}</p>
-                  <p className="text-[13px] text-white/40">{TABS[activeTab].statLabel}</p>
-                </div>
-                <div className="space-y-2.5 mb-8">
-                  {['Every claim grounded against a specific corpus provision — never inferred beyond what the rules contain.',
-                    'Citations are clickable — every reference opens the exact provision from the ADGM, VARA, or El Salvador corpus.'
-                  ].map((chip, i) => (
-                    <div key={i} className="flex items-start gap-3 bg-white/[0.04] px-4 py-3 border border-white/[0.08]">
-                      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="mt-0.5 flex-shrink-0">
-                        <circle cx="7.5" cy="7.5" r="6.5" stroke="#0F7A5F" strokeWidth="1.5"/>
-                        <path d="M4.5 7.5l2 2 4-4" stroke="#0F7A5F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span className="text-[13px] text-white/70">{chip}</span>
-                    </div>
-                  ))}
-                </div>
-                <Link href="/sign-up" className="inline-flex items-center gap-2 text-[13px] font-medium text-[#0047FF] hover:text-white transition-colors group">
-                  Try it now
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" className="group-hover:translate-x-1 transition-transform">
-                    <path d="M2 6.5h9M7.5 3l3.5 3.5L7.5 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Link>
-              </motion.div>
-            </AnimatePresence>
+            {/* Active description */}
+            <div className="border-t border-white/10 mt-8 pt-8">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.22 }}
+                >
+                  <p className="text-[15px] text-white/50 leading-[1.7] mb-8">
+                    {CAPABILITIES[active].description}
+                  </p>
+                  <p className="font-mono text-[48px] font-semibold text-white leading-none mb-2">
+                    {CAPABILITIES[active].stat}
+                  </p>
+                  <p className="font-mono text-[10px] text-white/25 uppercase tracking-[0.2em]">
+                    {CAPABILITIES[active].statLabel}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="mt-10">
+              <Link
+                href="/sign-up"
+                className="inline-flex items-center gap-2 font-mono text-[11px]
+                           text-white/40 uppercase tracking-[0.2em]
+                           hover:text-[#0047FF] transition-colors"
+              >
+                Get started →
+              </Link>
+            </div>
           </motion.div>
 
-          {/* RIGHT — terminal, sticky */}
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:sticky lg:top-24">
-            <div className="overflow-hidden flex flex-col"
-                 style={{ height: '560px', background: '#0A0A0A', boxShadow: '0 0 0 1px rgba(255,255,255,0.07)' }}>
-              <div className="flex-shrink-0 bg-[#111111] px-5 py-3 flex items-center justify-between border-b border-white/[0.08]">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]"/><div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]"/><div className="w-2.5 h-2.5 rounded-full bg-[#27C93F]"/>
-                  </div>
-                  <AnimatePresence mode="wait">
-                    <motion.span key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[11px] font-mono text-[#6B7280] ml-1">
-                      QANUN · {TABS[activeTab].label}
-                    </motion.span>
-                  </AnimatePresence>
-                </div>
+          {/* RIGHT — terminal, full height */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.65, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-8 lg:sticky lg:top-24"
+          >
+            <div
+              className="overflow-hidden flex flex-col"
+              style={{
+                height: '620px',
+                background: '#111417',
+                border: '1px solid rgba(255,255,255,0.10)',
+              }}
+            >
+              {/* Header — no traffic lights */}
+              <div className="flex-shrink-0 px-5 py-3 border-b border-white/[0.08]
+                              flex items-center justify-between bg-[#111111]">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={active}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="font-mono text-[10px] uppercase tracking-[0.15em] text-[#0047FF]"
+                  >
+                    QANUN · {CAPABILITIES[active].label}
+                  </motion.span>
+                </AnimatePresence>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0F7A5F] animate-pulse"/><span className="text-[10px] font-mono text-[#0F7A5F]">live</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0047FF] animate-pulse" />
+                  <span className="font-mono text-[10px] text-[#059669]">live</span>
                 </div>
               </div>
+
+              {/* Panel content */}
               <div className="flex-1 overflow-hidden">
                 <AnimatePresence mode="wait">
-                  <motion.div key={activeTab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }} className="h-full">
-                    {activeTab === 0 && <ResearchPanel />}
-                    {activeTab === 1 && <LookupPanel />}
-                    {activeTab === 2 && <MonitoringPanel />}
-                    {activeTab === 3 && <GovernanceSuitePanel />}
-                    {activeTab === 4 && <EntitySetupPanel />}
+                  <motion.div
+                    key={active}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.22 }}
+                    className="h-full"
+                  >
+                    {active === 0 && <ResearchPanel />}
+                    {active === 1 && <LookupPanel />}
+                    {active === 2 && <MonitoringPanel />}
+                    {active === 3 && <GovernanceSuitePanel />}
+                    {active === 4 && <EntitySetupPanel />}
                   </motion.div>
                 </AnimatePresence>
               </div>
-              <div className="flex-shrink-0 bg-[#111111] px-5 py-2.5 border-t border-white/[0.08] flex items-center gap-4">
-                <span className="text-[9px] font-mono text-[#0F7A5F]">● complete</span>
-                <span className="text-[9px] font-mono text-[#374151]">·</span>
-                <span className="text-[9px] font-mono text-[#374151]">ADGM / FSRA corpus</span>
-                <span className="text-[9px] font-mono text-[#374151]">·</span>
-                <span className="text-[9px] font-mono text-[#374151]">65,822 provisions</span>
+
+              {/* Status bar */}
+              <div className="flex-shrink-0 bg-[#111111] px-5 py-2.5
+                              border-t border-white/[0.08] flex items-center gap-4">
+                <span className="font-mono text-[9px] text-[#059669]">● live corpus</span>
+                <span className="font-mono text-[9px] text-[#374151]">·</span>
+                <span className="font-mono text-[9px] text-[#374151]">ADGM / FSRA</span>
+                <span className="font-mono text-[9px] text-[#374151]">·</span>
+                <span className="font-mono text-[9px] text-[#374151]">65,822 provisions</span>
               </div>
             </div>
           </motion.div>
         </div>
-
-        {/* Bottom stats */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-20 pt-10 border-t border-white/[0.08] grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { n: '2,484', label: 'Regulatory documents' },
-            { n: '65,822', label: 'Indexed provisions' },
-            { n: '84%', label: 'Average grounding ratio' },
-            { n: '0', label: 'Provisions invented', teal: true },
-          ].map((s, i) => (
-            <div key={i}>
-              <p className={`text-[38px] font-mono font-semibold leading-none mb-1 ${s.teal ? 'text-[#059669]' : 'text-white'}`}>{s.n}</p>
-              <p className="text-[13px] text-white/40">{s.label}</p>
-            </div>
-          ))}
-        </motion.div>
       </div>
     </section>
   )

@@ -1,0 +1,1 @@
+Use the corpus-explorer subagent to validate that all regulatory provision references in the current codebase are resolvable against the ADGM corpus. Report any broken references or missing provisions.

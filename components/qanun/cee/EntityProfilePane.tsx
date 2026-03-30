@@ -37,11 +37,11 @@ export function EntityProfilePane({ fields, validationSummary, flags, isExtracti
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B7280]">
+        <p className="font-mono text-[9px] text-black/30 uppercase tracking-[0.2em]">
           Entity profile
         </p>
         {isExtracting && (
-          <div className="flex items-center gap-1 text-[10px] text-[#6B7280]">
+          <div className="flex items-center gap-1 text-[10px] text-black/30">
             <Loader2 size={10} className="animate-spin" />
             <span>Extracting…</span>
           </div>
@@ -51,10 +51,10 @@ export function EntityProfilePane({ fields, validationSummary, flags, isExtracti
       {!hasAnyField ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-8 h-8 rounded-full border border-dashed border-[#E8EBF0] flex items-center justify-center mx-auto mb-2">
-              <span className="text-[#9CA3AF] text-xs">Q</span>
+            <div className="w-8 h-8 border border-dashed border-black/10 flex items-center justify-center mx-auto mb-2">
+              <span className="text-black/30 text-xs">Q</span>
             </div>
-            <p className="text-[11px] text-[#9CA3AF] leading-relaxed">
+            <p className="text-[11px] text-black/30 leading-relaxed">
               Listening to your answers…<br />Fields will appear here as confirmed.
             </p>
           </div>
@@ -67,15 +67,15 @@ export function EntityProfilePane({ fields, validationSummary, flags, isExtracti
               !(Array.isArray(value) && value.length === 0)
             if (!hasValue) return null
             return (
-              <div key={key} className="flex items-start gap-2 py-1.5 border-b border-[#F5F7FA]">
-                <div className="w-3 h-3 rounded-full bg-[#0F7A5F] flex items-center justify-center shrink-0 mt-0.5">
+              <div key={key} className="flex items-start gap-2 py-1.5 border-b border-black/5">
+                <div className="w-3 h-3 rounded-full bg-[#0047FF] flex items-center justify-center shrink-0 mt-0.5">
                   <Check size={8} className="text-white" strokeWidth={3} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]">
+                  <p className="font-mono text-[9px] text-black/25 uppercase tracking-[0.15em]">
                     {label}
                   </p>
-                  <p className="text-[12px] text-[#1D2D44] leading-snug mt-0.5 break-words">
+                  <p className="text-[12px] text-black leading-snug mt-0.5 break-words">
                     {formatValue(key, value)}
                   </p>
                 </div>
@@ -84,13 +84,13 @@ export function EntityProfilePane({ fields, validationSummary, flags, isExtracti
           })}
 
           {fields.recommended_tiers && fields.recommended_tiers.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-[#E8EBF0]">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF] mb-1">
+            <div className="mt-2 pt-2 border-t border-black/10">
+              <p className="font-mono text-[9px] text-black/25 uppercase tracking-[0.15em] mb-1">
                 Recommended tiers
               </p>
               <div className="flex gap-1">
                 {fields.recommended_tiers.map((t) => (
-                  <span key={t} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#0B1829] text-white">
+                  <span key={t} className="text-[10px] font-semibold px-1.5 py-0.5 bg-black text-white">
                     {t}
                   </span>
                 ))}
@@ -104,8 +104,8 @@ export function EntityProfilePane({ fields, validationSummary, flags, isExtracti
       {flags.length > 0 && (
         <div className="mt-3 space-y-1.5">
           {flags.map((flag, i) => (
-            <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-amber-50 border border-amber-200">
-              <span className="text-[10px] text-amber-700 leading-relaxed">{flag}</span>
+            <div key={i} className="flex items-start gap-2 p-2 bg-[#D97706]/5 border border-[#D97706]/20">
+              <span className="text-[10px] text-[#D97706] leading-relaxed">{flag}</span>
             </div>
           ))}
         </div>
@@ -113,11 +113,11 @@ export function EntityProfilePane({ fields, validationSummary, flags, isExtracti
 
       {/* Validation summary */}
       {validationSummary && (
-        <div className="mt-3 p-3 rounded-lg bg-[#EAF4F1] border-l-4 border-[#0F7A5F]">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-[#0F7A5F] mb-1">
+        <div className="mt-3 p-3 bg-[#059669]/5 border-l-4 border-[#059669]">
+          <p className="font-mono text-[9px] text-[#059669] uppercase tracking-[0.15em] mb-1">
             Validation complete
           </p>
-          <p className="text-[10px] text-[#1D2D44] leading-relaxed whitespace-pre-wrap">
+          <p className="text-[10px] text-black/70 leading-relaxed whitespace-pre-wrap">
             {validationSummary}
           </p>
         </div>

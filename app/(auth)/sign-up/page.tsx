@@ -42,7 +42,7 @@ function getStrength(password: string): number {
   return score
 }
 
-const strengthColors = ['bg-[#991B1B]', 'bg-orange-500', 'bg-yellow-500', 'bg-[#0F7A5F]']
+const strengthColors = ['bg-[#991B1B]', 'bg-orange-500', 'bg-yellow-500', 'bg-[#059669]']
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -93,26 +93,26 @@ export default function SignUpPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <h2 className="text-2xl font-semibold text-[#0B1829] mb-1">
+      <h2 className="text-2xl font-black uppercase tracking-tighter text-black mb-1">
         Create your account
       </h2>
-      <p className="text-sm text-[#6B7280] mb-6">
+      <p className="text-sm text-black/50 mb-6">
         Start your 14-day free trial. No credit card required.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-[#111827] mb-1 block">
+          <label className="text-sm font-semibold text-black mb-1 block">
             Full name
           </label>
           <Input placeholder="Jane Smith" {...register('name')} />
           {errors.name && (
-            <p className="text-[13px] text-[#991B1B] mt-1">{errors.name.message}</p>
+            <p className="text-[13px] text-red-600 mt-1">{errors.name.message}</p>
           )}
         </div>
 
         <div>
-          <label className="text-sm font-medium text-[#111827] mb-1 block">
+          <label className="text-sm font-semibold text-black mb-1 block">
             Work email
           </label>
           <Input
@@ -121,12 +121,12 @@ export default function SignUpPage() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-[13px] text-[#991B1B] mt-1">{errors.email.message}</p>
+            <p className="text-[13px] text-red-600 mt-1">{errors.email.message}</p>
           )}
         </div>
 
         <div>
-          <label className="text-sm font-medium text-[#111827] mb-1 block">
+          <label className="text-sm font-semibold text-black mb-1 block">
             Password
           </label>
           <Input
@@ -140,21 +140,21 @@ export default function SignUpPage() {
               <div
                 key={i}
                 className={cn(
-                  'h-1 flex-1 rounded-full transition-colors',
-                  i < strength ? strengthColors[strength - 1] : 'bg-[#E8EBF0]'
+                  'h-1 flex-1 transition-colors',
+                  i < strength ? strengthColors[strength - 1] : 'bg-black/10'
                 )}
               />
             ))}
           </div>
           {errors.password && (
-            <p className="text-[13px] text-[#991B1B] mt-1">
+            <p className="text-[13px] text-red-600 mt-1">
               {errors.password.message}
             </p>
           )}
         </div>
 
         <div>
-          <label className="text-sm font-medium text-[#111827] mb-1 block">
+          <label className="text-sm font-semibold text-black mb-1 block">
             Confirm password
           </label>
           <Input
@@ -163,7 +163,7 @@ export default function SignUpPage() {
             {...register('confirmPassword')}
           />
           {errors.confirmPassword && (
-            <p className="text-[13px] text-[#991B1B] mt-1">
+            <p className="text-[13px] text-red-600 mt-1">
               {errors.confirmPassword.message}
             </p>
           )}
@@ -174,25 +174,25 @@ export default function SignUpPage() {
             id="terms"
             onCheckedChange={(checked) => setValue('terms', checked === true)}
           />
-          <label htmlFor="terms" className="text-sm text-[#6B7280] leading-tight">
+          <label htmlFor="terms" className="text-sm text-black/50 leading-tight">
             I agree to the{' '}
-            <Link href="#" className="text-[#1A5FA8] hover:underline">
+            <Link href="#" className="text-[#0047FF] hover:underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="#" className="text-[#1A5FA8] hover:underline">
+            <Link href="#" className="text-[#0047FF] hover:underline">
               Privacy Policy
             </Link>
           </label>
         </div>
         {errors.terms && (
-          <p className="text-[13px] text-[#991B1B]">{errors.terms.message}</p>
+          <p className="text-[13px] text-red-600">{errors.terms.message}</p>
         )}
 
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-12 bg-[#0B1829] text-white hover:bg-[#1A5FA8]"
+          className="w-full h-12 bg-black text-white hover:bg-[#0047FF]"
         >
           {isSubmitting ? (
             <Loader2 className="animate-spin" size={18} />
@@ -202,15 +202,15 @@ export default function SignUpPage() {
         </Button>
 
         {serverError && (
-          <p className="text-[13px] text-[#991B1B] text-center">{serverError}</p>
+          <p className="text-[13px] text-red-600 text-center">{serverError}</p>
         )}
       </form>
 
       {/* Divider */}
       <div className="flex items-center gap-3 my-6">
-        <div className="flex-1 h-px bg-[#E8EBF0]" />
-        <span className="text-xs text-[#9CA3AF]">or continue with</span>
-        <div className="flex-1 h-px bg-[#E8EBF0]" />
+        <div className="flex-1 h-px bg-black/10" />
+        <span className="text-xs text-black/30">or continue with</span>
+        <div className="flex-1 h-px bg-black/10" />
       </div>
 
       {/* Google SSO */}
@@ -222,9 +222,9 @@ export default function SignUpPage() {
         Google
       </button>
 
-      <p className="text-sm text-[#6B7280] text-center mt-6">
+      <p className="text-sm text-black/40 text-center mt-6">
         Already have an account?{' '}
-        <Link href="/sign-in" className="text-[#1A5FA8] hover:underline">
+        <Link href="/sign-in" className="text-[#0047FF] hover:underline">
           Sign in
         </Link>
       </p>
