@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { useEntity } from '@/lib/entity-context'
 
 export function EntityList() {
-  const { entities, loading, error } = useEntity()
+  const { entities, loading, error, setSelectedEntity } = useEntity()
   const pathname = usePathname()
 
   if (loading) {
@@ -51,6 +51,7 @@ export function EntityList() {
           <Link
             key={entity.id}
             href={href}
+            onClick={() => setSelectedEntity(entity)}
             className={`flex items-center gap-2.5 w-full px-2 py-2.5
                         font-mono text-[11px] uppercase tracking-[0.08em]
                         transition-all duration-150 group ${
