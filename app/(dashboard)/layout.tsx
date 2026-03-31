@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, Search, Bell, BookOpen,
+  Search, FileSearch, Bell, BookOpen,
   Settings2, ChevronLeft, ChevronRight,
   Command, FileText, PlusCircle,
 } from 'lucide-react'
@@ -14,7 +14,7 @@ import { useSystemStatus } from '@/lib/hooks/useDashboard'
 import { CommandPalette } from '@/components/qanun/CommandPalette'
 import { useUIStore } from '@/lib/stores/uiStore'
 import { EntityProvider } from '@/lib/entity-context'
-import { EntitySelector } from '@/components/qanun/EntitySelector'
+import { EntityList } from '@/components/qanun/EntityList'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -24,24 +24,24 @@ const navSections = [
   {
     label: 'Workspace',
     items: [
-      { label: 'Dashboard',           icon: LayoutDashboard, href: '/dashboard' },
-      { label: 'Research',             icon: Search,          href: '/query' },
-      { label: 'Compliance Studio',    icon: FileText,        href: '/compliance/documents' },
-      { label: 'Monitoring',           icon: Bell,            href: '/alerts', badge: true },
-      { label: 'Corpus',               icon: BookOpen,        href: '/corpus' },
+      { label: 'Quick Lookup',      icon: Search,          href: '/dashboard' },
+      { label: 'Research',          icon: FileSearch,      href: '/query' },
+      { label: 'Compliance Studio', icon: FileText,        href: '/compliance/documents' },
+      { label: 'Monitoring',        icon: Bell,            href: '/alerts', badge: true },
+      { label: 'Corpus',            icon: BookOpen,        href: '/corpus' },
     ],
   },
   {
     label: 'Account',
     items: [
-      { label: 'Settings',             icon: Settings2,       href: '/settings' },
+      { label: 'Settings',          icon: Settings2,       href: '/settings' },
     ],
   },
 ]
 
 function getPageTitle(pathname: string): string {
   const map: Record<string, string> = {
-    '/dashboard': 'Dashboard',
+    '/dashboard': 'Quick Lookup',
     '/query': 'Research',
     '/sessions': 'Sessions',
     '/projects': 'Projects',
@@ -75,7 +75,7 @@ function getPageTitle(pathname: string): string {
   for (const [path, title] of Object.entries(map)) {
     if (pathname.startsWith(path + '/')) return title
   }
-  return 'Dashboard'
+  return 'Quick Lookup'
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -100,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (status === 'loading') {
     return (
       <div className="flex h-screen">
-        <div className="w-[200px] bg-white border-r border-black/10 p-4 space-y-4">
+        <div className="w-[220px] bg-white border-r border-black/10 p-4 space-y-4">
           <Skeleton className="h-8 w-32" />
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-28" />
@@ -187,19 +187,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Entity section */}
         {!collapsed && (
           <div className="mx-3 mb-3 border-t border-black/10 pt-3">
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-2">
               <p className="text-[9px] font-mono font-bold uppercase tracking-[0.25em] text-black/20">
-                Entity
+                Live Entities
               </p>
               <Link
                 href="/compliance/entities/new"
-                className="w-5 h-5 flex items-center justify-center border border-black/10 hover:bg-black hover:border-black hover:text-white text-black/40 transition-all"
+                className="w-5 h-5 flex items-center justify-center border border-black/10
+                           hover:bg-black hover:border-black hover:text-white
+                           text-black/40 transition-all"
                 title="Add new entity"
               >
                 <PlusCircle size={11} strokeWidth={1.5} />
               </Link>
             </div>
-            <EntitySelector />
+            <EntityList />
           </div>
         )}
 
