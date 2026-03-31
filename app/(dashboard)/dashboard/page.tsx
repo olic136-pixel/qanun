@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
+import { quickLookup, type QuickLookupResult } from '@/lib/api/quicklookup'
 
 const ACTIONS = [
   { label: 'Set up a new entity',           href: '/compliance/entities/new', mono: 'entity · governance suite' },
@@ -15,11 +17,32 @@ const ACTIONS = [
 export default function DashboardPage() {
   const router = useRouter()
   const { data: session } = useSession()
-  const [query, setQuery] = useState('')
+  const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
 
-  function handleSubmit() {
-    if (!query.trim()) return
-    router.push(`/query?q=${encodeURIComponent(query.trim())}`)
+  const [query, setQuery] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [result, setResult] = useState<QuickLookupResult | null>(null)
+  const [error, setError] = useState('')
+
+  async function handleSubmit() {
+    if (!query.trim() || !token) return
+    setLoading(true)
+    setResult(null)
+    setError('')
+    try {
+      const res = await quickLookup(query.trim(), 'ADGM', token)
+      setResult(res)
+    } catch (e: any) {
+      setError(e.message || 'Lookup failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleReset() {
+    setQuery('')
+    setResult(null)
+    setError('')
   }
 
   return (
@@ -38,8 +61,8 @@ export default function DashboardPage() {
           What would you like<br />to work on today?
         </h1>
 
-        {/* Input — routes to full research */}
-        <div className="flex mb-6 border border-black/20
+        {/* Input */}
+        <div className="flex mb-3 border border-black/20
                         focus-within:border-[#0047FF] transition-colors">
           <input
             type="text"
@@ -52,44 +75,117 @@ export default function DashboardPage() {
           />
           <button
             onClick={handleSubmit}
-            disabled={!query.trim()}
+            disabled={!query.trim() || loading}
             className="w-14 bg-black text-white flex items-center justify-center
                        hover:bg-[#0047FF] disabled:bg-black/15 transition-colors shrink-0"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 7h10M7.5 3l4.5 4-4.5 4" stroke="currentColor"
-                    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            {loading
+              ? <Loader2 size={14} className="animate-spin" />
+              : (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7h10M7.5 3l4.5 4-4.5 4" stroke="currentColor"
+                        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )
+            }
           </button>
         </div>
 
-        {/* Hint */}
-        <p className="font-mono text-[10px] text-black/20 uppercase tracking-[0.2em] mb-8">
-          Enter to search · or choose below
-        </p>
-
-        {/* Action list */}
-        <div className="border-t border-black/10">
-          {ACTIONS.map((action) => (
-            <Link
-              key={action.label}
-              href={action.href}
-              className="flex items-center justify-between w-full py-4
-                         border-b border-black/10 px-0
-                         hover:bg-black/[0.025] transition-colors group"
+        {/* Hint row */}
+        <div className="flex items-center justify-between mb-6">
+          <p className="font-mono text-[10px] text-black/20 uppercase tracking-[0.2em]">
+            Enter for quick lookup · or choose below
+          </p>
+          {result && (
+            <button
+              onClick={handleReset}
+              className="font-mono text-[10px] text-black/30 uppercase tracking-[0.2em]
+                         hover:text-black/60 transition-colors"
             >
-              <span className="font-mono text-[12px] font-medium text-black/70
-                               uppercase tracking-[0.08em]
-                               group-hover:text-black transition-colors">
-                {action.label}
-              </span>
-              <span className="font-mono text-[10px] text-black/25 uppercase
-                               tracking-[0.2em] group-hover:text-black/40 transition-colors">
-                {action.mono} →
-              </span>
-            </Link>
-          ))}
+              ← Clear
+            </button>
+          )}
         </div>
+
+        {/* Error */}
+        {error && (
+          <div className="border border-red-200 bg-red-50 px-4 py-3 mb-6
+                          font-mono text-[12px] text-red-700">
+            {error}
+          </div>
+        )}
+
+        {/* Quick Lookup Result */}
+        {result && (
+          <div className="mb-8 border border-black/10">
+            {/* Answer */}
+            <div className="px-5 py-5 border-b border-black/10">
+              <p className="font-mono text-[10px] text-black/30 uppercase tracking-[0.2em] mb-3">
+                Quick answer
+              </p>
+              <p className="font-mono text-[13px] text-black/80 leading-relaxed whitespace-pre-wrap">
+                {result.answer}
+              </p>
+            </div>
+
+            {/* Source passages */}
+            {result.passages.length > 0 && (
+              <div className="px-5 py-4">
+                <p className="font-mono text-[10px] text-black/30 uppercase tracking-[0.2em] mb-3">
+                  Sources ({result.passages.length})
+                </p>
+                <div className="space-y-2">
+                  {result.passages.slice(0, 5).map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 py-2 border-b border-black/5 last:border-0 cursor-pointer hover:bg-black/[0.015] -mx-2 px-2 transition-colors"
+                      onClick={() => router.push(`/corpus?section_ref=${encodeURIComponent(p.section_ref)}`)}
+                    >
+                      <span className="font-mono text-[10px] text-[#0047FF] font-semibold shrink-0 pt-0.5 uppercase tracking-[0.05em]">
+                        {p.section_ref}
+                      </span>
+                      <p className="font-mono text-[11px] text-black/50 leading-relaxed line-clamp-2">
+                        {p.text}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => router.push(`/query?q=${encodeURIComponent(query)}`)}
+                  className="mt-4 font-mono text-[10px] text-black/30 uppercase tracking-[0.2em]
+                             hover:text-black/60 transition-colors"
+                >
+                  Deep research this question →
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Action list — hidden when result is showing */}
+        {!result && (
+          <div className="border-t border-black/10">
+            {ACTIONS.map((action) => (
+              <Link
+                key={action.label}
+                href={action.href}
+                className="flex items-center justify-between w-full py-4
+                           border-b border-black/10 px-0
+                           hover:bg-black/[0.025] transition-colors group"
+              >
+                <span className="font-mono text-[12px] font-medium text-black/70
+                                 uppercase tracking-[0.08em]
+                                 group-hover:text-black transition-colors">
+                  {action.label}
+                </span>
+                <span className="font-mono text-[10px] text-black/25 uppercase
+                                 tracking-[0.2em] group-hover:text-black/40 transition-colors">
+                  {action.mono} →
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
 
       </div>
     </div>
