@@ -15,7 +15,7 @@ export default function BillingPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-[16px] font-semibold text-gray-900">Professional</h2>
-              <Badge className="bg-navy text-white text-[10px]">Current plan</Badge>
+              <Badge className="bg-[#0B1829] text-white text-[10px]">Current plan</Badge>
             </div>
             <p className="text-[13px] text-gray-500">
               Unlimited queries · 10 product twins · All agents · Priority support
@@ -42,7 +42,7 @@ export default function BillingPage() {
             'Priority email support',
           ].map((feature) => (
             <div key={feature} className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-teal shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-[#0F7A5F] shrink-0" />
               <span className="text-[13px] text-gray-700">{feature}</span>
             </div>
           ))}

@@ -24,7 +24,7 @@ const FEATURES = [
     stats: [
       { n: '10', label: 'specialist agents' },
       { n: '< 90s', label: 'full pipeline' },
-      { n: '65,822', label: 'provisions searched' },
+      { n: '67,056', label: 'provisions searched' },
     ],
   },
   {
@@ -44,7 +44,7 @@ const FEATURES = [
     stats: [
       { n: 'Live', label: 'corpus monitoring' },
       { n: '24h', label: 'alert latency' },
-      { n: '3', label: 'jurisdictions watched' },
+      { n: '5', label: 'jurisdictions watched' },
     ],
   },
   {

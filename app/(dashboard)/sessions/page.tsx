@@ -21,9 +21,9 @@ const STATUS_STYLES: Record<
   string,
   { label: string; icon: React.ElementType; color: string }
 > = {
-  complete: { label: 'Complete', icon: CheckCircle2, color: 'text-teal' },
-  running: { label: 'Running', icon: Loader2, color: 'text-blue' },
-  pending: { label: 'Pending', icon: Clock, color: 'text-gold' },
+  complete: { label: 'Complete', icon: CheckCircle2, color: 'text-[#0F7A5F]' },
+  running: { label: 'Running', icon: Loader2, color: 'text-[#0047FF]' },
+  pending: { label: 'Pending', icon: Clock, color: 'text-[#C4922A]' },
   error: { label: 'Error', icon: AlertCircle, color: 'text-[#991B1B]' },
 }
 

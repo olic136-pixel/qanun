@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const STATUS_STYLES: Record<string, { icon: React.ElementType; color: string; label: string }> = {
-  clear: { icon: CheckCircle2, color: 'text-teal', label: 'Clear' },
+  clear: { icon: CheckCircle2, color: 'text-[#0F7A5F]', label: 'Clear' },
   alert: { icon: AlertCircle, color: 'text-amber-600', label: 'Alert' },
   archived: { icon: Archive, color: 'text-gray-400', label: 'Archived' },
 }
@@ -89,7 +89,7 @@ export default function TwinsPage() {
                   onClick={() => router.push(`/twins/${twin.twin_id}`)}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <Hexagon className="h-4 w-4 text-navy" />
+                    <Hexagon className="h-4 w-4 text-[#0B1829]" />
                     <span className="text-[15px] font-medium text-gray-900">
                       {twin.product_name}
                     </span>

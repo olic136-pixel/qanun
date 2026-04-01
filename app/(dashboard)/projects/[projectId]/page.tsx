@@ -39,14 +39,14 @@ import {
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   pending: { label: 'Pending', cls: 'bg-gray-100 text-gray-600' },
   running: { label: 'Running', cls: 'bg-blue-50 text-[#1A5FA8] animate-pulse' },
-  complete: { label: 'Complete', cls: 'bg-teal/10 text-teal' },
+  complete: { label: 'Complete', cls: 'bg-[#0F7A5F]/10 text-[#0F7A5F]' },
   error: { label: 'Error', cls: 'bg-red-50 text-[#991B1B]' },
 }
 
 const TIER_COLOURS: Record<string, string> = {
-  VERIFIED: 'bg-teal/10 text-teal border-teal/20',
-  SUPPORTED: 'bg-blue/10 text-blue border-blue/20',
-  INFERRED: 'bg-gold/10 text-gold border-gold/20',
+  VERIFIED: 'bg-[#0F7A5F]/10 text-[#0F7A5F] border-[#0F7A5F]/20',
+  SUPPORTED: 'bg-[#0047FF]/10 text-[#0047FF] border-[#0047FF]/20',
+  INFERRED: 'bg-[#C4922A]/10 text-[#C4922A] border-[#C4922A]/20',
   SPECULATIVE: 'bg-gray-100 text-gray-500 border-gray-200',
   CONTESTED: 'bg-red-50 text-[#991B1B] border-red-200',
 }

@@ -34,7 +34,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-[13px] border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-navy text-navy font-medium'
+                  ? 'border-[#0B1829] text-[#0B1829] font-medium'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >

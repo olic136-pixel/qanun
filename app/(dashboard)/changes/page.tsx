@@ -30,8 +30,8 @@ export default function ChangesPage() {
   })
 
   const CHANGE_COLORS: Record<string, string> = {
-    added: 'bg-teal/10 text-teal',
-    amended: 'bg-blue/10 text-blue',
+    added: 'bg-[#0F7A5F]/10 text-[#0F7A5F]',
+    amended: 'bg-[#0047FF]/10 text-[#0047FF]',
     repealed: 'bg-red-100 text-[#991B1B]',
   }
 

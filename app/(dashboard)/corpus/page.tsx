@@ -27,6 +27,8 @@ const JURISDICTIONS = [
   { label: 'DIFC', value: 'DIFC' },
   { label: 'ADGM RA', value: 'ADGM_RA' },
   { label: 'El Salvador', value: 'EL_SALVADOR' },
+  { label: 'BVI — FSC',    value: 'BVI_FSC'     },
+  { label: 'Panama — SMV', value: 'PANAMA_SMV'  },
 ]
 
 function CorpusPageInner() {
@@ -115,7 +117,7 @@ function CorpusPageInner() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">Corpus Browser</h1>
         <p className="text-[14px] text-gray-500">
-          {totalCount.toLocaleString()} {isSearchMode ? 'results' : 'documents'} across ADGM, DIFC, and El Salvador
+          {totalCount.toLocaleString()} {isSearchMode ? 'results' : 'documents'} across ADGM, DIFC, El Salvador, BVI and Panama
         </p>
       </div>
 
@@ -148,7 +150,7 @@ function CorpusPageInner() {
               onClick={() => setDocType(dt)}
               className={`text-[12px] px-3 py-1.5 rounded-full capitalize transition-colors ${
                 docType === dt
-                  ? 'bg-navy text-white'
+                  ? 'bg-[#0B1829] text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -177,7 +179,7 @@ function CorpusPageInner() {
                       </Badge>
                     )}
                     {result.rulebook_code && (
-                      <Badge className="bg-navy text-white text-[10px] px-1.5 py-0">
+                      <Badge className="bg-[#0B1829] text-white text-[10px] px-1.5 py-0">
                         {result.rulebook_code}
                       </Badge>
                     )}
@@ -202,7 +204,7 @@ function CorpusPageInner() {
                 <div className="w-[60px] flex-shrink-0 pt-1">
                   <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-navy rounded-full"
+                      className="h-full bg-[#0B1829] rounded-full"
                       style={{ width: `${Math.max(20, 95 - i * 8)}%` }}
                     />
                   </div>
@@ -231,7 +233,7 @@ function CorpusPageInner() {
                     </p>
                     <div className="flex items-center gap-2 text-[11px] text-gray-400">
                       {doc.rulebook_code && (
-                        <Badge className="bg-navy text-white text-[10px] px-1.5 py-0">
+                        <Badge className="bg-[#0B1829] text-white text-[10px] px-1.5 py-0">
                           {doc.rulebook_code}
                         </Badge>
                       )}

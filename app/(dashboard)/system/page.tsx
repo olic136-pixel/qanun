@@ -45,9 +45,9 @@ export default function SystemPage() {
       </div>
 
       {/* Status banner */}
-      <Card className={`p-4 mb-6 ${data?.vault_health === 'ok' ? 'border-teal/30 bg-teal/5' : 'border-amber-200 bg-amber-50'}`}>
+      <Card className={`p-4 mb-6 ${data?.vault_health === 'ok' ? 'border-[#0F7A5F]/30 bg-[#0F7A5F]/5' : 'border-amber-200 bg-amber-50'}`}>
         <div className="flex items-center gap-2">
-          <Activity className={`h-4 w-4 ${data?.vault_health === 'ok' ? 'text-teal' : 'text-amber-600'}`} />
+          <Activity className={`h-4 w-4 ${data?.vault_health === 'ok' ? 'text-[#0F7A5F]' : 'text-amber-600'}`} />
           <span className="text-[13px] font-medium">
             {data?.vault_health === 'ok'
               ? `System healthy — ${liveCount} agents live`

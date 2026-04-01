@@ -32,8 +32,8 @@ const OUTPUT_SECTIONS: Record<
   string,
   { label: string; icon: React.ElementType; color: string; hidden?: boolean }
 > = {
-  final_output: { label: 'Analysis', icon: FileText, color: 'text-navy' },
-  grounding_result: { label: 'Grounding', icon: Shield, color: 'text-teal' },
+  final_output: { label: 'Analysis', icon: FileText, color: 'text-[#0B1829]' },
+  grounding_result: { label: 'Grounding', icon: Shield, color: 'text-[#0F7A5F]' },
   token_usage: { label: 'Token Usage', icon: BarChart3, color: 'text-gray-600' },
   // Internal fields — hide from display
   session_id: { label: 'Session ID', icon: FileText, color: 'text-gray-400', hidden: true },
@@ -43,9 +43,9 @@ const OUTPUT_SECTIONS: Record<
 }
 
 const CONFIDENCE_COLORS: Record<string, string> = {
-  VERIFIED: 'bg-teal/10 text-teal border-teal/20',
-  SUPPORTED: 'bg-blue/10 text-blue border-blue/20',
-  INFERRED: 'bg-gold/10 text-gold border-gold/20',
+  VERIFIED: 'bg-[#0F7A5F]/10 text-[#0F7A5F] border-[#0F7A5F]/20',
+  SUPPORTED: 'bg-[#0047FF]/10 text-[#0047FF] border-[#0047FF]/20',
+  INFERRED: 'bg-[#C4922A]/10 text-[#C4922A] border-[#C4922A]/20',
   CONTESTED: 'bg-red-100 text-[#991B1B] border-red-200',
 }
 
@@ -423,10 +423,10 @@ export default function SessionDetailPage() {
 
       {/* Complete banner */}
       {isComplete && (
-        <Card className="p-4 mb-6 border-teal/30 bg-teal/5">
+        <Card className="p-4 mb-6 border-[#0F7A5F]/30 bg-[#0F7A5F]/5">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-teal" />
-            <span className="text-[13px] font-medium text-teal">
+            <CheckCircle2 className="h-4 w-4 text-[#0F7A5F]" />
+            <span className="text-[13px] font-medium text-[#0F7A5F]">
               Analysis complete — {claims.length} claims extracted
             </span>
           </div>
@@ -485,7 +485,7 @@ export default function SessionDetailPage() {
                       <span className="text-[14px] font-medium text-gray-900">
                         {meta.label}
                       </span>
-                      <CheckCircle2 className="h-4 w-4 text-teal" />
+                      <CheckCircle2 className="h-4 w-4 text-[#0F7A5F]" />
                     </div>
                     {isExpanded ? (
                       <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -509,7 +509,7 @@ export default function SessionDetailPage() {
           {isRunning && (
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Loader2 className="h-5 w-5 text-navy animate-spin" />
+                <Loader2 className="h-5 w-5 text-[#0B1829] animate-spin" />
                 <span className="text-[14px] font-medium text-gray-700">
                   MALIS pipeline processing…
                 </span>
@@ -582,7 +582,7 @@ export default function SessionDetailPage() {
                       className="text-gray-400 hover:text-gray-600"
                     >
                       {copiedClaim === claim.claim_id ? (
-                        <Check className="h-3.5 w-3.5 text-teal" />
+                        <Check className="h-3.5 w-3.5 text-[#0F7A5F]" />
                       ) : (
                         <Copy className="h-3.5 w-3.5" />
                       )}
