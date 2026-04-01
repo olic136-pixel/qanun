@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Mic } from 'lucide-react'
 import type { ExtractedEntityFields, EntityValidationResult } from '@/lib/api/entitySetup'
 import { createOrUpdateSetupSession, validateEntityExtraction } from '@/lib/api/entitySetup'
 import { VoiceOrb } from '@/components/qanun/voice/VoiceOrb'
@@ -467,10 +467,10 @@ export function ConversationEngine({
               'font-mono text-[9px] uppercase tracking-[0.15em] px-2 py-1 transition-colors',
               voiceMode
                 ? 'bg-black text-white'
-                : 'text-black/30 hover:text-black border border-black/10',
+                : 'text-black/60 hover:text-black border border-black/30',
             ].join(' ')}
           >
-            {voiceMode ? '● VOICE ON' : 'VOICE'}
+            {voiceMode ? '● VOICE ON' : <><Mic size={11} className="inline-block mr-1 -mt-px" />VOICE</>}
           </button>
           {voiceMode && (
             <span className="font-mono text-[9px] text-black/30 uppercase tracking-[0.1em]">

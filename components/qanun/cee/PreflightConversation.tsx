@@ -357,7 +357,7 @@ export function PreflightConversation({
                 'font-mono text-[9px] uppercase tracking-[0.15em] px-2 py-1 transition-colors',
                 voiceMode
                   ? 'bg-black text-white'
-                  : 'text-black/30 hover:text-black border border-black/10',
+                  : 'text-black/60 hover:text-black border border-black/30',
               ].join(' ')}
             >
               {voiceMode ? '● VOICE ON' : 'VOICE'}
