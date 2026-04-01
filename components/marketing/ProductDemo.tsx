@@ -82,6 +82,8 @@ function LookupPanel() {
   )
 }
 
+{/* Demo content — ADGM only. Jurisdiction-specific demo
+    panels for BVI/Panama to be added in future session. */}
 function MonitoringPanel() {
   return (
     <div className="h-full overflow-y-auto px-6 py-5 hide-scrollbar">
@@ -393,7 +395,7 @@ export function ProductDemo() {
                 <span className="font-mono text-[9px] text-[#374151]">·</span>
                 <span className="font-mono text-[9px] text-[#374151]">ADGM / FSRA</span>
                 <span className="font-mono text-[9px] text-[#374151]">·</span>
-                <span className="font-mono text-[9px] text-[#374151]">65,822 provisions</span>
+                <span className="font-mono text-[9px] text-[#374151]">67,056 provisions</span>
               </div>
             </div>
           </motion.div>

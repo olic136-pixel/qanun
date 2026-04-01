@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { FilePlus, Trash2 } from 'lucide-react'
+import { FilePlus, Trash2, FileStack } from 'lucide-react'
 import {
   getTemplates,
   getApplicableTemplates,
@@ -79,6 +79,29 @@ export default function DocumentSuitePage() {
 
   const applicableTemplates = getApplicableTemplates(templates?.templates ?? [], selectedEntity?.category)
 
+  // Empty state for non-ADGM jurisdictions (or any entity with no applicable templates)
+  if (applicableTemplates.length === 0 && selectedEntity) {
+    return (
+      <div className="max-w-[720px] mx-auto mt-12 text-center">
+        <p className="text-[13px] text-gray-500 mb-2">
+          No document templates available for this jurisdiction yet.
+        </p>
+        <p className="text-[11px] text-gray-400 mb-6">
+          VARA, BVI and Panama templates are coming soon.
+          Use the Governance Suite to draft documents for this entity.
+        </p>
+        <Link
+          href="/compliance/governance-suite"
+          className="inline-flex items-center gap-2 px-4 py-2
+                     bg-[#0F7A5F] text-white text-[12px] font-semibold
+                     rounded-lg hover:bg-[#0F6E56] transition-colors"
+        >
+          <FileStack size={14} /> Go to Governance Suite
+        </Link>
+      </div>
+    )
+  }
+
   // Build status + job_id maps from submission data
   const docStatusMap = new Map<string, string>()
   const docJobMap = new Map<string, string>()
@@ -100,7 +123,7 @@ export default function DocumentSuitePage() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mb-1">
-              ADGM FSP Application · {selectedEntity?.category ?? 'Category 3C'}
+              {selectedEntity?.category ? '' : 'ADGM · '}{selectedEntity?.category ?? 'Category 3C'}
             </p>
             <h2 className="text-xl font-bold text-[#0B1829]">{selectedEntity?.name ?? 'Entity'}</h2>
           </div>

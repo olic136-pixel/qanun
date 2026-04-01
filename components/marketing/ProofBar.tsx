@@ -1,10 +1,10 @@
 export function ProofBar() {
   const ITEMS = [
-    '2,366 regulatory documents',
-    '65,822 indexed provisions',
+    '2,382 regulatory documents',
+    '67,056 indexed provisions',
     '84% average grounding ratio',
     '0 provisions invented',
-    '3 jurisdictions live',
+    '5 jurisdictions live',
   ]
 
   return (

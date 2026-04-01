@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEntity } from '@/lib/entity-context'
 import { Loader2, ArrowLeft, Play, FileStack } from 'lucide-react'
 import { apiFetch } from '@/lib/api/client'
@@ -12,6 +12,8 @@ const JURISDICTIONS = [
   { code: 'ADGM', label: 'ADGM / FSRA' },
   { code: 'VARA', label: 'VARA — Dubai' },
   { code: 'EL_SALVADOR', label: 'El Salvador — CNAD' },
+  { code: 'BVI', label: 'BVI — FSC' },
+  { code: 'PANAMA', label: 'Panama — SMV' },
 ]
 
 const TIER_OPTIONS = [
@@ -27,6 +29,8 @@ const DOC_COUNTS: Record<string, number[]> = {
   ADGM:         [0, 7, 8, 5, 5, 5],  // index = tier number
   VARA:         [0, 7, 11, 8, 6, 5],
   EL_SALVADOR:  [0, 11, 13, 7, 9, 10],
+  BVI:          [0, 7, 9, 6, 5, 4],
+  PANAMA:       [0, 6, 8, 5, 4, 3],
 }
 
 function estimateMinutes(jurisdiction: string, tiers: number[]): number {
@@ -54,6 +58,8 @@ export default function GovernanceSuitePage() {
   const { data: session } = useSession()
   const { selectedEntity } = useEntity()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const entityCreated = searchParams.get('entity_created')
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
 
   const [jurisdiction, setJurisdiction] = useState('ADGM')
@@ -67,7 +73,7 @@ export default function GovernanceSuitePage() {
     getEntity(selectedEntity.id, token)
       .then(entity => {
         if (entity.target_jurisdiction &&
-            ['ADGM', 'VARA', 'EL_SALVADOR'].includes(entity.target_jurisdiction)) {
+            ['ADGM', 'VARA', 'EL_SALVADOR', 'BVI', 'PANAMA'].includes(entity.target_jurisdiction)) {
           setJurisdiction(entity.target_jurisdiction)
         }
         const profile = entity.entity_profile as Record<string, unknown> | null
@@ -130,6 +136,13 @@ export default function GovernanceSuitePage() {
         or as a ZIP.
       </p>
 
+      {entityCreated && (
+        <div className="mb-4 p-3 bg-[#0F7A5F]/10 border border-[#0F7A5F]/20
+                        text-[#0F7A5F] text-[12px] font-medium rounded-lg">
+          Entity created. Select tiers and start your governance suite.
+        </div>
+      )}
+
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-[13px] mb-5">
           {error}
@@ -141,7 +154,7 @@ export default function GovernanceSuitePage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-2">
           Jurisdiction
         </p>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
           {JURISDICTIONS.map(j => (
             <button
               key={j.code}
@@ -261,6 +274,12 @@ export default function GovernanceSuitePage() {
           )}
         </p>
       </div>
+
+      {!selectedEntity && (
+        <p className="text-[11px] text-amber-600 mb-3">
+          Select an entity from the sidebar before starting a suite.
+        </p>
+      )}
 
       <button
         onClick={handleStartSuite}

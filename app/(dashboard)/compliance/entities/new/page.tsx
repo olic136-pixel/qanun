@@ -34,6 +34,7 @@ export default function NewEntityPage() {
   const [extractedFields, setExtractedFields] = useState<Partial<ExtractedEntityFields>>({})
   const [validationResult, setValidationResult] = useState<EntityValidationResult | null>(null)
   const [creating, setCreating] = useState(false)
+  const [suiteStarting, setSuiteStarting] = useState(false)
   const [createError, setCreateError] = useState('')
 
   async function handleJurisdictionSelect(code: string) {
@@ -92,22 +93,29 @@ export default function NewEntityPage() {
 
       await refreshEntities()
 
+      // Entity created — now start governance suite
+      setSuiteStarting(true)
       const tiers = extractedFields.recommended_tiers ?? [1, 2]
-      const suite = await apiFetch<{ suite_job_id: string }>('/api/drafting/suite', {
-        method: 'POST',
-        body: JSON.stringify({
-          entity_id: created.entity_id,
-          jurisdiction,
-          tiers,
-          doc_types: [],
-        }),
-        token,
-      })
-
-      router.push(`/compliance/governance-suite/${suite.suite_job_id}`)
+      try {
+        const suite = await apiFetch<{ suite_job_id: string }>('/api/drafting/suite', {
+          method: 'POST',
+          body: JSON.stringify({
+            entity_id: created.entity_id,
+            jurisdiction,
+            tiers,
+            doc_types: [],
+          }),
+          token,
+        })
+        router.push(`/compliance/governance-suite/${suite.suite_job_id}`)
+      } catch {
+        // Entity was created successfully but suite failed — redirect gracefully
+        router.push('/compliance/governance-suite?entity_created=true&error=suite_failed')
+      }
     } catch (e: unknown) {
       setCreateError(e instanceof Error ? e.message : 'Failed to create entity')
       setCreating(false)
+      setSuiteStarting(false)
     }
   }
 
@@ -167,9 +175,11 @@ export default function NewEntityPage() {
               disabled={creating}
               className="w-full py-3 bg-black text-white text-[13px] font-bold uppercase tracking-widest hover:bg-[#0047FF] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
-              {creating
-                ? <><Loader2 size={16} className="animate-spin" />Creating entity and initiating suite…</>
-                : <>Confirm and Create Entity →</>
+              {suiteStarting
+                ? <><Loader2 size={16} className="animate-spin" />Entity created. Starting governance suite…</>
+                : creating
+                  ? <><Loader2 size={16} className="animate-spin" />Creating entity…</>
+                  : <>Confirm and Create Entity →</>
               }
             </button>
             <p className="font-mono text-[9px] text-black/20 uppercase tracking-[0.2em] text-center mt-2">

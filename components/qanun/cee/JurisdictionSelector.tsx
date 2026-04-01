@@ -1,6 +1,6 @@
 'use client'
 
-import { Building2, Globe, MapPin } from 'lucide-react'
+import { Building2, Globe, MapPin, Shield, Landmark } from 'lucide-react'
 
 export interface JurisdictionOption {
   code: string
@@ -28,9 +28,21 @@ const JURISDICTIONS: JurisdictionOption[] = [
     regulator: 'Comisión Nacional de Activos Digitales',
     description: 'El Salvador — digital asset service providers (DASP)',
   },
+  {
+    code: 'BVI',
+    label: 'BVI — FSC',
+    regulator: 'Financial Services Commission',
+    description: 'British Virgin Islands — investment business, mutual funds, approved managers',
+  },
+  {
+    code: 'PANAMA',
+    label: 'Panama — SMV',
+    regulator: 'Superintendencia del Mercado de Valores',
+    description: 'Panama — securities market, investment, AML/CFT (Spanish)',
+  },
 ]
 
-const ICONS = [Building2, Globe, MapPin]
+const ICONS = [Building2, Globe, MapPin, Shield, Landmark]
 
 interface Props {
   selected: string
@@ -44,7 +56,7 @@ export function JurisdictionSelector({ selected, onSelect, locked }: Props) {
       <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#6B7280]">
         Select jurisdiction
       </p>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {JURISDICTIONS.map((j, i) => {
           const Icon = ICONS[i]
           const isSelected = selected === j.code
@@ -55,7 +67,7 @@ export function JurisdictionSelector({ selected, onSelect, locked }: Props) {
               onClick={() => !locked && onSelect(j.code)}
               disabled={isDisabled}
               title={locked ? 'Jurisdiction locked — restart to change' : j.description}
-              className={`flex-1 text-left p-3 rounded-xl border transition-all duration-150 ${
+              className={`text-left p-3 rounded-xl border transition-all duration-150 ${
                 isSelected
                   ? 'bg-[#0B1829] border-[#0B1829] text-white'
                   : locked

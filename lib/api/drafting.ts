@@ -103,9 +103,13 @@ export interface JobStatus {
 
 // ── Entity Constants ──────────────────────────────────────────
 
+/** @deprecated Demo only — use selectedEntity from entity context */
 export const ENTITY_ID = 'tradedarcateg3a-demo-0001'
+/** @deprecated Demo only — use selectedEntity from entity context */
 export const ENTITY_NAME = 'TradeDar Capital Management Ltd'
+/** @deprecated Demo only — use selectedEntity from entity context */
 export const ENTITY_TYPE = 'Category 3C'
+/** @deprecated Demo only — use selectedEntity from entity context */
 export const ENTITY_CATEGORY = 'category_3c'
 
 /** Filter templates to those applicable for the given entity category */
