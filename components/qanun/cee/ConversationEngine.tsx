@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import type { ExtractedEntityFields, EntityValidationResult } from '@/lib/api/entitySetup'
 import { createOrUpdateSetupSession, validateEntityExtraction } from '@/lib/api/entitySetup'
+import { VoiceOrb } from '@/components/qanun/voice/VoiceOrb'
+import { extractQuestion } from '@/lib/voice/extractQuestion'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 type CEEState = 'idle' | 'loading' | 'active' | 'extracting' | 'validating' | 'complete' | 'error'
@@ -18,7 +20,7 @@ interface Props {
   onSessionPersisted: (sessionId: string) => void
 }
 
-function buildSystemPrompt(contextDocument: string, jurisdictionCode: string): string {
+function buildSystemPrompt(contextDocument: string, jurisdictionCode: string, voiceMode = false): string {
   return `${contextDocument}
 
 === INTERROGATION PROTOCOL ===
@@ -64,10 +66,26 @@ JURISDICTION-SPECIFIC — collect if jurisdiction is EL_SALVADOR:
 - Name of local director / legal representative
 - MLRO UIF registration number if known
 
-Begin the conversation now with a warm, professional opening that confirms the jurisdiction and asks the user to describe their proposed business in their own words.`
+Begin the conversation now with a warm, professional opening that confirms the jurisdiction and asks the user to describe their proposed business in their own words.${voiceMode ? `
+
+=== VOICE MODE — MODIFIED PROTOCOL ===
+The user is speaking rather than typing. Adjust your approach accordingly:
+- After the opening response, a single spoken answer may address several required fields simultaneously. After each user message, check ALL required fields before deciding what to ask next — do not ask about anything already disclosed.
+- If the user mentions a name, role, company, or relationship while answering a different question, capture it silently and do not ask again.
+- Accept detailed, multi-sentence answers. Follow up one question at a time on genuine gaps only.
+- The user can hear only the final question, not the framing — keep framing brief.` : ''}`
 }
 
-const EXTRACTION_SYSTEM_PROMPT = `You are a data extraction engine. You will be given a conversation transcript between a regulatory counsel AI and a client. Extract the following fields from the conversation and return ONLY a valid JSON object with no preamble, explanation, or markdown.
+const EXTRACTION_SYSTEM_PROMPT = `You are a data extraction engine processing a regulatory intake conversation. The conversation may have been conducted by voice — users speaking freely often disclose multiple pieces of information in a single answer. Extract EVERY piece of structured data mentioned, regardless of which question prompted it.
+
+EXTRACTION RULES:
+1. Extract all named individuals mentioned anywhere in the conversation — a user mentioning a name while answering a different question still populates the relevant field.
+2. Extract all company names, system names, and third-party names: prime brokers, custodians, auditors, legal counsel, technology providers, screening providers.
+3. When a user names multiple people in one answer, list all of them — do not abbreviate.
+4. Extract financial figures mentioned in passing: AUM, capital, fee rates.
+5. Extract role relationships mentioned: deputies, reporting lines, dual-role arrangements.
+6. If a technology system is named (Bloomberg, World-Check, ComplySci, etc.) capture it even if unprompted.
+7. Never leave a field null if the information was disclosed anywhere in the transcript.
 
 Required JSON structure:
 {
@@ -79,13 +97,47 @@ Required JSON structure:
   "mlro_name": string or null,
   "compliance_name": string or null,
   "seo_name": string or null,
+  "deputy_mlro_name": string or null,
+  "board_chair": string or null,
+  "board_members": string or null,
+  "company_secretary": string or null,
+  "controllers": string or null,
+  "external_auditor": string or null,
+  "legal_counsel": string or null,
+  "prime_broker": string or null,
+  "custodian": string or null,
+  "screening_provider": string or null,
   "aum_range": string or null,
-  "jurisdiction_specific": object (VARA: {vasp_licence_types, activity_scope}, EL_SALVADOR: {sv_licence_category, sv_activities, sv_bitcoin_services, sv_capital_amount, sv_local_director, sv_mlro_uif_reg} — include only fields mentioned in conversation),
-  "recommended_tiers": number[] (always [1,2,3,4,5] unless user explicitly requested fewer tiers),
-  "validation_summary": string (one paragraph summarising what was confirmed),
+  "tier1_capital_usd": string or null,
+  "staff_count_range": string or null,
+  "primary_jurisdictions": string[] or null,
+  "client_composition": string or null,
+  "key_products": string[] or null,
+  "internal_audit_arrangement": string or null,
+  "idarc_name": string or null,
+  "jurisdiction_specific": object (VARA: {vasp_licence_types, activity_scope}, EL_SALVADOR: {sv_licence_category, sv_activities, sv_bitcoin_services, sv_capital_amount, sv_local_director, sv_mlro_uif_reg} — include only fields mentioned),
+  "recommended_tiers": number[] (always [1,2,3,4,5] unless user explicitly requested fewer),
+  "validation_summary": string (one paragraph summarising all confirmed facts),
   "viability_confirmed": boolean,
   "alternative_jurisdiction": string or null
 }
+
+Return ONLY the JSON object. No other text.`
+
+const CONTEXT_NARRATIVE_PROMPT = `You are reading a regulatory intake conversation. Extract qualitative narrative context that will be injected into compliance document drafting prompts as [ENTITY CONTEXT].
+
+Return ONLY a valid JSON object:
+{
+  "context_narrative": string
+}
+
+The context_narrative should be 100–200 words capturing:
+- How the business actually operates (beyond its licence category label)
+- Key structural relationships: JV arrangements, group structures, parent entities, ownership context
+- Strategic context: phased plans, technology dependencies, market positioning, intended client characteristics
+- Any regulatory concerns, complications, or unusual structures surfaced
+
+Write as a briefing note for a senior compliance counsel. Do not repeat purely structural fields (entity name, licence category, permitted activities list). Capture only qualitative nuance. If no meaningful qualitative context was disclosed, return a single sentence summary.
 
 Return ONLY the JSON object. No other text.`
 
@@ -99,8 +151,11 @@ export function ConversationEngine({
   const [errorMsg, setErrorMsg] = useState('')
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId)
   const [lastFields, setLastFields] = useState<Partial<ExtractedEntityFields>>({})
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [autoStartRecording, setAutoStartRecording] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -126,10 +181,17 @@ export function ConversationEngine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contextDocument])
 
+  useEffect(() => {
+    if (!voiceMode && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+  }, [voiceMode])
+
   async function openConversation() {
     setCeeState('loading')
     setErrorMsg('')
-    const systemPrompt = buildSystemPrompt(contextDocument, jurisdictionCode)
+    const systemPrompt = buildSystemPrompt(contextDocument, jurisdictionCode, voiceMode)
     try {
       const res = await fetch('/api/cee/chat', {
         method: 'POST',
@@ -145,6 +207,7 @@ export function ConversationEngine({
       const assistantText = data.content?.find((b: { type: string }) => b.type === 'text')?.text ?? ''
       setMessages([{ role: 'assistant', content: assistantText }])
       setCeeState('active')
+      speakQuestion(assistantText)
     } catch {
       setErrorMsg('Failed to start conversation. Please refresh.')
       setCeeState('error')
@@ -159,7 +222,7 @@ export function ConversationEngine({
     setMessages(newMessages)
     setCeeState('loading')
 
-    const systemPrompt = buildSystemPrompt(contextDocument, jurisdictionCode)
+    const systemPrompt = buildSystemPrompt(contextDocument, jurisdictionCode, voiceMode)
 
     try {
       // Persist session in background (do not await)
@@ -179,6 +242,7 @@ export function ConversationEngine({
       const assistantText = data.content?.find((b: { type: string }) => b.type === 'text')?.text ?? ''
       const allMessages: Message[] = [...newMessages, { role: 'assistant', content: assistantText }]
       setMessages(allMessages)
+      speakQuestion(assistantText)
 
       // Fire partial extraction in background (do not await)
       runPartialExtraction(allMessages)
@@ -211,6 +275,66 @@ export function ConversationEngine({
       }
     } catch {
       // non-fatal — session persistence failure does not block conversation
+    }
+  }
+
+  async function speakQuestion(text: string) {
+    if (!voiceMode) return
+    const question = extractQuestion(text)
+    if (!question) return
+    if (audioRef.current) {
+      audioRef.current.pause()
+      if (audioRef.current.src.startsWith('blob:')) URL.revokeObjectURL(audioRef.current.src)
+      audioRef.current = null
+    }
+    try {
+      const res = await fetch('/api/voice/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: question }),
+      })
+      if (!res.ok || res.status === 204) return
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => {
+        URL.revokeObjectURL(url)
+        if (voiceMode) setAutoStartRecording(true)
+      }
+      await audio.play().catch(() => {})
+    } catch {
+      // TTS failure is non-fatal — conversation continues in text mode
+    }
+  }
+
+  function handleVoiceTranscription(text: string) {
+    setInput(text)
+    setAutoStartRecording(false)
+    textareaRef.current?.focus()
+  }
+
+  async function runNarrativeExtraction(msgs: Message[]) {
+    try {
+      const transcript = msgs.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n\n')
+      const res = await fetch('/api/cee/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 512,
+          system: CONTEXT_NARRATIVE_PROMPT,
+          messages: [{ role: 'user', content: `Extract narrative context from this conversation:\n\n${transcript}` }],
+        }),
+      })
+      const data = await res.json()
+      const text = data.content?.find((b: { type: string }) => b.type === 'text')?.text ?? '{}'
+      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim())
+      if (parsed.context_narrative) {
+        await persistSession(msgs, { ...lastFields, context_narrative: parsed.context_narrative } as unknown as Partial<ExtractedEntityFields>)
+      }
+    } catch {
+      // non-fatal
     }
   }
 
@@ -277,6 +401,7 @@ export function ConversationEngine({
 
       setCeeState('complete')
       onExtractionComplete(extracted, validation)
+      runNarrativeExtraction(msgs).catch(() => {})
     } catch {
       setErrorMsg('Extraction failed. Please continue the conversation.')
       setCeeState('active')
@@ -331,6 +456,30 @@ export function ConversationEngine({
 
       {/* Input area — disabled when extracting/validating/complete */}
       {ceeState !== 'complete' && (
+        <div className="flex items-center gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => {
+              setVoiceMode(v => !v)
+              setAutoStartRecording(false)
+            }}
+            className={[
+              'font-mono text-[9px] uppercase tracking-[0.15em] px-2 py-1 transition-colors',
+              voiceMode
+                ? 'bg-black text-white'
+                : 'text-black/30 hover:text-black border border-black/10',
+            ].join(' ')}
+          >
+            {voiceMode ? '● VOICE ON' : 'VOICE'}
+          </button>
+          {voiceMode && (
+            <span className="font-mono text-[9px] text-black/30 uppercase tracking-[0.1em]">
+              press mic · speak · press to stop
+            </span>
+          )}
+        </div>
+      )}
+      {ceeState !== 'complete' && (
         <div className="border-t border-black/10 pt-3 mt-2">
           <div className="flex gap-0 border border-black/20 focus-within:border-[#0047FF] transition-colors">
             <textarea
@@ -345,6 +494,18 @@ export function ConversationEngine({
               rows={1}
               className="flex-1 resize-none font-mono text-[12px] border-none px-3 py-2.5 focus:outline-none bg-white disabled:bg-white disabled:text-black/30 placeholder:text-black/30 max-h-[120px]"
             />
+            {voiceMode && (
+              <VoiceOrb
+                onTranscription={handleVoiceTranscription}
+                onLivePreview={text => setInput(text)}
+                onError={msg => setErrorMsg(msg)}
+                disabled={ceeState !== 'active'}
+                autoStart={autoStartRecording}
+                onRecordingStateChange={recording => {
+                  if (recording) setAutoStartRecording(false)
+                }}
+              />
+            )}
             <button
               onClick={sendMessage}
               disabled={!input.trim() || ceeState !== 'active'}
