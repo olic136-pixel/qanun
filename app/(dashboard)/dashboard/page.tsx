@@ -10,8 +10,16 @@ import { quickLookup, type QuickLookupResult } from '@/lib/api/quicklookup'
 const ACTIONS = [
   { label: 'Set up a new entity',           href: '/compliance/entities/new', mono: 'entity · governance suite' },
   { label: 'Research a regulatory question', href: '/query',                   mono: 'deep research · 10 agents' },
-  { label: 'Browse the regulatory corpus',   href: '/corpus',                  mono: '65,822 provisions' },
-  { label: 'Explore jurisdictions',          href: '/corpus',                  mono: 'ADGM · VARA · El Salvador' },
+  { label: 'Browse the regulatory corpus',   href: '/corpus',                  mono: '67,056 provisions' },
+  { label: 'Explore jurisdictions',          href: '/corpus',                  mono: 'ADGM · VARA · El Salvador · BVI · Panama' },
+]
+
+const JURISDICTION_TABS = [
+  { code: 'ADGM',        label: 'ADGM / FSRA' },
+  { code: 'VARA',        label: 'VARA \u2014 Dubai' },
+  { code: 'EL_SALVADOR', label: 'El Salvador' },
+  { code: 'BVI',         label: 'BVI \u2014 FSC' },
+  { code: 'PANAMA',      label: 'Panama \u2014 SMV' },
 ]
 
 export default function DashboardPage() {
@@ -20,6 +28,7 @@ export default function DashboardPage() {
   const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
 
   const [query, setQuery] = useState('')
+  const [jurisdiction, setJurisdiction] = useState('ADGM')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<QuickLookupResult | null>(null)
   const [error, setError] = useState('')
@@ -30,7 +39,7 @@ export default function DashboardPage() {
     setResult(null)
     setError('')
     try {
-      const res = await quickLookup(query.trim(), 'ADGM', token)
+      const res = await quickLookup(query.trim(), jurisdiction, token)
       setResult(res)
     } catch (e: any) {
       setError(e.message || 'Lookup failed')
@@ -60,6 +69,27 @@ export default function DashboardPage() {
                        text-black mb-8 leading-[0.95]">
           What would you like<br />to work on today?
         </h1>
+
+        {/* Jurisdiction tabs */}
+        <div className="flex gap-0 mb-3 overflow-x-auto">
+          {JURISDICTION_TABS.map((j) => (
+            <button
+              key={j.code}
+              onClick={() => {
+                setJurisdiction(j.code)
+                setResult(null)
+                setError('')
+              }}
+              className={`font-mono text-[10px] uppercase tracking-[0.15em] px-3 py-2 border-b-2 transition-colors whitespace-nowrap ${
+                jurisdiction === j.code
+                  ? 'bg-black text-white border-black'
+                  : 'bg-transparent text-black/40 border-transparent hover:text-black/70'
+              }`}
+            >
+              {j.label}
+            </button>
+          ))}
+        </div>
 
         {/* Input */}
         <div className="flex mb-3 border border-black/20
@@ -120,9 +150,14 @@ export default function DashboardPage() {
           <div className="mb-8 border border-black/10">
             {/* Answer */}
             <div className="px-5 py-5 border-b border-black/10">
-              <p className="font-mono text-[10px] text-black/30 uppercase tracking-[0.2em] mb-3">
-                Quick answer
-              </p>
+              <div className="flex items-center gap-2 mb-3">
+                <p className="font-mono text-[10px] text-black/30 uppercase tracking-[0.2em]">
+                  Quick answer
+                </p>
+                <span className="font-mono text-[9px] text-black/30 uppercase">
+                  {JURISDICTION_TABS.find(j => j.code === jurisdiction)?.label ?? jurisdiction}
+                </span>
+              </div>
               <p className="font-mono text-[13px] text-black/80 leading-relaxed whitespace-pre-wrap">
                 {result.answer}
               </p>
@@ -141,8 +176,15 @@ export default function DashboardPage() {
                       className="flex items-start gap-3 py-2 border-b border-black/5 last:border-0 cursor-pointer hover:bg-black/[0.015] -mx-2 px-2 transition-colors"
                       onClick={() => router.push(`/corpus?section_ref=${encodeURIComponent(p.section_ref)}`)}
                     >
-                      <span className="font-mono text-[10px] text-[#0047FF] font-semibold shrink-0 pt-0.5 uppercase tracking-[0.05em]">
-                        {p.section_ref}
+                      <span className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                        <span className="font-mono text-[10px] text-[#0047FF] font-semibold uppercase tracking-[0.05em]">
+                          {p.section_ref}
+                        </span>
+                        {p.source_entity && (
+                          <span className="font-mono text-[9px] text-black/25 uppercase">
+                            {p.source_entity}
+                          </span>
+                        )}
                       </span>
                       <p className="font-mono text-[11px] text-black/50 leading-relaxed line-clamp-2">
                         {p.text}

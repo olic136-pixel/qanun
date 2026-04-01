@@ -4,9 +4,10 @@ import { motion, useInView } from 'framer-motion'
 
 const LIVE = [
   { name: 'ADGM', reg: 'FSRA' },
-  { name: 'DIFC', reg: 'DFSA' },
-  { name: 'El Salvador', reg: 'CNAD' },
   { name: 'VARA', reg: 'Dubai' },
+  { name: 'El Salvador', reg: 'CNAD' },
+  { name: 'BVI', reg: 'FSC' },
+  { name: 'Panama', reg: 'SMV' },
 ]
 const COMING = [
   { name: 'Saudi Arabia', reg: 'CMA', eta: 'Q3 2026' },
@@ -19,9 +20,9 @@ const COMING = [
   { name: 'Singapore', reg: 'MAS', eta: 'Q1 2027' },
 ]
 const STATS = [
-  { n: '65,822', label: 'Individual provisions searchable' },
-  { n: '2,366', label: 'Regulatory documents indexed' },
-  { n: '3', label: 'Jurisdictions live' },
+  { n: '67,056', label: 'Individual provisions searchable' },
+  { n: '2,382', label: 'Regulatory documents indexed' },
+  { n: '5', label: 'Jurisdictions live' },
 ]
 
 export function JurisdictionsSection() {
@@ -37,7 +38,7 @@ export function JurisdictionsSection() {
           className="text-[320px] font-black leading-none tracking-tighter"
           style={{ color: 'rgba(0,0,0,0.035)' }}
         >
-          3
+          5
         </span>
       </div>
 
@@ -56,7 +57,7 @@ export function JurisdictionsSection() {
           </p>
           <h2 className="text-[clamp(38px,5vw,72px)] font-black tracking-tighter uppercase
                           text-black leading-[1.0]">
-            Three jurisdictions.<br />One platform.
+            Five jurisdictions.<br />One platform.
           </h2>
         </motion.div>
 
@@ -69,7 +70,7 @@ export function JurisdictionsSection() {
           <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#0047FF] mb-3">
             LIVE
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-8">
             {LIVE.map((j) => (
               <div
                 key={j.name}

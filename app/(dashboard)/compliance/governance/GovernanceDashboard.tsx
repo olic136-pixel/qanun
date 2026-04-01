@@ -33,11 +33,17 @@ const CATEGORY_CONFIG: Record<string, { label: string; Icon: typeof Landmark }> 
   funds: { label: 'Funds', Icon: PiggyBank },
 }
 
-const FSRA_LABELS: Record<string, string> = {
+const CATEGORY_LABELS: Record<string, string> = {
   cat_3c: 'Cat 3C',
   cat_3a: 'Cat 3A',
   cat_2: 'Cat 2',
   cat_1: 'Cat 1',
+  vara_vasp_bd: 'VASP-BD',
+  vara_vasp_ex: 'VASP-EX',
+  vara_vasp_cust: 'VASP-CUST',
+  vara_vasp_mgmt: 'VASP-MGMT',
+  sv_dasp_ex: 'DASP-EX',
+  sv_dasp_cust: 'DASP-CUST',
 }
 
 const STAGE_LABELS: Record<string, string> = {
@@ -45,6 +51,9 @@ const STAGE_LABELS: Record<string, string> = {
   ipa_received: 'IPA Received',
   authorised: 'Authorised',
   compliance_audit: 'Compliance Audit',
+  vara_registration_pending: 'Registration Pending',
+  vara_registered: 'Registered',
+  sv_registered: 'Registered — CNAD',
 }
 
 const STAGE_COLORS: Record<string, string> = {
@@ -52,6 +61,9 @@ const STAGE_COLORS: Record<string, string> = {
   ipa_received: 'bg-blue-100 text-blue-700',
   authorised: 'bg-emerald-100 text-emerald-700',
   compliance_audit: 'bg-amber-100 text-amber-700',
+  vara_registration_pending: 'bg-indigo-100 text-indigo-700',
+  vara_registered: 'bg-emerald-100 text-emerald-700',
+  sv_registered: 'bg-emerald-100 text-emerald-700',
 }
 
 // ── Main Component ──────────────────────────────────────────────
@@ -105,7 +117,7 @@ export function GovernanceDashboard({ entityId, profile }: GovernanceDashboardPr
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-xl font-bold text-[#0B1829]">{entityName}</h1>
         <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-600">
-          {FSRA_LABELS[profile.fsra_category] ?? profile.fsra_category}
+          {CATEGORY_LABELS[profile.fsra_category] ?? profile.fsra_category}
         </span>
         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${STAGE_COLORS[profile.regulatory_stage] ?? 'bg-gray-100 text-gray-600'}`}>
           {STAGE_LABELS[profile.regulatory_stage] ?? profile.regulatory_stage}
@@ -309,7 +321,8 @@ function ProgressRing({
         y={size / 2}
         textAnchor="middle"
         dominantBaseline="central"
-        className="rotate-90 origin-center fill-[#0B1829] text-[10px] font-semibold"
+        style={{ fill: '#0B1829', fontSize: '10px', fontWeight: 600 }}
+        transform={`rotate(90, ${size / 2}, ${size / 2})`}
       >
         {percentage}%
       </text>

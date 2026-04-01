@@ -12,8 +12,11 @@ export interface AlertObject {
   created_at: string
 }
 
-export const getAlerts = (token: string, resolved?: boolean) => {
-  const qs = resolved !== undefined ? `?resolved=${resolved}` : ''
+export const getAlerts = (token: string, resolved?: boolean, entity_id?: string) => {
+  const params = new URLSearchParams()
+  if (resolved !== undefined) params.set('resolved', String(resolved))
+  if (entity_id) params.set('entity_id', entity_id)
+  const qs = params.toString() ? `?${params.toString()}` : ''
   return apiFetch<{ alerts: AlertObject[]; total: number; unresolved_count: number }>(
     `/api/alerts${qs}`,
     { token }

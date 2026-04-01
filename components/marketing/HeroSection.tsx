@@ -219,10 +219,10 @@ export function HeroSection() {
         {/* Assertion lines */}
         <div className="mb-10">
           <div className="py-3 border-t border-black/10">
-            <p className="hero-assertion">65,822 provisions. Zero hallucination.</p>
+            <p className="hero-assertion">67,056 provisions. Zero hallucination.</p>
           </div>
           <div className="py-3 border-t border-black/10">
-            <p className="hero-assertion">ADGM · VARA · El Salvador</p>
+            <p className="hero-assertion">ADGM · VARA · El Salvador · BVI · Panama</p>
           </div>
           <div className="py-3 border-t border-b border-black/10">
             <p className="hero-assertion">Research. Draft. Monitor.</p>
@@ -439,7 +439,7 @@ export function HeroSection() {
               <span className="font-mono text-[9px] text-black/20">·</span>
               <span className="font-mono text-[9px] text-black/25">ADGM / FSRA corpus</span>
               <span className="font-mono text-[9px] text-black/20">·</span>
-              <span className="font-mono text-[9px] text-black/25">65,822 provisions</span>
+              <span className="font-mono text-[9px] text-black/25">67,056 provisions</span>
             </div>
           </div>
         </motion.div>

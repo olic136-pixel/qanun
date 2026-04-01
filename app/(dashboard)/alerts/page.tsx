@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAlerts, dismissAlert, type AlertObject } from '@/lib/api/alerts'
+import { useEntity } from '@/lib/entity-context'
 import { useState } from 'react'
 import {
   Bell,
@@ -25,14 +26,15 @@ const LEVEL_STYLES: Record<string, { icon: React.ElementType; color: string; bg:
 
 export default function AlertsPage() {
   const { data: session } = useSession()
-  const token = session?.user?.accessToken as string
+  const token = (session?.user as { accessToken?: string } | undefined)?.accessToken || ''
+  const { selectedEntity, setSelectedEntity } = useEntity()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'active' | 'resolved'>('all')
   const [dismissing, setDismissing] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['alerts'],
-    queryFn: () => getAlerts(token),
+    queryKey: ['alerts', selectedEntity?.id],
+    queryFn: () => getAlerts(token, undefined, selectedEntity?.id),
     enabled: !!token,
   })
 
@@ -78,6 +80,20 @@ export default function AlertsPage() {
         </div>
       </div>
 
+      {/* Entity scope indicator */}
+      {selectedEntity && (
+        <div className="flex items-center gap-2 mb-4 font-mono text-[11px] text-black/50">
+          <span>Showing alerts for <span className="font-semibold text-black/70">{selectedEntity.name}</span></span>
+          <span className="text-black/20">·</span>
+          <button
+            onClick={() => setSelectedEntity(null)}
+            className="text-[#0047FF] hover:underline"
+          >
+            Show all
+          </button>
+        </div>
+      )}
+
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6">
         {(['all', 'active', 'resolved'] as const).map((tab) => (
@@ -86,7 +102,7 @@ export default function AlertsPage() {
             onClick={() => setFilter(tab)}
             className={`text-[13px] px-4 py-1.5 rounded-full transition-colors capitalize ${
               filter === tab
-                ? 'bg-navy text-white'
+                ? 'bg-[#0B1829] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -126,7 +142,7 @@ export default function AlertsPage() {
                         {alert.alert_level}
                       </Badge>
                       {alert.resolved && (
-                        <Badge className="bg-teal/10 text-teal text-[10px]">
+                        <Badge className="bg-[#0F7A5F]/10 text-[#0F7A5F] text-[10px]">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Resolved
                         </Badge>

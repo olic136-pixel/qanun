@@ -9,51 +9,118 @@ import { createGovernanceProfile, type CreateProfileResponse } from '@/lib/api/g
 
 // ── Constants ──────────────────────────────────────────────────
 
-const FSRA_CATEGORIES = [
-  {
-    value: 'cat_3c',
-    label: 'Category 3C — Fund Manager',
-    description: 'Manages collective investment funds',
-  },
-  {
-    value: 'cat_3a',
-    label: 'Category 3A — Matched Principal Dealer',
-    description: 'Deals as principal with professional clients',
-  },
-  {
-    value: 'cat_2',
-    label: 'Category 2 — Full Dealer',
-    description: 'Deals as principal/agent, retail and professional',
-  },
-  {
-    value: 'cat_1',
-    label: 'Category 1 — Bank / Full Licence',
-    description: 'Deposits, credit, full scope',
-  },
-] as const
+interface CategoryOption {
+  value: string
+  label: string
+  description: string
+}
 
-const REGULATORY_STAGES = [
+interface CategoryGroup {
+  jurisdiction: string
+  options: CategoryOption[]
+}
+
+const CATEGORY_GROUPS: CategoryGroup[] = [
   {
-    value: 'pre_application',
-    label: 'Pre-application',
-    description: 'Preparing for FSP application',
+    jurisdiction: 'ADGM / FSRA',
+    options: [
+      { value: 'cat_3c', label: 'Category 3C — Fund Manager', description: 'Manages collective investment funds' },
+      { value: 'cat_3a', label: 'Category 3A — Matched Principal Dealer', description: 'Deals as principal with professional clients' },
+      { value: 'cat_2', label: 'Category 2 — Full Dealer', description: 'Deals as principal/agent, retail and professional' },
+      { value: 'cat_1', label: 'Category 1 — Bank / Full Licence', description: 'Deposits, credit, full scope' },
+    ],
   },
   {
-    value: 'ipa_received',
-    label: 'IPA received',
-    description: 'In-Principle Approval granted, working toward Final Approval conditions',
+    jurisdiction: 'VARA — Dubai',
+    options: [
+      { value: 'vara_vasp_bd', label: 'VASP-BD — Broker-Dealer', description: 'Virtual asset broker-dealer activities' },
+      { value: 'vara_vasp_ex', label: 'VASP-EX — Exchange', description: 'Virtual asset exchange operations' },
+      { value: 'vara_vasp_cust', label: 'VASP-CUST — Custody', description: 'Virtual asset custody services' },
+      { value: 'vara_vasp_mgmt', label: 'VASP-MGMT — Management', description: 'Virtual asset portfolio management' },
+      { value: 'vara_vasp_adv', label: 'VASP-ADV — Advisory', description: 'Virtual asset investment advisory' },
+    ],
   },
   {
-    value: 'authorised',
-    label: 'Authorised',
-    description: 'Entity is authorised and operational',
+    jurisdiction: 'El Salvador — CNAD',
+    options: [
+      { value: 'sv_dasp_ex', label: 'DASP-EX — Exchange', description: 'Digital asset exchange / trading platform' },
+      { value: 'sv_dasp_cust', label: 'DASP-CUST — Custody', description: 'Digital asset custody and safekeeping' },
+      { value: 'sv_dasp_plat', label: 'DASP-PLAT — Platform', description: 'Digital asset service platform' },
+      { value: 'sv_dasp_xfer', label: 'DASP-XFER — Transfer', description: 'Digital asset transfer and settlement' },
+    ],
   },
   {
-    value: 'compliance_audit',
-    label: 'Compliance audit',
-    description: 'Reviewing governance completeness for an existing authorised entity',
+    jurisdiction: 'BVI — FSC',
+    options: [
+      { value: 'bvi_approved_manager', label: 'Approved Manager', description: 'Approved manager of investment funds' },
+      { value: 'bvi_investment_business', label: 'Investment Business', description: 'Licensed investment business' },
+      { value: 'bvi_mutual_fund', label: 'Mutual Fund', description: 'Registered or recognised mutual fund' },
+    ],
   },
-] as const
+  {
+    jurisdiction: 'Panama — SMV',
+    options: [
+      { value: 'pan_casa_valores', label: 'Casa de Valores', description: 'Securities broker-dealer (casa de valores)' },
+      { value: 'pan_asesor', label: 'Asesor de Inversión', description: 'Investment adviser (asesor de inversión)' },
+    ],
+  },
+]
+
+// Flat list for lookups
+const ALL_CATEGORIES: CategoryOption[] = CATEGORY_GROUPS.flatMap(g => g.options)
+
+interface StageOption {
+  value: string
+  label: string
+  description: string
+}
+
+interface StageGroup {
+  jurisdiction: string
+  options: StageOption[]
+}
+
+const STAGE_GROUPS: StageGroup[] = [
+  {
+    jurisdiction: 'ADGM / FSRA',
+    options: [
+      { value: 'pre_application', label: 'Pre-application', description: 'Preparing for FSP application' },
+      { value: 'ipa_received', label: 'IPA received', description: 'In-Principle Approval granted' },
+      { value: 'authorised', label: 'Authorised', description: 'Entity is authorised and operational' },
+      { value: 'compliance_audit', label: 'Compliance audit', description: 'Reviewing governance completeness' },
+    ],
+  },
+  {
+    jurisdiction: 'VARA — Dubai',
+    options: [
+      { value: 'vara_registration_pending', label: 'Registration Pending', description: 'VARA registration application in progress' },
+      { value: 'vara_registered', label: 'Registered', description: 'VARA registration granted' },
+    ],
+  },
+  {
+    jurisdiction: 'El Salvador — CNAD',
+    options: [
+      { value: 'sv_registered', label: 'Registered — CNAD', description: 'CNAD registration granted' },
+    ],
+  },
+  {
+    jurisdiction: 'BVI — FSC',
+    options: [
+      { value: 'bvi_pre_application', label: 'Pre-application', description: 'Preparing FSC licence application' },
+      { value: 'bvi_registered', label: 'Registered / Licensed', description: 'FSC licence granted' },
+    ],
+  },
+  {
+    jurisdiction: 'Panama — SMV',
+    options: [
+      { value: 'pan_pre_application', label: 'Pre-application', description: 'Preparing SMV licence application' },
+      { value: 'pan_registered', label: 'Registered', description: 'SMV licence granted' },
+    ],
+  },
+]
+
+// Flat list for lookups
+const ALL_STAGES: StageOption[] = STAGE_GROUPS.flatMap(g => g.options)
 
 const APPROXIMATE_COUNTS: Record<string, { total: number; draftable: number }> = {
   cat_3c: { total: 49, draftable: 45 },
@@ -62,19 +129,13 @@ const APPROXIMATE_COUNTS: Record<string, { total: number; draftable: number }> =
   cat_1: { total: 61, draftable: 57 },
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  cat_3c: 'Category 3C — Fund Manager',
-  cat_3a: 'Category 3A — Matched Principal Dealer',
-  cat_2: 'Category 2 — Full Dealer',
-  cat_1: 'Category 1 — Bank / Full Licence',
-}
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  ALL_CATEGORIES.map(c => [c.value, c.label])
+)
 
-const STAGE_LABELS: Record<string, string> = {
-  pre_application: 'Pre-application',
-  ipa_received: 'IPA received',
-  authorised: 'Authorised',
-  compliance_audit: 'Compliance audit',
-}
+const STAGE_LABELS: Record<string, string> = Object.fromEntries(
+  ALL_STAGES.map(s => [s.value, s.label])
+)
 
 // ── Component ──────────────────────────────────────────────────
 
@@ -169,24 +230,33 @@ export function GovernanceOnboardingWizard() {
 
       {/* Card wrapper */}
       <div className="bg-white border border-[#E8EBF0] rounded-lg p-6">
-        {/* Step 1: FSRA Category */}
+        {/* Step 1: Licence Category */}
         {step === 1 && (
           <div>
             <h2 className="text-[15px] font-bold text-[#0B1829] mb-1">
-              What type of FSRA entity is this?
+              What is the licence category for this entity?
             </h2>
             <p className="text-[12px] text-gray-500 mb-5">
               This determines which governance documents are applicable.
             </p>
-            <div className="grid gap-3">
-              {FSRA_CATEGORIES.map((cat) => (
-                <SelectableCard
-                  key={cat.value}
-                  label={cat.label}
-                  description={cat.description}
-                  selected={fsraCategory === cat.value}
-                  onClick={() => setFsraCategory(cat.value)}
-                />
+            <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+              {CATEGORY_GROUPS.map((group) => (
+                <div key={group.jurisdiction}>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">
+                    {group.jurisdiction}
+                  </p>
+                  <div className="grid gap-2">
+                    {group.options.map((cat) => (
+                      <SelectableCard
+                        key={cat.value}
+                        label={cat.label}
+                        description={cat.description}
+                        selected={fsraCategory === cat.value}
+                        onClick={() => setFsraCategory(cat.value)}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -201,15 +271,24 @@ export function GovernanceOnboardingWizard() {
             <p className="text-[12px] text-gray-500 mb-5">
               This determines which documents are required at your current phase.
             </p>
-            <div className="grid gap-3">
-              {REGULATORY_STAGES.map((stage) => (
-                <SelectableCard
-                  key={stage.value}
-                  label={stage.label}
-                  description={stage.description}
-                  selected={regulatoryStage === stage.value}
-                  onClick={() => setRegulatoryStage(stage.value)}
-                />
+            <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+              {STAGE_GROUPS.map((group) => (
+                <div key={group.jurisdiction}>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-400 mb-2">
+                    {group.jurisdiction}
+                  </p>
+                  <div className="grid gap-2">
+                    {group.options.map((stage) => (
+                      <SelectableCard
+                        key={stage.value}
+                        label={stage.label}
+                        description={stage.description}
+                        selected={regulatoryStage === stage.value}
+                        onClick={() => setRegulatoryStage(stage.value)}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -224,8 +303,8 @@ export function GovernanceOnboardingWizard() {
 
             <div className="bg-[#F5F7FA] border border-[#E8EBF0] rounded-lg p-4 space-y-3">
               <ConfirmRow label="Entity" value={entityName} />
-              <ConfirmRow label="FSRA category" value={CATEGORY_LABELS[fsraCategory]} />
-              <ConfirmRow label="Regulatory stage" value={STAGE_LABELS[regulatoryStage]} />
+              <ConfirmRow label="Licence category" value={CATEGORY_LABELS[fsraCategory] ?? fsraCategory} />
+              <ConfirmRow label="Regulatory stage" value={STAGE_LABELS[regulatoryStage] ?? regulatoryStage} />
               <div className="border-t border-[#E8EBF0] pt-3 mt-3">
                 <ConfirmRow
                   label="Applicable documents"
@@ -240,7 +319,7 @@ export function GovernanceOnboardingWizard() {
 
             <p className="text-[11px] text-gray-400 mt-4 leading-relaxed">
               This will create the governance document register for this entity, mapping all
-              applicable regulatory documents to your FSRA category and current phase.
+              applicable regulatory documents to your licence category and current phase.
               You can update the regulatory stage at any time.
             </p>
 

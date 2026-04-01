@@ -69,8 +69,18 @@ export default function GovernancePage() {
 
   if (pageState === 'no_entity') {
     return (
-      <div className="flex items-center justify-center h-64 text-sm text-gray-500">
-        Select an entity to view its governance framework.
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center max-w-sm border border-black/10 bg-white p-6">
+          <p className="text-[13px] text-gray-600 mb-4">
+            No entity selected. Select an entity from the sidebar, or set up a new entity to begin your governance framework.
+          </p>
+          <a
+            href="/compliance/entities/new"
+            className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#0B1829] hover:text-[#0047FF] transition-colors"
+          >
+            Set up entity &rarr;
+          </a>
+        </div>
       </div>
     )
   }
