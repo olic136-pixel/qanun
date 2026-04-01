@@ -21,7 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 const LEVEL_STYLES: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   high: { icon: AlertTriangle, color: 'text-[#991B1B]', bg: 'bg-red-50 border-red-200' },
   medium: { icon: AlertCircle, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-  low: { icon: Info, color: 'text-blue', bg: 'bg-blue-50 border-blue-200' },
+  low: { icon: Info, color: 'text-[#0047FF]', bg: 'bg-blue-50 border-blue-200' },
 }
 
 export default function AlertsPage() {
