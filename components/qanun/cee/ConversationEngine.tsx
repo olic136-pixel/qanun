@@ -90,7 +90,7 @@ EXTRACTION RULES:
 Required JSON structure:
 {
   "entity_name": string or null,
-  "jurisdiction_code": string (ADGM|VARA|EL_SALVADOR),
+  "jurisdiction_code": string (ADGM|VARA|EL_SALVADOR|BVI|PANAMA),
   "licence_category": string (e.g. category_3c, VASP-BD, SV-DASP-EX) or null,
   "permitted_activities": string[],
   "entity_type": string (use same value as licence_category),
@@ -380,9 +380,10 @@ export function ConversationEngine({
       setLastFields(extracted)
       onFieldsUpdated(extracted)
 
-      // Now validate
+      // Now validate — skip for jurisdictions without FSRA/VARA validation endpoint
       setCeeState('validating')
-      const validation = await validateEntityExtraction({
+      const skipValidation = !['ADGM','VARA','EL_SALVADOR'].includes(extracted.jurisdiction_code ?? '')
+      const validation = skipValidation ? null : await validateEntityExtraction({
         jurisdiction_code: extracted.jurisdiction_code,
         licence_category: extracted.licence_category ?? '',
         entity_name: extracted.entity_name ?? '',
@@ -399,7 +400,8 @@ export function ConversationEngine({
       setCeeState('complete')
       onExtractionComplete(extracted, validation)
       runNarrativeExtraction(msgs).catch(() => {})
-    } catch {
+    } catch (err) {
+      console.error('[CEE] Extraction failed:', err)
       setErrorMsg('Extraction failed. Please continue the conversation.')
       setCeeState('active')
     }
