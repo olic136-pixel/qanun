@@ -68,7 +68,7 @@ export default function NewEntityPage() {
   }
 
   async function handleConfirm() {
-    if (!validationResult || !extractedFields.entity_name) return
+    if (!extractedFields.entity_name) return
     setCreating(true)
     setCreateError('')
     try {
@@ -161,7 +161,7 @@ export default function NewEntityPage() {
           )}
         </div>
         {/* Confirmation area */}
-        {pageState === 'confirmed' && validationResult && (
+        {pageState === 'confirmed' && (
           <div className="p-5 border-t border-black/10 bg-white">
             <ValidationSummary
               result={validationResult}
