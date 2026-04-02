@@ -216,7 +216,7 @@ export default function SuiteStatusPage() {
     : 0
 
   // Group documents by tier
-  const byTier = suite.documents.reduce((acc, doc) => {
+  const byTier = (suite.document_statuses ?? []).reduce((acc, doc) => {
     const t = doc.tier || 1
     if (!acc[t]) acc[t] = []
     acc[t].push(doc)
