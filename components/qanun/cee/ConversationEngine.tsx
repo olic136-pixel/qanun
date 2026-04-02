@@ -152,7 +152,6 @@ export function ConversationEngine({
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId)
   const [lastFields, setLastFields] = useState<Partial<ExtractedEntityFields>>({})
   const [voiceMode, setVoiceMode] = useState(false)
-  const [autoStartRecording, setAutoStartRecording] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -300,7 +299,6 @@ export function ConversationEngine({
       audioRef.current = audio
       audio.onended = () => {
         URL.revokeObjectURL(url)
-        if (voiceMode) setAutoStartRecording(true)
       }
       await audio.play().catch(() => {})
     } catch {
@@ -310,7 +308,6 @@ export function ConversationEngine({
 
   function handleVoiceTranscription(text: string) {
     setInput(text)
-    setAutoStartRecording(false)
     textareaRef.current?.focus()
   }
 
@@ -461,7 +458,6 @@ export function ConversationEngine({
             type="button"
             onClick={() => {
               setVoiceMode(v => !v)
-              setAutoStartRecording(false)
             }}
             className={[
               'font-mono text-[9px] uppercase tracking-[0.15em] px-2 py-1 transition-colors',
@@ -500,10 +496,7 @@ export function ConversationEngine({
                 onLivePreview={text => setInput(text)}
                 onError={msg => setErrorMsg(msg)}
                 disabled={ceeState !== 'active'}
-                autoStart={autoStartRecording}
-                onRecordingStateChange={recording => {
-                  if (recording) setAutoStartRecording(false)
-                }}
+                onClearInput={() => setInput('')}
               />
             )}
             <button

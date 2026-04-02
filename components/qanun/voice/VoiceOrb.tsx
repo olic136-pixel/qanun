@@ -41,8 +41,7 @@ interface VoiceOrbProps {
   onLivePreview?: (text: string) => void;
   onError: (message: string) => void;
   disabled?: boolean;
-  autoStart?: boolean;
-  onRecordingStateChange?: (recording: boolean) => void;
+  onClearInput?: () => void;
 }
 
 type OrbState = 'idle' | 'recording' | 'processing';
@@ -52,8 +51,7 @@ export function VoiceOrb({
   onLivePreview,
   onError,
   disabled,
-  autoStart,
-  onRecordingStateChange,
+  onClearInput,
 }: VoiceOrbProps) {
   const [orbState, setOrbState] = useState<OrbState>('idle');
 
@@ -107,10 +105,10 @@ export function VoiceOrb({
       recorderRef.current.stop();
     }
     setOrbState('processing');
-    onRecordingStateChange?.(false);
-  }, [stopRecognition, onRecordingStateChange]);
+  }, [stopRecognition]);
 
   const startRecording = useCallback(async () => {
+    onClearInput?.();
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -169,12 +167,11 @@ export function VoiceOrb({
     recorder.start(100);
     startRecognition();
     setOrbState('recording');
-    onRecordingStateChange?.(true);
 
     maxTimerRef.current = setTimeout(() => {
       stopRecording();
     }, 60_000);
-  }, [onError, onTranscription, onRecordingStateChange, startRecognition, stopRecording]);
+  }, [onClearInput, onError, onTranscription, startRecognition, stopRecording]);
 
   const handlePress = useCallback(() => {
     if (orbState === 'idle') {
@@ -183,12 +180,6 @@ export function VoiceOrb({
       stopRecording();
     }
   }, [orbState, startRecording, stopRecording]);
-
-  useEffect(() => {
-    if (autoStart && orbState === 'idle' && !disabled) {
-      startRecording();
-    }
-  }, [autoStart, disabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => {
