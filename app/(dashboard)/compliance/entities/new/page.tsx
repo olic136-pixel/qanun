@@ -163,10 +163,16 @@ export default function NewEntityPage() {
         {/* Confirmation area */}
         {pageState === 'confirmed' && (
           <div className="p-5 border-t border-black/10 bg-white">
-            <ValidationSummary
-              result={validationResult}
-              entityName={extractedFields.entity_name ?? 'Entity'}
-            />
+            {validationResult ? (
+              <ValidationSummary
+                result={validationResult}
+                entityName={extractedFields.entity_name ?? 'Entity'}
+              />
+            ) : (
+              <p className="text-sm text-black/60 mb-3">
+                {extractedFields.entity_name} is ready to be created in {jurisdiction}.
+              </p>
+            )}
             {createError && (
               <p className="text-[12px] text-black mb-3">{createError}</p>
             )}
