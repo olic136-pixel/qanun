@@ -61,7 +61,7 @@ export default function NewEntityPage() {
     setExtractedFields(prev => ({ ...prev, ...fields }))
   }
 
-  function handleExtractionComplete(fields: ExtractedEntityFields, validation: EntityValidationResult) {
+  function handleExtractionComplete(fields: ExtractedEntityFields, validation: EntityValidationResult | null) {
     setExtractedFields(fields)
     setValidationResult(validation)
     setPageState('confirmed')

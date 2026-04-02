@@ -16,7 +16,7 @@ interface Props {
   token: string
   sessionId: string | null
   onFieldsUpdated: (fields: Partial<ExtractedEntityFields>) => void
-  onExtractionComplete: (fields: ExtractedEntityFields, validationResult: EntityValidationResult) => void
+  onExtractionComplete: (fields: ExtractedEntityFields, validationResult: EntityValidationResult | null) => void
   onSessionPersisted: (sessionId: string) => void
 }
 
@@ -95,7 +95,7 @@ Required JSON structure:
   "jurisdiction_code": string (ADGM|VARA|EL_SALVADOR|BVI|PANAMA),
   "licence_category": string (e.g. category_3c, VASP-BD, SV-DASP-EX) or null,
   "permitted_activities": string[],
-  "entity_type": string (use same value as licence_category),
+  "entity_type": string (use same value as licence_category; for unregulated BVI Business Companies use "bvi_business_company"; for Panama Sociedad Anónima use "panama_sa"),
   "mlro_name": string or null,
   "compliance_name": string or null,
   "seo_name": string or null,
@@ -400,7 +400,7 @@ export function ConversationEngine({
       }, token)
 
       setCeeState('complete')
-      onExtractionComplete(extracted, validation as never)
+      onExtractionComplete(extracted, validation)
       runNarrativeExtraction(msgs).catch(() => {})
     } catch (err) {
       console.error('[CEE] Extraction failed:', err)
