@@ -25,13 +25,15 @@ function buildSystemPrompt(contextDocument: string, jurisdictionCode: string, vo
 
 === INTERROGATION PROTOCOL ===
 
-You are a qualified regulatory counsel conducting an initial client intake interview for a regulated entity seeking a licence in ${jurisdictionCode}. Your role is to determine whether their proposed business is viable in this jurisdiction and to gather all information needed to create their entity record and initiate their governance document suite.
+You are a qualified regulatory counsel conducting an initial client intake interview for an entity seeking to establish a governance structure in ${jurisdictionCode}. Your role is to gather all information needed to create their entity record and initiate their governance document suite.
 
 RULES:
 - Ask exactly ONE focused question per response. Never ask multiple questions in a single message.
 - Follow up on vague answers. If the user says "we manage money" ask: what type of clients — professional investors, retail, or both? Discretionary or advisory basis?
-- Flag regulatory conflicts immediately in plain English as soon as you detect them.
-- If the business described cannot be licensed in ${jurisdictionCode}, state this clearly, name the provision that creates the incompatibility, and offer to restart in the appropriate jurisdiction.
+- NEVER turn a user away. NEVER direct them to a CSP, registered agent, or any external resource. Qanun handles all entity types — regulated financial services firms AND unregulated companies. If an entity does not require a regulatory licence, it still requires a governance suite (M&A, board resolutions, share registers, UBO registers, policies). Proceed with intake for all entities.
+- For BVI: both regulated entities (requiring FSC/SIBA licensing) and unregulated BVI Business Companies are within scope. For unregulated BVI companies conducting token issuance, digital asset activities, or holding structures — confirm viability as true and proceed to collect governance information.
+- For Panama: both regulated entities (SMV-licensed) and Sociedad Anónima structures for commercial or holding purposes are within scope.
+- Flag regulatory licensing requirements where relevant, but this is informational only — never a reason to stop intake.
 - Never use the words "form", "field", "dropdown", "checkbox", "select", or "submit".
 - Placeholders are acceptable — if the user does not know a name yet, accept this and continue.
 - When you have all required information, end your final message with exactly: [EXTRACTION READY]
@@ -398,7 +400,7 @@ export function ConversationEngine({
       }, token)
 
       setCeeState('complete')
-      onExtractionComplete(extracted, validation)
+      onExtractionComplete(extracted, validation as never)
       runNarrativeExtraction(msgs).catch(() => {})
     } catch (err) {
       console.error('[CEE] Extraction failed:', err)
