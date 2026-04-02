@@ -4,8 +4,8 @@ import { useSession } from 'next-auth/react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
 import { listSources, searchCorpus, type CorpusSource, type CorpusSearchResult } from '@/lib/api/corpus'
-import { useState, useEffect, Suspense } from 'react'
-import { Search, BookOpen, FileText, Scale } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import { Search, BookOpen, FileText, Scale, Copy, Check, ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -40,6 +40,10 @@ function CorpusPageInner() {
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [docType, setDocType] = useState<string>('all')
   const [jurisdiction, setJurisdiction] = useState<string>('')
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
+  const [copiedRef, setCopiedRef] = useState<string | null>(null)
+  const resultRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const deepLinkRef = useRef<string | null>(null)
 
   // Pre-populate from URL params
   useEffect(() => {
@@ -54,6 +58,7 @@ function CorpusPageInner() {
       setDebouncedQuery(ref)
       setJurisdiction('')
       setDocType('all')
+      deepLinkRef.current = ref
     }
   }, [searchParams])
 
@@ -95,10 +100,28 @@ function CorpusPageInner() {
     s.rulebook_code?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const copyLink = (sectionRef: string) => {
+  const copyLink = useCallback((sectionRef: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
     const url = `${window.location.origin}/corpus?section_ref=${encodeURIComponent(sectionRef)}`
     navigator.clipboard.writeText(url).catch(() => undefined)
-  }
+    setCopiedRef(sectionRef)
+    setTimeout(() => setCopiedRef(null), 1500)
+  }, [])
+
+  // Auto-scroll to deep-linked section_ref once results load
+  useEffect(() => {
+    if (!deepLinkRef.current || searchResults.length === 0) return
+    const ref = deepLinkRef.current
+    const idx = searchResults.findIndex((r) => r.section_ref === ref)
+    if (idx !== -1) {
+      setExpandedIndex(idx)
+      requestAnimationFrame(() => {
+        const el = resultRefs.current.get(ref)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+    }
+    deepLinkRef.current = null
+  }, [searchResults])
 
   if (isLoading) {
     return (
@@ -163,58 +186,113 @@ function CorpusPageInner() {
       {/* Search results mode */}
       {isSearchMode && (
         <div className="space-y-2">
-          {searchResults.map((result, i) => (
-            <Card key={`${result.section_ref}-${i}`} className="p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {result.section_ref && (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-mono px-1.5 py-0 cursor-pointer hover:bg-gray-100 transition-colors"
-                        onClick={() => copyLink(result.section_ref)}
-                        title="Copy link to this provision"
-                      >
-                        {result.section_ref}
+          {searchResults.map((result, i) => {
+            const isExpanded = expandedIndex === i
+            return (
+              <Card
+                key={`${result.section_ref}-${i}`}
+                ref={(el) => {
+                  if (el && result.section_ref) resultRefs.current.set(result.section_ref, el)
+                }}
+                className={`p-4 cursor-pointer transition-colors ${isExpanded ? 'bg-[#F5F7FA] border-[#0B1829]' : 'hover:bg-gray-50'}`}
+                onClick={() => setExpandedIndex(isExpanded ? null : i)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {result.section_ref && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] font-mono px-1.5 py-0 cursor-pointer hover:bg-gray-100 transition-colors"
+                          onClick={(e) => copyLink(result.section_ref, e)}
+                          title="Copy link to this provision"
+                        >
+                          {result.section_ref}
+                        </Badge>
+                      )}
+                      {result.rulebook_code && (
+                        <Badge className="bg-[#0B1829] text-white text-[10px] px-1.5 py-0">
+                          {result.rulebook_code}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize">
+                        {result.source_entity}
                       </Badge>
-                    )}
-                    {result.rulebook_code && (
-                      <Badge className="bg-[#0B1829] text-white text-[10px] px-1.5 py-0">
-                        {result.rulebook_code}
-                      </Badge>
-                    )}
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize">
-                      {result.source_entity}
-                    </Badge>
-                    {result.is_current && (
-                      <span className="flex items-center gap-1 text-[10px] text-[#16A34A]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
-                        Current
-                      </span>
+                      {result.is_current && (
+                        <span className="flex items-center gap-1 text-[10px] text-[#16A34A]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] font-medium text-gray-900 mb-1">
+                      {result.doc_title}
+                    </p>
+                    <p className={`text-[12px] text-gray-600 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                      {result.chunk_text}
+                    </p>
+
+                    {/* Expanded detail panel */}
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-gray-500">
+                          {result.section_ref && (
+                            <span><span className="font-semibold text-gray-700">Section:</span> {result.section_ref}</span>
+                          )}
+                          {result.rulebook_code && (
+                            <span><span className="font-semibold text-gray-700">Rulebook:</span> {result.rulebook_code}</span>
+                          )}
+                          {result.effective_date && (
+                            <span><span className="font-semibold text-gray-700">Effective:</span> {result.effective_date}</span>
+                          )}
+                          {result.version && (
+                            <span><span className="font-semibold text-gray-700">Version:</span> {result.version}</span>
+                          )}
+                        </div>
+                        {result.source_url && (
+                          <a
+                            href={result.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-block text-[11px] text-[#1A5FA8] hover:underline"
+                          >
+                            View source document &rarr;
+                          </a>
+                        )}
+                        <button
+                          onClick={(e) => copyLink(result.section_ref, e)}
+                          className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-800 transition-colors"
+                        >
+                          {copiedRef === result.section_ref ? (
+                            <><Check size={12} className="text-[#16A34A]" /> Copied!</>
+                          ) : (
+                            <><Copy size={12} /> Copy link</>
+                          )}
+                        </button>
+                      </div>
                     )}
                   </div>
-                  <p className="text-[13px] font-medium text-gray-900 mb-1">
-                    {result.doc_title}
-                  </p>
-                  <p className="text-[12px] text-gray-600 leading-relaxed line-clamp-2">
-                    {result.chunk_text}
-                  </p>
-                </div>
-                {/* Relevance bar */}
-                <div className="w-[60px] flex-shrink-0 pt-1">
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#0B1829] rounded-full"
-                      style={{ width: `${Math.max(20, 95 - i * 8)}%` }}
+                  {/* Relevance bar + expand indicator */}
+                  <div className="w-[60px] flex-shrink-0 pt-1">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#0B1829] rounded-full"
+                        style={{ width: `${Math.max(20, 95 - i * 8)}%` }}
+                      />
+                    </div>
+                    <p className="text-[9px] text-gray-400 text-right mt-0.5">
+                      {Math.round(result.relevance_score * 100)}%
+                    </p>
+                    <ChevronDown
+                      size={14}
+                      className={`text-gray-400 mx-auto mt-1 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                     />
                   </div>
-                  <p className="text-[9px] text-gray-400 text-right mt-0.5">
-                    {Math.round(result.relevance_score * 100)}%
-                  </p>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            )
+          })}
         </div>
       )}
 
@@ -224,7 +302,11 @@ function CorpusPageInner() {
           {filteredSources.slice(0, 50).map((doc) => {
             const Icon = DOC_TYPE_ICONS[doc.doc_type] ?? FileText
             return (
-              <Card key={doc.doc_id} className="p-3 hover:bg-gray-50 transition-colors">
+              <Card
+                key={doc.doc_id}
+                className="p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => setSearchQuery(doc.rulebook_code || doc.title || doc.source_key)}
+              >
                 <div className="flex items-center gap-3">
                   <Icon className="h-4 w-4 text-gray-400 shrink-0" />
                   <div className="flex-1 min-w-0">
