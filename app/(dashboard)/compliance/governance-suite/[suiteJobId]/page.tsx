@@ -25,6 +25,7 @@ interface SuiteStatus {
   total_documents: number
   completed_documents: number
   documents: SuiteDocument[]
+  document_statuses: SuiteDocument[]
   created_at: string
   updated_at: string
 }
@@ -216,7 +217,7 @@ export default function SuiteStatusPage() {
     : 0
 
   // Group documents by tier
-  const byTier = (suite.document_statuses ?? []).reduce((acc, doc) => {
+  const byTier = (suite.document_statuses ?? suite.documents ?? []).reduce((acc, doc) => {
     const t = doc.tier || 1
     if (!acc[t]) acc[t] = []
     acc[t].push(doc)
