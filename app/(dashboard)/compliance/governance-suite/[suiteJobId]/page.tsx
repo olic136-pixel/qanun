@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useParams, useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/api/client'
 import { Download, ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
+import { DocumentReviewModal } from '@/components/qanun/DocumentReviewModal'
 
 // ── Types matching backend B2 response ──────────────────────────
 
@@ -133,6 +134,7 @@ export default function SuiteStatusPage() {
   const [error, setError] = useState('')
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState('')
+  const [reviewOpen, setReviewOpen] = useState(false)
   const isTerminalRef = useRef(false)
 
   useEffect(() => {
@@ -210,6 +212,7 @@ export default function SuiteStatusPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
+      setReviewOpen(true)
     } catch {
       setDownloadError('Download failed. Please try again.')
     } finally {
@@ -373,6 +376,15 @@ export default function SuiteStatusPage() {
             ))}
           </div>
         ))}
+
+      <DocumentReviewModal
+        jobId={suiteJobId}
+        documentTitle={`Governance Suite (${suite.completed_documents} documents)`}
+        entityName={suite.jurisdiction}
+        token={token}
+        isOpen={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+      />
     </div>
   )
 }

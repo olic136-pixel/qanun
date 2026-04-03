@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import { Download, ArrowLeft, CheckCircle2, XCircle, Loader2, AlertTriangle, RefreshCw } from 'lucide-react'
 import { getJobStatus, getDownloadUrl, retryDraft, type JobStatus } from '@/lib/api/drafting'
+import { DocumentReviewModal } from '@/components/qanun/DocumentReviewModal'
 
 export default function DraftProgressPage() {
   const { data: session } = useSession()
@@ -17,6 +18,7 @@ export default function DraftProgressPage() {
   const [status, setStatus] = useState<JobStatus | null>(null)
   const [error, setError] = useState('')
   const [retrying, setRetrying] = useState(false)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const poll = useCallback(async () => {
@@ -185,6 +187,7 @@ export default function DraftProgressPage() {
             <a
               href={getDownloadUrl(jobId, token)}
               download={status?.output_filename ?? 'document.docx'}
+              onClick={() => { setTimeout(() => setReviewOpen(true), 500) }}
               className="flex items-center justify-center gap-2 w-full py-3 bg-[#0B1829] text-white rounded-md text-[14px] font-semibold hover:bg-[#1D2D44] transition-colors mb-3"
             >
               <Download size={16} /> Download DOCX
@@ -196,6 +199,15 @@ export default function DraftProgressPage() {
             >
               Back to documents
             </button>
+
+            <DocumentReviewModal
+              jobId={jobId}
+              documentTitle={status?.output_filename?.replace('.docx', '') ?? 'Document'}
+              entityName=""
+              token={token}
+              isOpen={reviewOpen}
+              onClose={() => setReviewOpen(false)}
+            />
           </>
         )}
 
