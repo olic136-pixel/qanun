@@ -136,6 +136,10 @@ export default function SuiteStatusPage() {
           `/api/drafting/suite/${suiteJobId}/status`, { token }
         )
         if (!active) return
+        if (!data || !data.suite_job_id) {
+          setError('Unexpected response from server')
+          return
+        }
         setSuite(data)
         const terminal = data.status === 'complete'
           || data.status === 'partial'
@@ -256,18 +260,41 @@ export default function SuiteStatusPage() {
       </div>
 
       {/* Progress bar */}
-      <div className="mb-8">
-        <div className="flex justify-between text-[11px] text-gray-500 mb-1.5">
-          <span>{suite.completed_documents} of {suite.total_documents} complete</span>
-          <span>{progressPct}%</span>
+      {suite.total_documents > 0 && (
+        <div className="mb-8">
+          <div className="flex justify-between text-[11px] text-gray-500 mb-1.5">
+            <span>{suite.completed_documents} of {suite.total_documents} complete</span>
+            <span>{progressPct}%</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#0F7A5F] rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
         </div>
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-[#0F7A5F] rounded-full transition-all duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
+      )}
+
+      {/* Empty state: suite initiated but 0 documents */}
+      {suite.total_documents === 0 && suite.status !== 'failed' && (
+        <div className="text-center py-12">
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-black/40 mb-3">
+            SUITE INITIATED
+          </p>
+          <p className="text-[14px] text-black/70 mb-6">
+            Your governance suite for {suite.jurisdiction} has been created. Document drafting will begin shortly.
+          </p>
+          <p className="text-[12px] text-black/40 mb-6">
+            Suite ID: {suiteJobId}
+          </p>
+          <a
+            href="/compliance/documents"
+            className="font-mono text-[11px] uppercase tracking-[0.15em] text-[#0047FF] hover:underline"
+          >
+            Draft individual documents →
+          </a>
         </div>
-      </div>
+      )}
 
       {/* Suite failed state */}
       {suite.status === 'failed' && (
