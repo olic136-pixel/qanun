@@ -131,6 +131,8 @@ export default function SuiteStatusPage() {
 
   const [suite, setSuite] = useState<SuiteStatus | null>(null)
   const [error, setError] = useState('')
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState('')
   const isTerminalRef = useRef(false)
 
   useEffect(() => {
@@ -190,8 +192,29 @@ export default function SuiteStatusPage() {
     }
   }
 
-  function getDownloadAllUrl() {
-    return `${BASE_URL}/api/drafting/suite/${suiteJobId}/download?token=${encodeURIComponent(token)}`
+  async function handleDownload() {
+    setDownloading(true)
+    setDownloadError('')
+    try {
+      const response = await fetch(
+        `${BASE_URL}/api/drafting/suite/${suiteJobId}/download`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (!response.ok) throw new Error('Download failed')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `governance_suite_${suiteJobId.slice(0, 8)}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      setDownloadError('Download failed. Please try again.')
+    } finally {
+      setDownloading(false)
+    }
   }
 
   if (error) {
@@ -258,12 +281,21 @@ export default function SuiteStatusPage() {
           </p>
         </div>
         {suite.completed_documents > 0 && (
-          <a
-            href={getDownloadAllUrl()}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0B1829] text-white rounded-lg text-[12px] font-semibold hover:bg-[#1D2D44] transition-colors"
-          >
-            <Download size={14} /> Download all (ZIP)
-          </a>
+          <div>
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="flex items-center gap-2 px-4 py-2 bg-[#0B1829] text-white rounded-lg text-[12px] font-semibold hover:bg-[#1D2D44] disabled:opacity-40 transition-colors"
+            >
+              {downloading
+                ? <><Loader2 size={14} className="animate-spin" /> Preparing...</>
+                : <><Download size={14} /> Download all (ZIP)</>
+              }
+            </button>
+            {downloadError && (
+              <p className="font-mono text-[10px] text-[#991B1B] mt-1">{downloadError}</p>
+            )}
+          </div>
         )}
       </div>
 
