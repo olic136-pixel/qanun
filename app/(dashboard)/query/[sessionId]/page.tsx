@@ -22,7 +22,10 @@ import {
   BarChart3,
   AlertTriangle,
   Download,
+  ExternalLink,
 } from 'lucide-react'
+import { getProjects, type ProjectListItem } from '@/lib/api/projects'
+import { FolderOpen, RotateCcw, FileEdit } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -117,6 +120,10 @@ export default function SessionDetailPage() {
   const [exportLoading, setExportLoading] = useState<'docx' | 'pdf' | false>(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [startTime] = useState(Date.now())
+  const [saveProjectOpen, setSaveProjectOpen]       = useState(false)
+  const [projects, setProjects]                     = useState<ProjectListItem[]>([])
+  const [projectsLoading, setProjectsLoading]       = useState(false)
+  const [savedToProject, setSavedToProject]         = useState(false)
 
   // Request notification permission
   useEffect(() => {
@@ -255,6 +262,42 @@ export default function SessionDetailPage() {
     }
   }
 
+  async function openSaveToProject() {
+    if (!token) return
+    setSaveProjectOpen(true)
+    setSavedToProject(false)
+    setProjectsLoading(true)
+    try {
+      const list = await getProjects(token)
+      setProjects(Array.isArray(list) ? list : [])
+    } catch {
+      setProjects([])
+    } finally {
+      setProjectsLoading(false)
+    }
+  }
+
+  function handleRerun() {
+    if (!sessionData?.query_text) return
+    router.push(`/query?q=${encodeURIComponent(sessionData.query_text)}`)
+  }
+
+  function handleDraftDocuments() {
+    router.push(`/compliance/documents?from_session=${sessionId}`)
+  }
+
+  useEffect(() => {
+    if (!saveProjectOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-project-dropdown]')) {
+        setSaveProjectOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [saveProjectOpen])
+
   // Derive display state
   const isComplete =
     sessionData?.status === 'complete' || stream.status === 'complete'
@@ -327,46 +370,161 @@ export default function SessionDetailPage() {
     <div className="max-w-5xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+        {/* Top row: breadcrumb + actions */}
+        <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => router.push('/sessions')}
-            className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-700"
+            className="flex items-center gap-1.5 font-mono text-[10px] text-black/30
+                       uppercase tracking-[0.2em] hover:text-black/60 transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft size={11} strokeWidth={1.5} />
             Sessions
           </button>
+
+          {/* Action buttons — shown when session is complete */}
           {isComplete && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
+              {/* Re-run */}
               <button
-                onClick={() => handleExport('docx')}
-                disabled={!!exportLoading}
-                className="flex items-center gap-1.5 border border-[#E8EBF0] rounded-l-md px-3 h-[34px] text-[12px] text-[#6B7280] hover:bg-[#F5F7FA] transition-colors disabled:opacity-50"
+                onClick={handleRerun}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase
+                           tracking-[0.1em] text-black/40 border border-black/15 px-3 py-1.5
+                           hover:border-black/40 hover:text-black/70 transition-colors"
               >
-                <FileText className="w-3.5 h-3.5" strokeWidth={1.5} />
-                {exportLoading === 'docx' ? 'Exporting…' : 'Word'}
+                <RotateCcw size={10} strokeWidth={1.5} />
+                Re-run
               </button>
+
+              {/* Draft Documents */}
               <button
-                onClick={() => handleExport('pdf')}
-                disabled={!!exportLoading}
-                className="flex items-center gap-1.5 border border-l-0 border-[#E8EBF0] rounded-r-md px-3 h-[34px] text-[12px] text-[#6B7280] hover:bg-[#F5F7FA] transition-colors disabled:opacity-50"
+                onClick={handleDraftDocuments}
+                className="flex items-center gap-1.5 font-mono text-[10px] uppercase
+                           tracking-[0.1em] text-black/40 border border-black/15 px-3 py-1.5
+                           hover:border-black/40 hover:text-black/70 transition-colors"
               >
-                {exportLoading === 'pdf' ? 'Exporting…' : 'PDF'}
+                <FileEdit size={10} strokeWidth={1.5} />
+                Draft Documents
               </button>
+
+              {/* Save to Project */}
+              <div className="relative" data-project-dropdown>
+                <button
+                  onClick={openSaveToProject}
+                  className="flex items-center gap-1.5 font-mono text-[10px] uppercase
+                             tracking-[0.1em] text-black/40 border border-black/15 px-3 py-1.5
+                             hover:border-black/40 hover:text-black/70 transition-colors"
+                >
+                  <FolderOpen size={10} strokeWidth={1.5} />
+                  {savedToProject ? 'Saved ✓' : 'Save to Project'}
+                </button>
+                {saveProjectOpen && (
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-black/15
+                                  shadow-lg min-w-[240px]">
+                    <div className="px-4 py-2 border-b border-black/10">
+                      <p className="font-mono text-[9px] text-black/30 uppercase tracking-[0.2em]">
+                        Add to project
+                      </p>
+                    </div>
+                    {projectsLoading ? (
+                      <div className="px-4 py-3 flex items-center gap-2">
+                        <Loader2 size={11} className="animate-spin text-black/30" />
+                        <span className="font-mono text-[10px] text-black/30">Loading…</span>
+                      </div>
+                    ) : projects.length === 0 ? (
+                      <div className="px-4 py-3">
+                        <p className="font-mono text-[10px] text-black/30">No projects yet.</p>
+                      </div>
+                    ) : (
+                      <div className="max-h-[200px] overflow-y-auto">
+                        {projects.map(p => (
+                          <button
+                            key={p.project_id}
+                            onClick={() => {
+                              setSaveProjectOpen(false)
+                              setSavedToProject(true)
+                              router.push(`/projects/${p.project_id}`)
+                            }}
+                            className="w-full text-left px-4 py-2.5 border-b border-black/5 last:border-0
+                                       hover:bg-black/[0.03] transition-colors"
+                          >
+                            <p className="font-mono text-[11px] text-black/70 uppercase
+                                         tracking-[0.05em] truncate">
+                              {p.title}
+                            </p>
+                            <p className="font-mono text-[9px] text-black/25 mt-0.5">
+                              {p.cycle_count} cycle{p.cycle_count !== 1 ? 's' : ''}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSaveProjectOpen(false)
+                        router.push('/projects/new')
+                      }}
+                      className="w-full text-left px-4 py-2.5 border-t border-black/10
+                                 hover:bg-black/[0.03] transition-colors"
+                    >
+                      <span className="font-mono text-[10px] text-[#0047FF] uppercase tracking-[0.1em]">
+                        + New project
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setSaveProjectOpen(false)}
+                      className="absolute top-2 right-3 font-mono text-[10px] text-black/25
+                                 hover:text-black/50 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Export */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => handleExport('docx')}
+                  disabled={!!exportLoading}
+                  className="flex items-center gap-1.5 font-mono text-[10px] uppercase
+                             tracking-[0.1em] text-black/40 border border-black/15 px-3 py-1.5
+                             hover:border-black/40 hover:text-black/70 transition-colors
+                             disabled:opacity-40 border-r-0"
+                >
+                  {exportLoading === 'docx' ? <Loader2 size={10} className="animate-spin" /> : null}
+                  Word
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  disabled={!!exportLoading}
+                  className="flex items-center gap-1.5 font-mono text-[10px] uppercase
+                             tracking-[0.1em] text-black/40 border border-black/15 px-3 py-1.5
+                             hover:border-black/40 hover:text-black/70 transition-colors
+                             disabled:opacity-40"
+                >
+                  {exportLoading === 'pdf' ? <Loader2 size={10} className="animate-spin" /> : null}
+                  PDF
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">
+        {/* Query title */}
+        <h1 className="font-black text-[18px] uppercase tracking-tight text-black
+                       leading-tight mb-3">
           {sessionData?.query_text ?? 'Query session'}
         </h1>
 
+        {/* Meta row */}
         <div className="flex items-center gap-3">
           {sessionData?.jurisdictions?.map((j) => (
-            <Badge key={j} variant="outline" className="text-[11px]">
+            <span key={j} className="font-mono text-[10px] text-black/40 uppercase
+                                     tracking-[0.1em] border border-black/15 px-2 py-0.5">
               {j}
-            </Badge>
+            </span>
           ))}
-          <span className="text-[12px] text-gray-400">
+          <span className="font-mono text-[10px] text-black/25">
             {sessionData?.created_at
               ? new Date(sessionData.created_at).toLocaleString()
               : ''}
@@ -435,12 +593,32 @@ export default function SessionDetailPage() {
 
       {/* Error state */}
       {error && (
-        <Card className="p-6 mb-6 border-red-200 bg-red-50">
-          <div className="flex items-center gap-2">
-            <XCircle className="h-5 w-5 text-[#991B1B]" />
-            <p className="text-[14px] text-[#991B1B]">{error}</p>
+        <div className="border border-black/15 bg-white px-5 py-4 mb-6">
+          <div className="flex items-start gap-3">
+            <XCircle size={14} className="text-[#991B1B] shrink-0 mt-0.5" strokeWidth={1.5} />
+            <div className="flex-1">
+              <p className="font-mono text-[11px] text-black/60 uppercase tracking-[0.1em] mb-2">
+                The research pipeline was unavailable. Your query has been saved.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleRerun}
+                  className="font-mono text-[10px] text-white uppercase tracking-[0.1em]
+                             bg-black px-4 py-2 hover:bg-[#0047FF] transition-colors"
+                >
+                  Retry →
+                </button>
+                <button
+                  onClick={() => router.push(`/dashboard?q=${encodeURIComponent(sessionData?.query_text ?? '')}`)}
+                  className="font-mono text-[10px] text-black/40 uppercase tracking-[0.1em]
+                             border border-black/15 px-4 py-2 hover:border-black/40 transition-colors"
+                >
+                  Try Quick Lookup →
+                </button>
+              </div>
+            </div>
           </div>
-        </Card>
+        </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -562,49 +740,66 @@ export default function SessionDetailPage() {
               </div>
             )}
 
-            <div className="space-y-3 mt-2 max-h-[600px] overflow-y-auto">
-              {claims.map((claim) => (
-                <div
-                  key={claim.claim_id}
-                  className="p-3 rounded-lg border bg-white"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] ${CONFIDENCE_COLORS[claim.confidence_tier] ?? ''}`}
-                    >
-                      {claim.confidence_tier}
-                    </Badge>
-                    <button
-                      onClick={() =>
-                        copyClaim(claim.claim_text, claim.claim_id)
-                      }
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      {copiedClaim === claim.claim_id ? (
-                        <Check className="h-3.5 w-3.5 text-[#0F7A5F]" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                    </button>
+            <div className="space-y-4 mt-2 max-h-[600px] overflow-y-auto pr-1">
+              {(['VERIFIED', 'SUPPORTED', 'INFERRED', 'CONTESTED'] as const).map(tier => {
+                const tierClaims = claims.filter(c => c.confidence_tier === tier)
+                if (tierClaims.length === 0) return null
+                const tierColors: Record<string, string> = {
+                  VERIFIED:  'text-[#059669] border-[#059669]/20 bg-[#059669]/5',
+                  SUPPORTED: 'text-[#0047FF] border-[#0047FF]/20 bg-[#0047FF]/5',
+                  INFERRED:  'text-[#D97706] border-[#D97706]/20 bg-[#D97706]/5',
+                  CONTESTED: 'text-[#991B1B] border-[#991B1B]/20 bg-[#991B1B]/5',
+                }
+                return (
+                  <div key={tier}>
+                    <div className={`flex items-center gap-2 px-2.5 py-1.5 border mb-2 ${tierColors[tier]}`}>
+                      <span className={`font-mono text-[9px] uppercase tracking-[0.2em] font-bold`}>
+                        {tier}
+                      </span>
+                      <span className="font-mono text-[9px] opacity-60">
+                        {tierClaims.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {tierClaims.map((claim) => (
+                        <div key={claim.claim_id} className="border border-black/10 p-3 bg-white">
+                          <p className="font-mono text-[11px] text-black/70 leading-relaxed mb-2">
+                            {claim.claim_text}
+                          </p>
+                          {claim.section_ref && (
+                            <div className="flex items-center justify-between">
+                              <button
+                                type="button"
+                                onClick={() => setActiveCitation(claim.section_ref)}
+                                className="font-mono text-[10px] text-[#0047FF] hover:text-black
+                                           transition-colors uppercase tracking-[0.05em]"
+                              >
+                                {claim.section_ref}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => router.push(
+                                  `/corpus?section_ref=${encodeURIComponent(claim.section_ref)}`
+                                )}
+                                className="font-mono text-[9px] text-black/25 hover:text-black/50
+                                           uppercase tracking-[0.1em] flex items-center gap-1 transition-colors"
+                              >
+                                <ExternalLink size={9} strokeWidth={1.5} />
+                                corpus
+                              </button>
+                            </div>
+                          )}
+                          {!claim.section_ref && (
+                            <p className="font-mono text-[9px] text-black/20 uppercase tracking-[0.1em]">
+                              {claim.agent_name}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-[13px] text-gray-700 leading-relaxed">
-                    {claim.claim_text}
-                  </p>
-                  {claim.section_ref && (
-                    <button
-                      type="button"
-                      onClick={() => setActiveCitation(claim.section_ref)}
-                      className="block font-mono text-[11px] text-[#1A5FA8] hover:underline cursor-pointer mt-1.5"
-                    >
-                      {claim.section_ref}
-                    </button>
-                  )}
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    {claim.agent_name}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </Card>
         </div>
