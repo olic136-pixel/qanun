@@ -11,10 +11,13 @@ import { Download, ArrowLeft, Loader2, RefreshCw } from 'lucide-react'
 interface SuiteDocument {
   doc_type: string
   display_name: string
-  tier: number
+  tier: number | null
   status: 'queued' | 'drafting' | 'drafted' | 'exporting' | 'complete' | 'failed'
   job_id: string | null
-  error_message: string | null
+  error: string | null
+  error_message?: string | null
+  progress?: number
+  download_url?: string | null
 }
 
 interface SuiteStatus {
@@ -35,7 +38,8 @@ interface SuiteStatus {
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://api.qanun.io'
 
 const TIER_LABELS: Record<number, string> = {
-  1: 'Registration Pack',
+  0: 'Incorporation Pack',
+  1: 'Governance Framework',
   2: 'Mandatory Compliance Framework',
   3: 'Corporate Governance Framework',
   4: 'Operational Procedures',
@@ -82,11 +86,15 @@ function DocumentRow({
               ? 'text-red-500'
               : doc.status === 'complete'
                 ? 'text-[#0F7A5F]'
-                : 'text-gray-400'
+                : doc.status === 'drafting'
+                  ? 'text-[#0047FF]'
+                  : 'text-gray-400'
           }`}>
-            {doc.status === 'failed' && doc.error_message
-              ? doc.error_message.slice(0, 60)
-              : doc.status}
+            {doc.status === 'failed' && (doc.error || doc.error_message)
+              ? (doc.error || doc.error_message || '').slice(0, 60)
+              : doc.status === 'drafting' && doc.progress
+                ? `Drafting (${doc.progress}%)`
+                : doc.status}
           </p>
         </div>
       </div>
@@ -220,9 +228,9 @@ export default function SuiteStatusPage() {
     ? Math.round((suite.completed_documents / suite.total_documents) * 100)
     : 0
 
-  // Group documents by tier
+  // Group documents by tier (null tier = governance framework → tier 1)
   const byTier = (suite.document_statuses ?? suite.documents ?? []).reduce((acc, doc) => {
-    const t = doc.tier || 1
+    const t = doc.tier ?? 1
     if (!acc[t]) acc[t] = []
     acc[t].push(doc)
     return acc
