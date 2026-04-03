@@ -54,7 +54,9 @@ export interface EntityValidationResult {
 export interface ExtractedEntityFields {
   entity_name: string
   jurisdiction_code: string
-  licence_category: string
+  regulatory_status: 'regulated' | 'unregulated' | 'pending_assessment'
+  jurisdiction_confirmed: boolean
+  licence_category: string | null
   permitted_activities: string[]
   entity_type: string
   mlro_name: string | null
