@@ -212,7 +212,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="mx-3 mb-3 border-t border-black/10 pt-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[9px] font-mono font-bold uppercase tracking-[0.25em] text-black/20">
-                Live Entities
+                Entities
               </p>
               <Link
                 href="/compliance/entities/new"

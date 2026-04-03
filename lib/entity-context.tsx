@@ -17,6 +17,8 @@ export interface Entity {
   id: string
   name: string
   category: string
+  jurisdiction: string
+  completionPct: number
 }
 
 interface EntityContextValue {
@@ -41,6 +43,8 @@ function toEntity(summary: EntitySummary): Entity {
     id: summary.entity_id,
     name: summary.entity_name,
     category: summary.entity_type,
+    jurisdiction: summary.target_jurisdiction ?? '',
+    completionPct: summary.completion_pct ?? 0,
   }
 }
 
@@ -63,7 +67,13 @@ function readStoredEntity(): Entity | null {
         typeof obj.name === 'string' &&
         typeof obj.category === 'string'
       ) {
-        return { id: obj.id, name: obj.name, category: obj.category }
+        return {
+          id: obj.id,
+          name: obj.name,
+          category: obj.category,
+          jurisdiction: typeof obj.jurisdiction === 'string' ? obj.jurisdiction : '',
+          completionPct: typeof obj.completionPct === 'number' ? obj.completionPct : 0,
+        }
       }
     }
   } catch {
