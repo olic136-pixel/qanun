@@ -8,6 +8,7 @@ import {
   Search, FileSearch, Bell, BookOpen,
   Settings2, ChevronLeft, ChevronRight,
   Command, FileText, PlusCircle,
+  Layers, RefreshCw, Monitor, FolderOpen, Activity,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemStatus } from '@/lib/hooks/useDashboard'
@@ -22,19 +23,40 @@ import {
 
 const navSections = [
   {
-    label: 'Workspace',
+    label: 'Research',
     items: [
-      { label: 'Quick Lookup',      icon: Search,          href: '/dashboard' },
-      { label: 'Research',          icon: FileSearch,      href: '/query' },
-      { label: 'Compliance Studio', icon: FileText,        href: '/compliance/documents' },
-      { label: 'Monitoring',        icon: Bell,            href: '/alerts', badge: true },
-      { label: 'Corpus',            icon: BookOpen,        href: '/corpus' },
+      { label: 'Quick Lookup',     icon: Search,      href: '/dashboard' },
+      { label: 'Deep Research',    icon: FileSearch,  href: '/query' },
+      { label: 'Corpus',           icon: BookOpen,    href: '/corpus' },
+    ],
+  },
+  {
+    label: 'Studio',
+    items: [
+      { label: 'Documents',        icon: FileText,    href: '/compliance/documents' },
+      { label: 'Governance Suite', icon: Layers,      href: '/compliance/governance-suite' },
+      { label: 'Entity Setup',     icon: PlusCircle,  href: '/compliance/entities/new' },
+    ],
+  },
+  {
+    label: 'Monitoring',
+    items: [
+      { label: 'Alerts',           icon: Bell,        href: '/alerts',   badge: true },
+      { label: 'Reg. Changes',     icon: RefreshCw,   href: '/changes' },
+      { label: 'Product Twins',    icon: Monitor,     href: '/twins' },
+    ],
+  },
+  {
+    label: 'Projects',
+    items: [
+      { label: 'All Projects',     icon: FolderOpen,  href: '/projects' },
     ],
   },
   {
     label: 'Account',
     items: [
-      { label: 'Settings',          icon: Settings2,       href: '/settings' },
+      { label: 'Settings',         icon: Settings2,   href: '/settings' },
+      { label: 'System',           icon: Activity,    href: '/system' },
     ],
   },
 ]
@@ -45,11 +67,11 @@ function getPageTitle(pathname: string): string {
     '/query': 'Research',
     '/sessions': 'Sessions',
     '/projects': 'Projects',
-    '/projects/new': 'New project',
-    '/twins': 'Product twins',
+    '/projects/new': 'New Project',
+    '/twins': 'Product Twins',
     '/alerts': 'Alerts',
     '/corpus': 'Browse corpus',
-    '/changes': 'Recent changes',
+    '/changes': 'Recent Changes',
     '/settings': 'Settings',
     '/system': 'System',
     '/billing': 'Billing',
@@ -157,7 +179,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </p>
               )}
               {section.items.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(item.href + '/')
+                const active = pathname === item.href ||
+                  (item.href !== '/compliance/entities/new' && pathname.startsWith(item.href + '/'))
                 const Icon = item.icon
                 const showBadge = 'badge' in item && item.badge && pendingAlerts > 0
                 return (
