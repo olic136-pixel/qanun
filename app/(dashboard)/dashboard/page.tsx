@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { Loader2, AlertTriangle, AlertCircle, Info } from 'lucide-react'
+import { Loader2, AlertTriangle, AlertCircle, Info, Link as LinkIcon, Check } from 'lucide-react'
 import { quickLookup, type QuickLookupResult } from '@/lib/api/quicklookup'
 import { useEntity } from '@/lib/entity-context'
 import { useQuery } from '@tanstack/react-query'
@@ -76,6 +76,14 @@ function SearchBlock({
   handleReset: () => void
 }) {
   const router = useRouter()
+  const [copiedRef, setCopiedRef] = useState<string | null>(null)
+  const copySectionLink = (sectionRef: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const url = `${window.location.origin}/corpus?section_ref=${encodeURIComponent(sectionRef)}`
+    navigator.clipboard.writeText(url).catch(() => undefined)
+    setCopiedRef(sectionRef)
+    setTimeout(() => setCopiedRef(null), 1500)
+  }
   return (
     <>
       {/* Jurisdiction tabs */}
@@ -181,6 +189,18 @@ function SearchBlock({
                       <span className="font-mono text-[10px] text-[#0047FF] font-semibold uppercase tracking-[0.05em]">
                         {p.section_ref}
                       </span>
+                      {p.section_ref && (
+                        <button
+                          type="button"
+                          onClick={e => copySectionLink(p.section_ref, e)}
+                          title="Copy link to this provision"
+                          className="text-black/25 hover:text-[#0047FF] transition-colors"
+                        >
+                          {copiedRef === p.section_ref
+                            ? <Check size={12} strokeWidth={1.5} className="text-[#0F7A5F]" />
+                            : <LinkIcon size={12} strokeWidth={1.5} />}
+                        </button>
+                      )}
                       {p.source_entity && (
                         <span className="font-mono text-[9px] text-black/25 uppercase">
                           {p.source_entity}

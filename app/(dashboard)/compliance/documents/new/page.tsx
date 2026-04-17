@@ -31,6 +31,7 @@ function NewDocumentContent() {
   const JURISDICTIONS = [
     { code: 'ADGM', label: 'ADGM / FSRA', active: true },
     { code: 'VARA', label: 'VARA — Dubai', active: true },
+    { code: 'DFSA', label: 'DIFC / DFSA', active: true },
     { code: 'EL_SALVADOR', label: 'El Salvador — CNAD', active: true },
   ]
 
@@ -76,7 +77,7 @@ function NewDocumentContent() {
         <h1 className="text-xl font-bold text-[#0B1829]">Select Document Type</h1>
         <p className="text-[13px] text-gray-500 mt-1">
           Choose which compliance document to draft for {selectedEntity?.name ?? 'this entity'}.
-          Documents are grounded in the live {jurisdiction === 'ADGM' ? 'ADGM / FSRA' : jurisdiction === 'VARA' ? 'VARA' : 'El Salvador CNAD'} regulatory corpus.
+          Documents are grounded in the live {jurisdiction === 'ADGM' ? 'ADGM / FSRA' : jurisdiction === 'VARA' ? 'VARA' : jurisdiction === 'DFSA' ? 'DIFC / DFSA' : 'El Salvador CNAD'} regulatory corpus.
         </p>
       </div>
 

@@ -131,14 +131,16 @@ export function filterTemplatesByJurisdiction(
     // All current templates are ADGM — return applicable ones
     return getApplicableTemplates(templates)
   }
-  // For VARA and EL_SALVADOR: filter by coverage_rulebooks containing jurisdiction prefix
-  // When no VARA/SV templates exist yet, return empty array with a placeholder
-  const filtered = templates.filter(t =>
-    t.coverage_rulebooks.some(rb =>
-      rb.startsWith(jurisdiction === 'VARA' ? 'VARA-' : 'SV-')
-    )
+  const prefixMap: Record<string, string> = {
+    VARA: 'VARA-',
+    DFSA: 'DFSA-',
+    EL_SALVADOR: 'SV-',
+  }
+  const prefix = prefixMap[jurisdiction]
+  if (!prefix) return []
+  return templates.filter(t =>
+    t.coverage_rulebooks.some(rb => rb.startsWith(prefix))
   )
-  return filtered
 }
 
 // ── API Functions ──────────────────────────────────────────────
