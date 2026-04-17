@@ -99,6 +99,7 @@ export interface JobStatus {
   retry_action?: 'none' | 're_export' | 'full_redraft' | 'wait' | 'unknown'
   phase_a_completed_at?: string
   exported_at?: string
+  sections_json?: string
 }
 
 // ── Entity Constants ──────────────────────────────────────────
@@ -212,3 +213,48 @@ export const exportDraft = (jobId: string, token: string) =>
 
 export const deleteJob = (jobId: string, token: string) =>
   apiFetch<void>(`/api/drafting/jobs/${jobId}`, { method: 'DELETE', token })
+
+export interface DiscrepancyInput {
+  discrepancy_type:
+    | 'MISSTATEMENT'
+    | 'OVERSTATEMENT'
+    | 'MATERIAL_OMISSION'
+    | 'SCOPE_ERROR'
+    | 'STRENGTH_ERROR'
+  original_text: string
+  corrected_text: string
+  provision_ref?: string
+}
+
+export interface ReviewSectionInput {
+  section_id: string
+  discrepancies: DiscrepancyInput[]
+  quality_tier: 'excellent' | 'good' | 'acceptable' | 'poor'
+  reviewed: boolean
+}
+
+export interface ReviewRequest {
+  sections: ReviewSectionInput[]
+  jurisdiction: string
+}
+
+export interface ReviewResponse {
+  job_id: string
+  sections_reviewed: number
+  pairs_stored: number
+  message: string
+}
+
+export const submitReview = (
+  jobId: string,
+  payload: ReviewRequest,
+  token: string
+) =>
+  apiFetch<ReviewResponse>(
+    `/api/drafting/${jobId}/review`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      token,
+    }
+  )

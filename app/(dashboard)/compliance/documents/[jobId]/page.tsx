@@ -16,6 +16,8 @@ import {
   type MethodologyNote,
 } from '@/lib/api/twins'
 import { useEntity } from '@/lib/entity-context'
+import { ReviewPanel } from '@/components/drafting/ReviewPanel'
+import { submitReview } from '@/lib/api/drafting'
 
 const SEVERITY_CONFIG = {
   high: { label: 'High', tw: 'bg-red-50 text-red-700 border-red-200' },
@@ -47,6 +49,9 @@ export default function DocumentDetailPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [resolvingId, setResolvingId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [reviewOpen, setReviewOpen] = useState(false)
+  const [reviewPairsStored, setReviewPairsStored] =
+    useState<number | null>(null)
 
   async function loadData() {
     if (!token) return
@@ -371,6 +376,50 @@ export default function DocumentDetailPage() {
             ))}
           </div>
         </details>
+      )}
+
+      {/* Accuracy review panel */}
+      {job?.status === 'complete' && job.sections_json && (
+        <div className="bg-white border border-[#E8EBF0] rounded-lg">
+          <button
+            onClick={() => setReviewOpen((o) => !o)}
+            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 transition-colors"
+          >
+            <div>
+              <h2 className="text-[11px] font-bold text-[#0B1829] uppercase tracking-wide">
+                Accuracy Review
+              </h2>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Rate section quality and flag discrepancies
+                to improve future drafts
+              </p>
+            </div>
+            {reviewPairsStored !== null ? (
+              <span className="text-[11px] text-emerald-600 font-semibold">
+                {reviewPairsStored} correction pair
+                {reviewPairsStored !== 1 ? 's' : ''} stored
+              </span>
+            ) : (
+              <span className="text-[11px] text-blue-600 font-semibold">
+                {reviewOpen ? 'Close' : 'Start review'}
+              </span>
+            )}
+          </button>
+          {reviewOpen && reviewPairsStored === null && (
+            <div className="border-t border-[#E8EBF0] px-4 pb-4 pt-3">
+              <ReviewPanel
+                jobId={jobId}
+                sectionsJson={job.sections_json}
+                jurisdiction={'ADGM'}
+                token={token}
+                onComplete={(pairs) => {
+                  setReviewPairsStored(pairs)
+                  setReviewOpen(false)
+                }}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {error && (
