@@ -38,15 +38,47 @@ export interface GiraJobStatusResponse {
 
 // ── API Functions ──────────────────────────────────────────────
 
-export const getGiraPreflight = (
+// ── Normalisation helpers ──────────────────────────────────────
+
+type RawField = string | { field: string; label: string }
+type RawCee  = string | CeeQuestion
+
+function toFieldLabel(f: RawField): { field: string; label: string } {
+  if (typeof f === 'string') {
+    return {
+      field: f,
+      label: f
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase()),
+    }
+  }
+  return f
+}
+
+function toCeeQuestion(q: RawCee, i: number): CeeQuestion {
+  if (typeof q === 'string') {
+    return { id: `q_${i}`, prompt: q, helper_text: null, answer: null }
+  }
+  return q
+}
+
+export const getGiraPreflight = async (
   entityId: string,
   jurisdiction: Jurisdiction,
   token: string,
-) =>
-  apiFetch<GiraPreflightResponse>(
+): Promise<GiraPreflightResponse> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const raw = await apiFetch<any>(
     `/api/gira/preflight/${entityId}?jurisdiction=${encodeURIComponent(jurisdiction)}`,
     { token },
   )
+  return {
+    ...raw,
+    blocking_fields:  (raw.blocking_fields  ?? []).map(toFieldLabel),
+    optional_missing: (raw.optional_missing ?? []).map(toFieldLabel),
+    cee_questions:    (raw.cee_questions    ?? []).map(toCeeQuestion),
+  }
+}
 
 export const generateGira = (
   entityId: string,
