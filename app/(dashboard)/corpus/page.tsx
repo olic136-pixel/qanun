@@ -26,10 +26,19 @@ const JURISDICTIONS = [
   { label: 'DFSA', value: 'DFSA' },
   { label: 'DIFC', value: 'DIFC' },
   { label: 'ADGM RA', value: 'ADGM_RA' },
+  { label: 'VARA', value: 'VARA' },
   { label: 'El Salvador', value: 'EL_SALVADOR' },
   { label: 'BVI — FSC',    value: 'BVI_FSC'     },
   { label: 'Panama — SMV', value: 'PANAMA_SMV'  },
 ]
+
+const safeDecodeTitle = (title: string) => {
+  try {
+    return decodeURIComponent(title)
+  } catch {
+    return title
+  }
+}
 
 function CorpusPageInner() {
   const { data: session } = useSession()
@@ -140,7 +149,7 @@ function CorpusPageInner() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">Corpus Browser</h1>
         <p className="text-[14px] text-gray-500">
-          {totalCount.toLocaleString()} {isSearchMode ? 'results' : 'documents'} across ADGM, DIFC, El Salvador, BVI and Panama
+          {totalCount.toLocaleString()} {isSearchMode ? 'results' : 'documents'} across ADGM, DIFC, VARA, El Salvador, BVI and Panama
         </p>
       </div>
 
@@ -226,7 +235,7 @@ function CorpusPageInner() {
                       )}
                     </div>
                     <p className="text-[13px] font-medium text-gray-900 mb-1">
-                      {result.doc_title}
+                      {safeDecodeTitle(result.doc_title)}
                     </p>
                     <p className={`text-[12px] text-gray-600 leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
                       {result.chunk_text}
@@ -311,7 +320,7 @@ function CorpusPageInner() {
                   <Icon className="h-4 w-4 text-gray-400 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-gray-900 truncate">
-                      {doc.title || doc.source_key || `Document #${doc.doc_id}`}
+                      {doc.title ? safeDecodeTitle(doc.title) : (doc.source_key || `Document #${doc.doc_id}`)}
                     </p>
                     <div className="flex items-center gap-2 text-[11px] text-gray-400">
                       {doc.rulebook_code && (

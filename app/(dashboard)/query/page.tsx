@@ -10,6 +10,7 @@ import Link from 'next/link'
 const JURISDICTIONS = [
   { id: 'ADGM', label: 'ADGM / FSRA' },
   { id: 'DIFC', label: 'DIFC / DFSA' },
+  { id: 'VARA', label: 'VARA — Dubai' },
   { id: 'EL_SALVADOR', label: 'El Salvador' },
 ]
 
