@@ -77,6 +77,8 @@ function SearchBlock({
 }) {
   const router = useRouter()
   const [copiedRef, setCopiedRef] = useState<string | null>(null)
+  const [expandedPassage, setExpandedPassage] =
+    useState<number | null>(null)
   const copySectionLink = (sectionRef: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const url = `${window.location.origin}/corpus?section_ref=${encodeURIComponent(sectionRef)}`
@@ -178,40 +180,76 @@ function SearchBlock({
                 Sources ({result.passages.length})
               </p>
               <div className="space-y-2">
-                {result.passages.slice(0, 5).map((p, i) => (
-                  <div
-                    key={i}
-                    className="flex items-start gap-3 py-2 border-b border-black/5 last:border-0
-                               cursor-pointer hover:bg-black/[0.015] -mx-2 px-2 transition-colors"
-                    onClick={() => router.push(`/corpus?section_ref=${encodeURIComponent(p.section_ref)}`)}
-                  >
-                    <span className="flex items-center gap-1.5 shrink-0 pt-0.5">
-                      <span className="font-mono text-[10px] text-[#0047FF] font-semibold uppercase tracking-[0.05em]">
-                        {p.section_ref}
-                      </span>
-                      {p.section_ref && (
-                        <button
-                          type="button"
-                          onClick={e => copySectionLink(p.section_ref, e)}
-                          title="Copy link to this provision"
-                          className="text-black/25 hover:text-[#0047FF] transition-colors"
-                        >
-                          {copiedRef === p.section_ref
-                            ? <Check size={12} strokeWidth={1.5} className="text-[#0F7A5F]" />
-                            : <LinkIcon size={12} strokeWidth={1.5} />}
-                        </button>
-                      )}
-                      {p.source_entity && (
-                        <span className="font-mono text-[9px] text-black/25 uppercase">
-                          {p.source_entity}
+                {result.passages.slice(0, 5).map((p, i) => {
+                  const isOpen = expandedPassage === i
+                  return (
+                    <div key={i} className="border-b border-black/5 last:border-0">
+                      {/* Row header — click to expand */}
+                      <div
+                        className="flex items-start gap-3 py-2 cursor-pointer
+                                   hover:bg-black/[0.015] -mx-2 px-2
+                                   transition-colors"
+                        onClick={() =>
+                          setExpandedPassage(isOpen ? null : i)
+                        }
+                      >
+                        <span className="flex items-center gap-1.5 shrink-0 pt-0.5">
+                          <span className="font-mono text-[10px] text-[#0047FF]
+                                           font-semibold uppercase tracking-[0.05em]">
+                            {p.section_ref}
+                          </span>
+                          {p.source_entity && (
+                            <span className="font-mono text-[9px] text-black/25 uppercase">
+                              {p.source_entity}
+                            </span>
+                          )}
                         </span>
+                        <p className={`font-mono text-[11px] text-black/50
+                                       leading-relaxed flex-1 ${
+                          isOpen ? '' : 'line-clamp-2'
+                        }`}>
+                          {p.text}
+                        </p>
+                        <span className="font-mono text-[9px] text-black/25
+                                         shrink-0 pt-0.5">
+                          {isOpen ? '▲' : '▼'}
+                        </span>
+                      </div>
+
+                      {/* Expanded actions */}
+                      {isOpen && (
+                        <div className="flex items-center gap-4 pb-2 -mx-2 px-2">
+                          <a
+                            href={`/corpus?section_ref=${encodeURIComponent(p.section_ref)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={e => e.stopPropagation()}
+                            className="font-mono text-[10px] text-[#0047FF]
+                                       uppercase tracking-[0.1em]
+                                       hover:text-black transition-colors"
+                          >
+                            View in corpus →
+                          </a>
+                          {p.section_ref && (
+                            <button
+                              type="button"
+                              onClick={e => copySectionLink(p.section_ref, e)}
+                              className="font-mono text-[10px] text-black/30
+                                         uppercase tracking-[0.1em]
+                                         hover:text-black/60 transition-colors
+                                         flex items-center gap-1"
+                            >
+                              {copiedRef === p.section_ref
+                                ? <><Check size={10} strokeWidth={1.5} className="text-[#0F7A5F]" /> Copied</>
+                                : <><LinkIcon size={10} strokeWidth={1.5} /> Copy link</>
+                              }
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </span>
-                    <p className="font-mono text-[11px] text-black/50 leading-relaxed line-clamp-2">
-                      {p.text}
-                    </p>
-                  </div>
-                ))}
+                    </div>
+                  )
+                })}
               </div>
               <button
                 onClick={() => router.push(`/query?q=${encodeURIComponent(query)}`)}

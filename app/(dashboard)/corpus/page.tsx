@@ -45,8 +45,14 @@ function CorpusPageInner() {
   const token = session?.user?.accessToken as string
   const searchParams = useSearchParams()
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const initialRef = searchParams.get('section_ref') ?? ''
+  const initialQ   = searchParams.get('q') ?? ''
+  const initialSearch = initialRef || initialQ
+
+  const [searchQuery, setSearchQuery] =
+    useState(initialSearch)
+  const [debouncedQuery, setDebouncedQuery] =
+    useState(initialSearch)
   const [docType, setDocType] = useState<string>('all')
   const [jurisdiction, setJurisdiction] = useState<string>('')
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
@@ -54,22 +60,31 @@ function CorpusPageInner() {
   const resultRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const deepLinkRef = useRef<string | null>(null)
 
-  // Pre-populate from URL params
   useEffect(() => {
-    const q = searchParams.get('q')
-    if (q) {
-      setSearchQuery(q)
-      setDebouncedQuery(q)
-    }
+    // Handle subsequent navigations to the
+    // corpus page with new URL params
     const ref = searchParams.get('section_ref')
+    const q   = searchParams.get('q')
     if (ref) {
       setSearchQuery(ref)
       setDebouncedQuery(ref)
       setJurisdiction('')
       setDocType('all')
       deepLinkRef.current = ref
+    } else if (q) {
+      setSearchQuery(q)
+      setDebouncedQuery(q)
     }
   }, [searchParams])
+
+  // Set deepLinkRef on initial load if section_ref
+  // was in the URL (useState already set the query)
+  useEffect(() => {
+    if (initialRef) {
+      deepLinkRef.current = initialRef
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Debounce search
   useEffect(() => {
