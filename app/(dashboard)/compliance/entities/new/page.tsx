@@ -50,9 +50,20 @@ export default function NewEntityPage() {
       const ctx = await getJurisdictionContext(code, token)
       setContextDocument(ctx.context_document)
       setPageState('ready')
-    } catch {
-      setContextError('Failed to load regulatory context. Please try again.')
-      setPageState('error')
+    } catch (err) {
+      // Context load failed — proceed with empty
+      // context. The CEE system prompt has full
+      // jurisdiction-specific guidance hardcoded
+      // and functions correctly without corpus
+      // context. Log for debugging only.
+      console.warn(
+        'jurisdiction-context fetch failed:',
+        err)
+      setContextDocument('')
+      setContextError(
+        'Regulatory context unavailable — ' +
+        'proceeding with standard guidance.')
+      setPageState('ready')
     }
   }
 
@@ -143,8 +154,10 @@ export default function NewEntityPage() {
             </div>
           )}
           {contextError && (
-            <div className="p-3 border border-black/20 text-[13px] text-black mb-4">
-              {contextError}
+            <div className="px-3 py-2 bg-amber-50 border
+                            border-amber-200 text-[11px]
+                            text-amber-700 mb-3 font-mono">
+              ⚠ {contextError}
             </div>
           )}
           {(pageState === 'ready' || pageState === 'confirmed') && (
