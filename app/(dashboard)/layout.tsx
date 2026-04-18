@@ -9,6 +9,7 @@ import {
   Settings2, ChevronLeft, ChevronRight,
   Command, FileText, PlusCircle,
   Layers, RefreshCw, Monitor, FolderOpen, Activity,
+  CalendarDays,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSystemStatus } from '@/lib/hooks/useDashboard'
@@ -34,6 +35,7 @@ const navSections = [
     label: 'Studio',
     items: [
       { label: 'Documents',        icon: FileText,    href: '/compliance/documents' },
+      { label: 'Compliance Calendar', icon: CalendarDays, href: '/compliance/calendar' },
       { label: 'Governance Suite', icon: Layers,      href: '/compliance/governance-suite' },
       { label: 'Entity Setup',     icon: PlusCircle,  href: '/compliance/entities/new' },
     ],
@@ -80,6 +82,8 @@ function getPageTitle(pathname: string): string {
     '/compliance/documents': 'Document Suite',
     '/compliance/documents/new': 'New Draft',
     '/compliance/documents/draft': 'Drafting...',
+    '/compliance/calendar': 'Compliance Calendar',
+    '/compliance/gira': 'GIRA Application Form',
     '/compliance/draft': 'New Draft',
     '/compliance/drafts': 'Drafts',
     '/compliance/twins': 'Document Twins',
