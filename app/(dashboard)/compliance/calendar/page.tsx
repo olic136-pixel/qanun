@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   CalendarDays,
+  CalendarPlus,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -28,6 +29,15 @@ import {
 import { ControlTestResult } from '@/components/compliance/ControlTestResult'
 
 type TabKey = 'obligations' | 'timeline' | 'calendar'
+
+function isLifecycleNotFound(error: unknown): boolean {
+  const msg = (error as Error)?.message ?? ''
+  return (
+    msg.includes('No lifecycle found') ||
+    msg.includes('lifecycle') ||
+    msg.includes('404')
+  )
+}
 
 // TODO(phase5-gate): gate this entire page on entity.monitor_enabled once the
 // flag lands on EntitySummary. Until then, every user sees the page.
@@ -69,6 +79,35 @@ export default function CompliancCalendarPage() {
     queryKey: ['calendar', entityId],
     queryFn: () => getCalendar(entityId, token),
     enabled: !!token && !!entityId,
+  })
+
+  const initLifecycle = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/lifecycle/${entityId}/init`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ jurisdiction: 'ADGM' }),
+        }
+      )
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        // 409 means already exists — that's fine
+        if (res.status !== 409) {
+          throw new Error(err.detail ?? 'Failed to initialise lifecycle')
+        }
+      }
+      return res.status === 409 ? null : res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['calendar', entityId],
+      })
+    },
   })
 
   const obligations = data?.obligations ?? []
@@ -130,9 +169,40 @@ export default function CompliancCalendarPage() {
       {isLoading && (
         <div className="py-16 text-center text-sm text-gray-500">Loading calendar…</div>
       )}
-      {error && (
+      {error && !isLifecycleNotFound(error) && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
           {(error as Error).message}
+        </div>
+      )}
+
+      {error && isLifecycleNotFound(error) && (
+        <div className="bg-white border border-[#E8EBF0] rounded-lg p-10 text-center">
+          <div className="w-12 h-12 rounded-full bg-[#EAF4F1] flex items-center
+                          justify-center mx-auto mb-4">
+            <CalendarPlus size={22} strokeWidth={1.5} className="text-[#0F7A5F]" />
+          </div>
+          <h3 className="text-[15px] font-bold text-[#0B1829] mb-2">
+            Compliance calendar not yet set up
+          </h3>
+          <p className="text-[12px] text-gray-500 max-w-sm mx-auto mb-6">
+            Initialise the compliance calendar for this entity to track
+            your regulatory obligations, deadlines, and review cycles.
+          </p>
+          <button
+            onClick={() => initLifecycle.mutate()}
+            disabled={initLifecycle.isPending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-[12px]
+                       font-semibold rounded-md bg-[#0B1829] text-white
+                       hover:bg-[#1D2D44] transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {initLifecycle.isPending ? 'Setting up…' : 'Initialise Compliance Calendar'}
+          </button>
+          {initLifecycle.isError && (
+            <p className="mt-3 text-[11px] text-red-600">
+              {(initLifecycle.error as Error).message}
+            </p>
+          )}
         </div>
       )}
 
