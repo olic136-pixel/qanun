@@ -55,6 +55,164 @@ export default function GiraPage({
   )
 }
 
+// ── GIRA field section maps ───────────────────────────────────
+// Defines canonical field order and labels per jurisdiction.
+// Status is derived from the preflight response:
+//   field not in missing_fields → COMPLETE (green)
+//   field in blocking_fields    → REQUIRED (red)
+//   field in optional_missing   → OPTIONAL (amber)
+
+interface GiraField {
+  field: string
+  label: string
+  hint?: string
+}
+
+interface GiraSection {
+  key: string
+  title: string
+  fields: GiraField[]
+}
+
+const ADGM_SECTIONS: GiraSection[] = [
+  {
+    key: 'A', title: 'Section A — Applicant Details',
+    fields: [
+      { field: 'entity_name',                   label: 'Entity Name' },
+      { field: 'legal_form',                    label: 'Legal Form' },
+      { field: 'jurisdiction_of_incorporation', label: 'Jurisdiction of Incorporation' },
+      { field: 'adgm_registration_number',      label: 'ADGM Registration Number',
+        hint: 'Leave blank if not yet incorporated in ADGM' },
+      { field: 'registered_address',            label: 'Registered Address' },
+      { field: 'proposed_commencement_date',    label: 'Proposed Commencement Date' },
+    ],
+  },
+  {
+    key: 'B', title: 'Section B — Proposed Regulated Activities',
+    fields: [
+      { field: 'regulated_activities', label: 'Regulated Activities' },
+      { field: 'client_categories',    label: 'Client Categories' },
+      { field: 'fsra_category',        label: 'FSRA Licence Category' },
+      { field: 'activity_description', label: 'Activity Description',
+        hint: 'Auto-populated from Business Plan if drafted' },
+    ],
+  },
+  {
+    key: 'C', title: 'Section C — Controllers and Shareholders',
+    fields: [
+      { field: 'controllers',                label: 'Controllers / Shareholders' },
+      { field: 'group_structure_description', label: 'Group Structure Description' },
+    ],
+  },
+  {
+    key: 'D', title: 'Section D — Approved Persons',
+    fields: [
+      { field: 'approved_persons', label: 'Approved Persons',
+        hint: 'CEO, CFO, MLRO, Compliance Officer' },
+    ],
+  },
+  {
+    key: 'E', title: 'Section E — Financial Resources',
+    fields: [
+      { field: 'initial_capital_usd',    label: 'Initial Capital (USD)' },
+      { field: 'regulatory_capital_usd', label: 'Regulatory Capital (USD)' },
+      { field: 'projections',            label: '3-Year Financial Projections' },
+    ],
+  },
+  {
+    key: 'F', title: 'Section F — Systems and Controls',
+    fields: [
+      { field: 'compliance_function_description', label: 'Compliance Function',
+        hint: 'Auto-populated from Compliance Manual if drafted' },
+      { field: 'it_systems_description',          label: 'IT Systems' },
+      { field: 'outsourcing_arrangements',        label: 'Outsourcing Arrangements' },
+    ],
+  },
+  {
+    key: 'G', title: 'Section G — Declaration',
+    fields: [
+      { field: 'signatory_name',  label: 'Signatory Name' },
+      { field: 'signatory_title', label: 'Signatory Title' },
+      { field: 'declaration_date', label: 'Declaration Date' },
+    ],
+  },
+]
+
+const VARA_SECTIONS: GiraSection[] = [
+  {
+    key: '1', title: 'Section 1 — Applicant Details',
+    fields: [
+      { field: 'entity_name',                   label: 'Entity Name' },
+      { field: 'legal_form',                    label: 'Legal Form' },
+      { field: 'jurisdiction_of_incorporation', label: 'Jurisdiction of Incorporation' },
+      { field: 'vara_registration_number',      label: 'VARA Registration Number',
+        hint: 'Leave blank if not yet registered with VARA' },
+      { field: 'uae_trn',                       label: 'UAE Tax Registration Number' },
+      { field: 'registered_address',            label: 'Registered Address' },
+    ],
+  },
+  {
+    key: '2', title: 'Section 2 — Virtual Asset Activities',
+    fields: [
+      { field: 'vara_licence_type',    label: 'VARA Licence Type' },
+      { field: 'va_activities',        label: 'Virtual Asset Activities' },
+      { field: 'va_types_handled',     label: 'Virtual Asset Types Handled' },
+      { field: 'activity_description', label: 'Activity Description',
+        hint: 'Auto-populated from Business Plan if drafted' },
+    ],
+  },
+  {
+    key: '3', title: 'Section 3 — Governance and Controllers',
+    fields: [
+      { field: 'controllers',       label: 'Controllers / UBO' },
+      { field: 'senior_management', label: 'Senior Management' },
+      { field: 'board_composition', label: 'Board Composition' },
+    ],
+  },
+  {
+    key: '4', title: 'Section 4 — Financial Resources',
+    fields: [
+      { field: 'initial_capital_usd',    label: 'Initial Capital (USD)' },
+      { field: 'projected_revenue_yr1',  label: 'Projected Year 1 Revenue (USD)' },
+    ],
+  },
+  {
+    key: '5', title: 'Section 5 — Technology Architecture',
+    fields: [
+      { field: 'technology_description',  label: 'Technology Architecture',
+        hint: 'Auto-populated from Technology Assessment if drafted' },
+      { field: 'cybersecurity_framework', label: 'Cybersecurity Framework' },
+    ],
+  },
+  {
+    key: '6', title: 'Section 6 — AML/CFT Programme',
+    fields: [
+      { field: 'aml_programme_summary', label: 'AML/CFT Programme Summary',
+        hint: 'Auto-populated from AML/CFT Policy if drafted' },
+    ],
+  },
+  {
+    key: '7', title: 'Section 7 — Declaration',
+    fields: [
+      { field: 'signatory_name',   label: 'Signatory Name' },
+      { field: 'signatory_title',  label: 'Signatory Title' },
+      { field: 'declaration_date', label: 'Declaration Date' },
+    ],
+  },
+]
+
+type FieldStatus = 'complete' | 'required' | 'optional'
+
+function getFieldStatus(
+  fieldName: string,
+  blockingFields: { field: string }[],
+  optionalMissing: { field: string }[],
+): FieldStatus {
+  if (blockingFields.some((f) => f.field === fieldName)) return 'required'
+  if (optionalMissing.some((f) => f.field === fieldName)) return 'optional'
+  return 'complete'
+}
+
 // ── STATE A: Preflight ────────────────────────────────────────
 
 function PreflightState({
@@ -117,59 +275,109 @@ function PreflightState({
       {data && (
         <>
           {/* Completion ring + readiness banner */}
-          <div className="bg-white border border-[#E8EBF0] rounded-lg p-6 flex items-center gap-8">
-            <CompletionRing pct={Math.round((data.completion_pct ?? 0) * 100)} />
-
+          <div className="bg-white border border-[#E8EBF0]
+                          rounded-lg p-6 flex items-center gap-8">
+            <CompletionRing
+              pct={Math.round((data.completion_pct ?? 0) * 100)}
+            />
             <div className="flex-1">
               {data.ready_to_generate ? (
-                <div className="flex items-start gap-3 p-4 bg-[#EAF4F1] border border-[#0F7A5F]/20 rounded-md">
-                  <CheckCircle2 size={18} strokeWidth={1.5} className="text-[#0F7A5F] shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 p-4
+                                bg-[#EAF4F1] border
+                                border-[#0F7A5F]/20 rounded-md">
+                  <CheckCircle2
+                    size={18} strokeWidth={1.5}
+                    className="text-[#0F7A5F] shrink-0 mt-0.5"
+                  />
                   <div>
-                    <p className="text-[13px] font-bold text-[#0F7A5F]">Ready to generate</p>
-                    <p className="text-[11px] text-[#0F7A5F]/80 mt-0.5">
-                      All blocking fields are complete for {jurisdiction}.
+                    <p className="text-[13px] font-bold
+                                  text-[#0F7A5F]">
+                      Ready to generate
+                    </p>
+                    <p className="text-[11px] text-[#0F7A5F]/80
+                                  mt-0.5">
+                      All required fields are complete.
+                      Optional fields marked below will appear
+                      as "To be confirmed" in the form.
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-md">
-                  <AlertTriangle size={18} strokeWidth={1.5} className="text-amber-700 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3 p-4
+                                bg-amber-50 border border-amber-200
+                                rounded-md">
+                  <AlertTriangle
+                    size={18} strokeWidth={1.5}
+                    className="text-amber-700 shrink-0 mt-0.5"
+                  />
                   <div>
-                    <p className="text-[13px] font-bold text-amber-700">
-                      {data.blocking_fields.length} blocking {data.blocking_fields.length === 1 ? 'field' : 'fields'} missing
+                    <p className="text-[13px] font-bold
+                                  text-amber-700">
+                      {data.blocking_fields.length} required{' '}
+                      {data.blocking_fields.length === 1
+                        ? 'field'
+                        : 'fields'}{' '}
+                      incomplete
                     </p>
-                    <p className="text-[11px] text-amber-700/80 mt-0.5">
-                      Complete these fields before generating the {jurisdiction} form.
+                    <p className="text-[11px] text-amber-700/80
+                                  mt-0.5">
+                      Complete the fields marked{' '}
+                      <span className="font-semibold">Required</span>{' '}
+                      below before generating the{' '}
+                      {jurisdiction} application form.
                     </p>
                   </div>
                 </div>
               )}
+
+              {/* Legend */}
+              <div className="mt-3 flex items-center gap-4
+                              text-[10px] text-gray-400">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2
+                    size={12} strokeWidth={1.5}
+                    className="text-[#0F7A5F]"
+                  />
+                  Complete
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <X size={12} strokeWidth={2}
+                     className="text-red-600" />
+                  Required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <AlertCircle
+                    size={12} strokeWidth={1.5}
+                    className="text-amber-500"
+                  />
+                  Optional
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Two columns: blocking + optional */}
-          <div className="grid grid-cols-2 gap-4">
-            <FieldColumn
-              title="Blocking fields"
-              icon={X}
-              tone="red"
-              fields={data.blocking_fields}
-              emptyLabel="All blocking fields complete."
-            />
-            <FieldColumn
-              title="Optional missing"
-              icon={AlertCircle}
-              tone="amber"
-              fields={data.optional_missing}
-              emptyLabel="No optional fields missing."
-            />
-          </div>
+          {/* Unified field list by section */}
+          <GiraSectionList
+            sections={
+              jurisdiction === 'ADGM'
+                ? ADGM_SECTIONS
+                : VARA_SECTIONS
+            }
+            blockingFields={data.blocking_fields}
+            optionalMissing={data.optional_missing}
+          />
 
-          {/* CEE questions */}
+          {/* CEE questions — only if missing fields exist */}
           {data.cee_questions.length > 0 && (
-            <div className="bg-white border border-[#E8EBF0] rounded-lg p-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mb-4">
-                CEE Questions
+            <div className="bg-white border border-[#E8EBF0]
+                            rounded-lg p-6">
+              <p className="text-[10px] font-semibold uppercase
+                            tracking-[0.1em] text-gray-400 mb-1">
+                Questions to complete your profile
+              </p>
+              <p className="text-[11px] text-gray-500 mb-4">
+                Answer these to fill in missing fields before
+                generating the form.
               </p>
               <div className="space-y-4">
                 {data.cee_questions.map((q) => (
@@ -183,11 +391,23 @@ function PreflightState({
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={() => generate.mutate()}
-              disabled={!data.ready_to_generate || generate.isPending}
-              title={!data.ready_to_generate ? 'Complete blocking fields first' : undefined}
-              className="px-5 py-2.5 text-[12px] font-semibold rounded-md bg-[#0B1829] text-white hover:bg-[#1D2D44] transition-colors disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+              disabled={
+                !data.ready_to_generate || generate.isPending
+              }
+              title={
+                !data.ready_to_generate
+                  ? 'Complete required fields first'
+                  : undefined
+              }
+              className="px-5 py-2.5 text-[12px] font-semibold
+                         rounded-md bg-[#0B1829] text-white
+                         hover:bg-[#1D2D44] transition-colors
+                         disabled:bg-gray-200 disabled:text-gray-400
+                         disabled:cursor-not-allowed"
             >
-              {generate.isPending ? 'Generating…' : 'Generate Application Form'}
+              {generate.isPending
+                ? 'Generating…'
+                : `Generate ${jurisdiction} Application Form`}
             </button>
           </div>
         </>
@@ -224,37 +444,113 @@ function CompletionRing({ pct }: { pct: number }) {
   )
 }
 
-function FieldColumn({
-  title, icon: Icon, tone, fields, emptyLabel,
-}: {
-  title: string
-  icon: React.ElementType
-  tone: 'red' | 'amber'
-  fields: { field: string; label: string }[]
-  emptyLabel: string
-}) {
-  const toneTw = tone === 'red' ? 'text-red-600' : 'text-amber-600'
-
+function FieldStatusIcon({ status }: { status: FieldStatus }) {
+  if (status === 'complete') {
+    return (
+      <CheckCircle2
+        size={15}
+        strokeWidth={1.5}
+        className="text-[#0F7A5F] shrink-0"
+      />
+    )
+  }
+  if (status === 'required') {
+    return (
+      <X
+        size={15}
+        strokeWidth={2}
+        className="text-red-600 shrink-0"
+      />
+    )
+  }
   return (
-    <div className="bg-white border border-[#E8EBF0] rounded-lg p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-gray-400 mb-3">
-        {title}
-      </p>
-      {fields.length === 0 ? (
-        <p className="text-[12px] text-gray-400">{emptyLabel}</p>
-      ) : (
-        <ul className="space-y-2">
-          {fields.map((f) => (
-            <li key={f.field} className="flex items-start gap-2">
-              <Icon size={12} strokeWidth={1.5} className={`${toneTw} shrink-0 mt-0.5`} />
-              <div>
-                <p className="text-[12px] text-[#0B1829]">{f.label}</p>
-                <p className="text-[10px] text-gray-400 font-mono">{f.field}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+    <AlertCircle
+      size={15}
+      strokeWidth={1.5}
+      className="text-amber-500 shrink-0"
+    />
+  )
+}
+
+function GiraSectionList({
+  sections,
+  blockingFields,
+  optionalMissing,
+}: {
+  sections: GiraSection[]
+  blockingFields: { field: string; label: string }[]
+  optionalMissing: { field: string; label: string }[]
+}) {
+  return (
+    <div className="space-y-4">
+      {sections.map((section) => (
+        <div
+          key={section.key}
+          className="bg-white border border-[#E8EBF0] rounded-lg overflow-hidden"
+        >
+          <div className="px-5 py-3 bg-[#F5F7FA] border-b border-[#E8EBF0]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.08em]
+                          text-[#0B1829]">
+              {section.title}
+            </p>
+          </div>
+          <div className="divide-y divide-[#F0F2F5]">
+            {section.fields.map((f) => {
+              const status = getFieldStatus(
+                f.field, blockingFields, optionalMissing)
+              return (
+                <div
+                  key={f.field}
+                  className="flex items-center gap-3 px-5 py-3"
+                >
+                  <FieldStatusIcon status={status} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[13px] font-medium ${
+                      status === 'complete'
+                        ? 'text-[#0B1829]'
+                        : status === 'required'
+                          ? 'text-[#0B1829]'
+                          : 'text-gray-500'
+                    }`}>
+                      {f.label}
+                      {status === 'required' && (
+                        <span className="ml-1.5 text-[10px] font-semibold
+                                         text-red-600 bg-red-50 px-1.5 py-0.5
+                                         rounded">
+                          Required
+                        </span>
+                      )}
+                    </p>
+                    {f.hint && status !== 'complete' && (
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {f.hint}
+                      </p>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    {status === 'complete' ? (
+                      <span className="text-[10px] font-mono
+                                       text-[#0F7A5F]">
+                        Complete
+                      </span>
+                    ) : status === 'required' ? (
+                      <span className="text-[10px] font-mono
+                                       text-red-500">
+                        Missing
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono
+                                       text-amber-500">
+                        Optional
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
